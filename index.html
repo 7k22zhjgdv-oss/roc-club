@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rolling Oaks Club</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rolling Oaks">
+<style>
+  /* This page only holds one full-screen frame. It exists so the Apps Script
+     pages load inside it, which is what hides Google's blue banner. */
+  html, body { margin: 0; height: 100%; background: #111; }
+  @media (prefers-color-scheme: light) { html, body { background: #fff; } }
+  #app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+  @supports (height: 100dvh) { #app { height: 100dvh; } }
+  noscript { color: #999; font: 16px/1.4 system-ui, sans-serif; display: block; padding: 24px; }
+  noscript a { color: inherit; }
+</style>
+</head>
+<body>
+<iframe id="app" title="Rolling Oaks Club" allow="fullscreen"></iframe>
+<noscript>This page needs JavaScript. You can also open the tools directly:
+  <a href="https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec">Home</a>.</noscript>
+<script>
+// The three tools. If a tool's Apps Script address ever changes, edit it here
+// (this is the only place it lives now, besides the wrapper links inside each tool).
+var TOOLS = {
+  home: { title: 'Rolling Oaks Club',
+          url: 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec' },
+  pump: { title: 'Rolling Oaks Club - Water Systems Dashboard',
+          url: 'https://script.google.com/macros/s/AKfycbyT2vJWAEfvHBqsMxAdcuO4xUCuDDVUZ6Uw-0xbxJSfFM0rsj0oJNRX53gclWo-hWMRQg/exec' },
+  chem: { title: 'Rolling Oaks Club - Pool Chemistry Dashboard',
+          url: 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec' }
+};
+var p = (new URLSearchParams(location.search).get('p') || 'home').toLowerCase();
+var tool = TOOLS[p] || TOOLS.home;
+document.title = tool.title;
+document.getElementById('app').src = tool.url;
+</script>
+</body>
+</html>
