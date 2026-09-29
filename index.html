@@ -34,11 +34,30 @@ var TOOLS = {
   pump: { title: 'Rolling Oaks Club - Water Systems Dashboard',
           url: 'https://script.google.com/macros/s/AKfycbyT2vJWAEfvHBqsMxAdcuO4xUCuDDVUZ6Uw-0xbxJSfFM0rsj0oJNRX53gclWo-hWMRQg/exec' },
   chem: { title: 'Rolling Oaks Club - Pool Chemistry Dashboard',
-          url: 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec' }
+          url: 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec' },
+  // The Pump Log (Well Log Tool) - Board and Manager only. Deliberately NOT linked from Home or the page menus; it keeps
+  // its own home-screen icon, name and colors so it feels like its own app. The old address
+  // github.io/Pump-log-icon/ now just forwards here (same site, so a saved home-screen icon keeps working).
+  log:  { title: 'Pump Log', appTitle: 'Pump Log', icon: 'log-icon.png', bg: ['#FAF7F1', '#1B1712'],
+          url: 'https://script.google.com/macros/s/AKfycbxuGpuW9uzpKp97sc9vTkFS5o_1WoonL7_q9fH0SH-HJJAZ3Dy29LtqreUofuBLp238/exec' }
 };
 var p = (new URLSearchParams(location.search).get('p') || 'home').toLowerCase();
 var tool = TOOLS[p] || TOOLS.home;
 document.title = tool.title;
+// a tool with its own look: icon + name for "Add to Home Screen", and the colors behind the frame / status bar
+if (tool.icon) {
+  document.querySelector('link[rel="apple-touch-icon"]').href = tool.icon;
+  document.querySelector('link[rel="icon"]').href = tool.icon;
+}
+if (tool.appTitle) document.querySelector('meta[name="apple-mobile-web-app-title"]').content = tool.appTitle;
+if (tool.bg) {
+  var st = document.createElement('style');
+  st.textContent = 'html, body { background: ' + tool.bg[1] + '; } @media (prefers-color-scheme: light) { html, body { background: ' + tool.bg[0] + '; } }';
+  document.head.appendChild(st);
+  document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+    m.content = /dark/.test(m.getAttribute('media')) ? tool.bg[1] : tool.bg[0];
+  });
+}
 document.getElementById('app').src = tool.url;
 
 // Sign in once for every tool. When someone signs in on any tool, that tool sends its key number / password up here;
