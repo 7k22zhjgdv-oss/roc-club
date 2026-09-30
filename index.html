@@ -51,7 +51,9 @@
 // The three tools. If a tool's Apps Script address ever changes, edit it here
 // (this is the only place it lives now, besides the wrapper links inside each tool).
 var TOOLS = {
-  home: { title: 'Rolling Oaks Club',
+  // bg: [light, dark] colour behind the frame (and the browser's tinted bar); Home = the roof wood at the top of its photo,
+  // so a thin gap Safari leaves beside Google's frame doesn't show as a white strip
+  home: { title: 'Rolling Oaks Club', bg: ['#47260F', '#47260F'],
           url: 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec' },
   pump: { title: 'Rolling Oaks Club - Water Systems Dashboard',
           url: 'https://script.google.com/macros/s/AKfycbyT2vJWAEfvHBqsMxAdcuO4xUCuDDVUZ6Uw-0xbxJSfFM0rsj0oJNRX53gclWo-hWMRQg/exec' },
@@ -92,6 +94,7 @@ function show(p, push) {
   Object.keys(FRAMES).forEach(function (k) { FRAMES[k].classList.toggle('on', k === p); });
   current = p;
   document.title = tool.title || BASE_TITLE;
+  applyBg(tool);
   if (push) history.pushState({ p: p }, '', '?p=' + p);
 }
 var start = pageFrom(location.search), tool = TOOLS[start];
@@ -102,12 +105,13 @@ if (tool.icon) {
   document.querySelector('link[rel="icon"]').href = tool.icon;
 }
 if (tool.appTitle) document.querySelector('meta[name="apple-mobile-web-app-title"]').content = tool.appTitle;
-if (tool.bg) {
-  var st = document.createElement('style');
-  st.textContent = 'html, body { background: ' + tool.bg[1] + '; } @media (prefers-color-scheme: light) { html, body { background: ' + tool.bg[0] + '; } }';
-  document.head.appendChild(st);
+// the colours behind the frame / status bar follow the page being shown (default: white in light mode, #111 in dark)
+var bgStyle = document.createElement('style'); document.head.appendChild(bgStyle);
+function applyBg(t) {
+  var bg = t.bg || ['#ffffff', '#111111'];
+  bgStyle.textContent = 'html, body { background: ' + bg[1] + '; } @media (prefers-color-scheme: light) { html, body { background: ' + bg[0] + '; } }';
   document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
-    m.content = /dark/.test(m.getAttribute('media')) ? tool.bg[1] : tool.bg[0];
+    m.content = /dark/.test(m.getAttribute('media')) ? bg[1] : bg[0];
   });
 }
 show(start, false);
