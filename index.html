@@ -46,6 +46,8 @@ var BASE_TITLE = document.title;
 var FRAMES = {}, INNER = {}, HIDDEN_AT = {}, current = null;
 var SWITCHABLE = { home: 1, pump: 1, chem: 1 };      // these switch in place; the Pump Log stays its own app
 var PRELOAD = { home: 1, chem: 1 };                   // loaded in the background; Pump loads the first time it's opened (keeps data light)
+// Chemistry is only preloaded for someone signed in (Home only shows the dashboard buttons to them)
+function signedIn() { try { return !!localStorage.getItem('rocSignIn'); } catch (x) { return false; } }
 var STALE_MS = 2 * 60 * 60 * 1000;                        // a page hidden longer than this reloads when shown again
 function pageFrom(search) {
   var p = (new URLSearchParams(search).get('p') || 'home').toLowerCase();
@@ -93,7 +95,7 @@ if (SWITCHABLE[start]) {
   var preloaded = false;
   var preload = function () {
     if (preloaded) return; preloaded = true;
-    Object.keys(PRELOAD).forEach(function (k, n) { if (!FRAMES[k]) setTimeout(function () { frameFor(k); }, n * 800); });
+    Object.keys(PRELOAD).forEach(function (k, n) { if (k === 'chem' && !signedIn()) return; if (!FRAMES[k]) setTimeout(function () { frameFor(k); }, n * 800); });
   };
   FRAMES[start].addEventListener('load', function () { setTimeout(preload, 2500); });
   setTimeout(preload, 8000);
@@ -138,6 +140,7 @@ window.addEventListener('message', function (e) {
       var changed = localStorage.getItem(SIGNIN_KEY) !== d.code;
       localStorage.setItem(SIGNIN_KEY, d.code);
       if (/^(member|board|manager)$/.test(d.level || '')) localStorage.setItem(LEVEL_KEY, JSON.stringify({ level: d.level, who: String(d.who || '').slice(0, 80) }));
+      if (changed && SWITCHABLE[current] && !FRAMES.chem) setTimeout(function () { if (signedIn()) frameFor('chem'); }, 1500);  // just signed in: load it now
       if (changed) { var l2 = level(); tellOthers(from, { roc: 'code', code: d.code, level: l2.level || '', who: l2.who || '' }); }
     } else if (d.roc === 'forget') {
       var had = !!localStorage.getItem(SIGNIN_KEY);
