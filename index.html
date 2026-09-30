@@ -11,18 +11,19 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <style>
-  /* This page only holds one full-screen frame. It exists so the Apps Script
-     pages load inside it, which is what hides Google's blue banner. */
+  /* This page holds the tools' full-screen frames. It exists so the Apps Script
+     pages load inside it, which is what hides Google's blue banner. Home, Pump and
+     Chemistry stay loaded once opened, and switching just shows a different frame. */
   html, body { margin: 0; height: 100%; background: #111; }
   @media (prefers-color-scheme: light) { html, body { background: #fff; } }
-  #app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
-  @supports (height: 100dvh) { #app { height: 100dvh; } }
+  .tool { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; visibility: hidden; pointer-events: none; z-index: 0; }
+  .tool.on { visibility: visible; pointer-events: auto; z-index: 1; }
+  @supports (height: 100dvh) { .tool { height: 100dvh; } }
   noscript { color: #999; font: 16px/1.4 system-ui, sans-serif; display: block; padding: 24px; }
   noscript a { color: inherit; }
 </style>
 </head>
 <body>
-<iframe id="app" title="Rolling Oaks Club" allow="fullscreen"></iframe>
 <noscript>This page needs JavaScript. You can also open the tools directly:
   <a href="https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec">Home</a>.</noscript>
 <script>
@@ -41,9 +42,37 @@ var TOOLS = {
   log:  { title: 'Pump Log', appTitle: 'Pump Log', icon: 'log-icon.png', bg: ['#FAF7F1', '#1B1712'],
           url: 'https://script.google.com/macros/s/AKfycbxuGpuW9uzpKp97sc9vTkFS5o_1WoonL7_q9fH0SH-HJJAZ3Dy29LtqreUofuBLp238/exec' }
 };
-var p = (new URLSearchParams(location.search).get('p') || 'home').toLowerCase();
-var tool = TOOLS[p] || TOOLS.home;
-document.title = tool.title;
+var BASE_TITLE = document.title;
+var FRAMES = {}, INNER = {}, HIDDEN_AT = {}, current = null;
+var SWITCHABLE = { home: 1, pump: 1, chem: 1 };      // these switch in place; the Pump Log stays its own app
+var PRELOAD = { home: 1, chem: 1 };                   // loaded in the background; Pump loads the first time it's opened (keeps data light)
+var STALE_MS = 2 * 60 * 60 * 1000;                        // a page hidden longer than this reloads when shown again
+function pageFrom(search) {
+  var p = (new URLSearchParams(search).get('p') || 'home').toLowerCase();
+  return TOOLS[p] ? p : 'home';
+}
+function frameFor(p) {
+  if (FRAMES[p]) return FRAMES[p];
+  var f = document.createElement('iframe');
+  f.className = 'tool'; f.title = TOOLS[p].title; f.setAttribute('allow', 'fullscreen');
+  f.src = TOOLS[p].url;
+  document.body.appendChild(f);
+  return (FRAMES[p] = f);
+}
+function show(p, push) {
+  var tool = TOOLS[p];
+  if (current === p) return;
+  if (current) HIDDEN_AT[current] = Date.now();
+  var f = frameFor(p);
+  if (HIDDEN_AT[p] && Date.now() - HIDDEN_AT[p] > STALE_MS) { INNER[p] = null; f.src = TOOLS[p].url; }
+  HIDDEN_AT[p] = 0;
+  Object.keys(FRAMES).forEach(function (k) { FRAMES[k].classList.toggle('on', k === p); });
+  current = p;
+  document.title = tool.title || BASE_TITLE;
+  if (push) history.pushState({ p: p }, '', '?p=' + p);
+}
+var start = pageFrom(location.search), tool = TOOLS[start];
+history.replaceState({ p: start }, '', location.search || '?p=' + start);
 // a tool with its own look: icon + name for "Add to Home Screen", and the colors behind the frame / status bar
 if (tool.icon) {
   document.querySelector('link[rel="apple-touch-icon"]').href = tool.icon;
@@ -58,35 +87,66 @@ if (tool.bg) {
     m.content = /dark/.test(m.getAttribute('media')) ? tool.bg[1] : tool.bg[0];
   });
 }
-document.getElementById('app').src = tool.url;
+show(start, false);
+// once the first page is up, quietly load the others in PRELOAD so switching to them is instant
+if (SWITCHABLE[start]) {
+  var preloaded = false;
+  var preload = function () {
+    if (preloaded) return; preloaded = true;
+    Object.keys(PRELOAD).forEach(function (k, n) { if (!FRAMES[k]) setTimeout(function () { frameFor(k); }, n * 800); });
+  };
+  FRAMES[start].addEventListener('load', function () { setTimeout(preload, 2500); });
+  setTimeout(preload, 8000);
+}
+window.addEventListener('popstate', function (e) {
+  var p = (e.state && e.state.p) || pageFrom(location.search);
+  if (SWITCHABLE[p] && SWITCHABLE[current]) show(p, false); else location.reload();
+});
 
 // Sign in once for every tool. When someone signs in on any tool, that tool sends its key number / password up here;
 // this page keeps it (its own storage survives reloads, unlike storage inside the frame) and hands it to each tool
-// that asks when it loads. Sign out on any tool clears it. It is only ever given to the tool loaded in THIS page's
-// frame (an Apps Script page, *.googleusercontent.com), and never when this page is itself inside someone else's frame.
+// that asks when it loads. Sign in / out on one tool is passed on to the others that are already loaded.
+// Only ever given to the tools in THIS page's frames (Apps Script pages, *.googleusercontent.com), and never when
+// this page is itself inside someone else's frame.
 var SIGNIN_KEY = 'rocSignIn', LEVEL_KEY = 'rocLevel';   // rocLevel: {level, who} from the last good check, so tools can show it at once
-var frameEl = document.getElementById('app');
-function fromOurTool(e) {
-  if (window.top !== window) return false;
-  if (!/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(e.origin)) return false;
+function toolOf(e) {
+  if (window.top !== window) return null;
+  if (!/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(e.origin)) return null;
   for (var w = e.source, i = 0; w && i < 6; i++) {       // the tool's page sits a frame or two inside ours
-    if (w === frameEl.contentWindow) return true;
+    for (var k in FRAMES) if (w === FRAMES[k].contentWindow) return k;
     if (w === w.parent) break;
     w = w.parent;
   }
-  return false;
+  return null;
 }
+function tellOthers(from, msg) {
+  Object.keys(INNER).forEach(function (k) {
+    if (k !== from && INNER[k]) { try { INNER[k].win.postMessage(msg, INNER[k].origin); } catch (x) {} }
+  });
+}
+function level() { try { return JSON.parse(localStorage.getItem(LEVEL_KEY) || '{}') || {}; } catch (x) { return {}; } }
 window.addEventListener('message', function (e) {
-  if (!fromOurTool(e)) return;
+  var from = toolOf(e);
+  if (!from) return;
   var d = e.data || {};
   try {
     if (d.roc === 'hello') {
-      var lv = {}; try { lv = JSON.parse(localStorage.getItem(LEVEL_KEY) || '{}') || {}; } catch (x) {}
+      INNER[from] = { win: e.source, origin: e.origin };
+      var lv = level();
       e.source.postMessage({ roc: 'code', code: localStorage.getItem(SIGNIN_KEY) || '', level: lv.level || '', who: lv.who || '' }, e.origin);
     } else if (d.roc === 'save' && typeof d.code === 'string' && d.code.length < 200) {
+      var changed = localStorage.getItem(SIGNIN_KEY) !== d.code;
       localStorage.setItem(SIGNIN_KEY, d.code);
       if (/^(member|board|manager)$/.test(d.level || '')) localStorage.setItem(LEVEL_KEY, JSON.stringify({ level: d.level, who: String(d.who || '').slice(0, 80) }));
-    } else if (d.roc === 'forget') { localStorage.removeItem(SIGNIN_KEY); localStorage.removeItem(LEVEL_KEY); }
+      if (changed) { var l2 = level(); tellOthers(from, { roc: 'code', code: d.code, level: l2.level || '', who: l2.who || '' }); }
+    } else if (d.roc === 'forget') {
+      var had = !!localStorage.getItem(SIGNIN_KEY);
+      localStorage.removeItem(SIGNIN_KEY); localStorage.removeItem(LEVEL_KEY);
+      if (had) tellOthers(from, { roc: 'signout' });
+    } else if (d.roc === 'go' && SWITCHABLE[d.p] && SWITCHABLE[from]) {
+      e.source.postMessage({ roc: 'went' }, e.origin);
+      show(d.p, true);
+    }
   } catch (err) {}
 });
 </script>
