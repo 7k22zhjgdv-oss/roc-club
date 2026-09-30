@@ -19,6 +19,27 @@
   .tool { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; visibility: hidden; pointer-events: none; z-index: 0; }
   .tool.on { visibility: visible; pointer-events: auto; z-index: 1; }
   @supports (height: 100dvh) { .tool { height: 100dvh; } }
+  /* donation popup (Zeffy form), opened by a tool's Donate button */
+  .give-back { position: fixed; inset: 0; z-index: 20; background: rgba(8,6,3,.62); opacity: 0; transition: opacity .25s; }
+  .give-panel:focus { outline: none; }
+  .give-panel { position: fixed; z-index: 21; left: 50%; top: 50%; width: min(560px, calc(100vw - 32px)); height: min(860px, calc(100vh - 48px));
+    transform: translate(-50%, -48%); opacity: 0; transition: opacity .25s, transform .25s; display: flex; flex-direction: column;
+    background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+  .give-back[hidden], .give-panel[hidden] { display: none; }
+  .give-open .give-back { opacity: 1; }
+  .give-open .give-panel { opacity: 1; transform: translate(-50%, -50%); }
+  .give-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; outline: none;
+    background: #140F09; color: #FFF8EC; font: 600 15px/1.2 "Jost", "Avenir Next", "Futura", "Segoe UI", system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  .give-head span b { color: #D69A4A; font-weight: 600; }
+  .give-body { position: relative; flex: 1; background: #fff; }
+  .give-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .give-wait { position: absolute; inset: 0; display: grid; place-items: center; color: #6b6259; font: 15px system-ui, sans-serif; }
+  @media (max-width: 768px) {
+    .give-panel { left: 0; right: 0; bottom: 0; top: calc(env(safe-area-inset-top, 0px) + 56px); width: auto; height: auto;
+      border-radius: 16px 16px 0 0; transform: translateY(100%); opacity: 1; }
+    .give-open .give-panel { transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) { .give-back, .give-panel { transition: none; } }
   noscript { color: #999; font: 16px/1.4 system-ui, sans-serif; display: block; padding: 24px; }
   noscript a { color: inherit; }
 </style>
@@ -135,7 +156,7 @@ window.addEventListener('message', function (e) {
     if (d.roc === 'hello') {
       INNER[from] = { win: e.source, origin: e.origin };
       var lv = level();
-      e.source.postMessage({ roc: 'code', code: localStorage.getItem(SIGNIN_KEY) || '', level: lv.level || '', who: lv.who || '' }, e.origin);
+      e.source.postMessage({ roc: 'code', code: localStorage.getItem(SIGNIN_KEY) || '', level: lv.level || '', who: lv.who || '', donate: true }, e.origin);
     } else if (d.roc === 'save' && typeof d.code === 'string' && d.code.length < 200) {
       var changed = localStorage.getItem(SIGNIN_KEY) !== d.code;
       localStorage.setItem(SIGNIN_KEY, d.code);
@@ -146,11 +167,55 @@ window.addEventListener('message', function (e) {
       var had = !!localStorage.getItem(SIGNIN_KEY);
       localStorage.removeItem(SIGNIN_KEY); localStorage.removeItem(LEVEL_KEY);
       if (had) tellOthers(from, { roc: 'signout' });
+    } else if (d.roc === 'donate') {
+      openDonate();
     } else if (d.roc === 'go' && SWITCHABLE[d.p] && SWITCHABLE[from]) {
       e.source.postMessage({ roc: 'went' }, e.origin);
       show(d.p, true);
     }
   } catch (err) {}
+});
+
+// Donation popup: the Zeffy form in a frame of our own, loaded the first time Donate is tapped (not on every visit).
+// Same form and link as Zeffy's own popup script; this page is the top page, so Apple Pay / Google Pay can work
+// (the frame has allow="payment"). Closing: Zeffy's own X (it sends {id:'zeffy-iframe', close:true}), tapping the dimmed
+// page around the popup (a strip stays visible above it on phones), or Esc.
+var DONATE_URL = 'https://www.zeffy.com/embed/donation-form/help-support-the-club-and-grounds?modal=true';
+var give = null, giveReturn = null;
+function openDonate() {
+  if (!give) {
+    var back = document.createElement('div'); back.className = 'give-back';
+    var panel = document.createElement('div'); panel.className = 'give-panel';
+    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', 'Donate to Rolling Oaks Club');
+    panel.innerHTML = '<div class="give-head"><span>Support the <b>Club &amp; Grounds</b></span></div>' +
+      '<div class="give-body"><div class="give-wait">Loading secure donation form\u2026</div></div>';
+    var f = document.createElement('iframe');
+    f.title = 'Donation form, powered and secured by Zeffy'; f.setAttribute('allow', 'payment');
+    f.addEventListener('load', function () { var w = panel.querySelector('.give-wait'); if (w) w.remove(); try { f.contentWindow.postMessage({ id: 'zeffy-iframe', open: true }, '*'); } catch (x) {} });
+    f.src = DONATE_URL;
+    panel.querySelector('.give-body').appendChild(f);
+    document.body.appendChild(back); document.body.appendChild(panel);
+    back.addEventListener('click', closeDonate);
+    give = { back: back, panel: panel, frame: f };
+  } else {
+    try { give.frame.contentWindow.postMessage({ id: 'zeffy-iframe', open: true }, '*'); } catch (x) {}
+  }
+  giveReturn = document.activeElement;
+  give.back.hidden = false; give.panel.hidden = false;
+  Object.keys(FRAMES).forEach(function (k) { FRAMES[k].setAttribute('aria-hidden', 'true'); });
+  give.panel.tabIndex = -1;
+  setTimeout(function () { document.body.classList.add('give-open'); try { give.panel.focus(); } catch (x) {} }, 20);
+}
+function closeDonate() {
+  if (!give || !document.body.classList.contains('give-open')) return;
+  document.body.classList.remove('give-open');
+  Object.keys(FRAMES).forEach(function (k) { FRAMES[k].removeAttribute('aria-hidden'); });
+  setTimeout(function () { give.back.hidden = true; give.panel.hidden = true; }, 260);
+  if (giveReturn && giveReturn.focus) try { giveReturn.focus(); } catch (x) {}
+}
+window.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDonate(); });
+window.addEventListener('message', function (e) {
+  if (e.origin === 'https://www.zeffy.com' && e.data && e.data.id === 'zeffy-iframe' && e.data.close) closeDonate();
 });
 </script>
 </body>
