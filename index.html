@@ -64,7 +64,7 @@ document.getElementById('app').src = tool.url;
 // this page keeps it (its own storage survives reloads, unlike storage inside the frame) and hands it to each tool
 // that asks when it loads. Sign out on any tool clears it. It is only ever given to the tool loaded in THIS page's
 // frame (an Apps Script page, *.googleusercontent.com), and never when this page is itself inside someone else's frame.
-var SIGNIN_KEY = 'rocSignIn';
+var SIGNIN_KEY = 'rocSignIn', LEVEL_KEY = 'rocLevel';   // rocLevel: {level, who} from the last good check, so tools can show it at once
 var frameEl = document.getElementById('app');
 function fromOurTool(e) {
   if (window.top !== window) return false;
@@ -80,9 +80,13 @@ window.addEventListener('message', function (e) {
   if (!fromOurTool(e)) return;
   var d = e.data || {};
   try {
-    if (d.roc === 'hello') e.source.postMessage({ roc: 'code', code: localStorage.getItem(SIGNIN_KEY) || '' }, e.origin);
-    else if (d.roc === 'save' && typeof d.code === 'string' && d.code.length < 200) localStorage.setItem(SIGNIN_KEY, d.code);
-    else if (d.roc === 'forget') localStorage.removeItem(SIGNIN_KEY);
+    if (d.roc === 'hello') {
+      var lv = {}; try { lv = JSON.parse(localStorage.getItem(LEVEL_KEY) || '{}') || {}; } catch (x) {}
+      e.source.postMessage({ roc: 'code', code: localStorage.getItem(SIGNIN_KEY) || '', level: lv.level || '', who: lv.who || '' }, e.origin);
+    } else if (d.roc === 'save' && typeof d.code === 'string' && d.code.length < 200) {
+      localStorage.setItem(SIGNIN_KEY, d.code);
+      if (/^(member|board|manager)$/.test(d.level || '')) localStorage.setItem(LEVEL_KEY, JSON.stringify({ level: d.level, who: String(d.who || '').slice(0, 80) }));
+    } else if (d.roc === 'forget') { localStorage.removeItem(SIGNIN_KEY); localStorage.removeItem(LEVEL_KEY); }
   } catch (err) {}
 });
 </script>
