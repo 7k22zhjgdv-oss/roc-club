@@ -812,7 +812,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   function saveCode(c, level, who){ try { localStorage.setItem('rocPass', c); } catch(e){} wrapSend({roc: 'save', code: c, level: level, who: who}); }
   function loadCode(){ return CODE; }
   function savedCode(){ try { return localStorage.getItem('rocPass') || ''; } catch(e){ return ''; } }
-  function forgetCode(){ try { localStorage.removeItem('rocPass'); } catch(e){} wrapSend({roc: 'forget'}); }
+  function forgetCode(){ try { localStorage.removeItem('rocPass'); localStorage.removeItem('rocChemData'); } catch(e){} wrapSend({roc: 'forget'}); }
   window.rocCode = function(){ return CODE; };
   var calLevel = 'public';
   function setLevel(level, who){
@@ -1363,23 +1363,23 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
 </script>
 <style>
 /* donation popup (Zeffy form) for computers - moved here from the old Hosting Wrapper */
-.give-back { position: fixed; inset: 0; z-index: 90; background: rgba(8,6,3,.62); opacity: 0; transition: opacity .25s; }
-.give-panel:focus { outline: none; }
-.give-panel { position: fixed; z-index: 91; left: 50%; top: 50%; width: min(560px, calc(100vw - 32px)); height: min(860px, calc(100vh - 48px));
+.dn-back { position: fixed; inset: 0; z-index: 90; background: rgba(8,6,3,.62); opacity: 0; transition: opacity .25s; }
+.dn-panel:focus { outline: none; }
+.dn-panel { position: fixed; z-index: 91; left: 50%; top: 50%; width: min(560px, calc(100vw - 32px)); height: min(860px, calc(100vh - 48px));
   transform: translate(-50%, -48%); opacity: 0; transition: opacity .25s, transform .25s; display: flex; flex-direction: column;
   background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
-.give-back[hidden], .give-panel[hidden] { display: none; }
-.give-open .give-back { opacity: 1; }
-.give-open .give-panel { opacity: 1; transform: translate(-50%, -50%); }
-.give-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; outline: none;
+.dn-back[hidden], .dn-panel[hidden] { display: none; }
+.dn-open .dn-back { opacity: 1; }
+.dn-open .dn-panel { opacity: 1; transform: translate(-50%, -50%); }
+.dn-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; outline: none;
   background: #140F09; color: #FFF8EC; font: 600 15px/1.2 "Jost", "Avenir Next", "Futura", "Segoe UI", system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
-.give-head span b { color: #D69A4A; font-weight: 600; }
-.give-x { border: 0; background: none; color: #FFF8EC; font: 22px/1 system-ui, sans-serif; cursor: pointer; padding: 2px 6px; opacity: .8; }
-.give-x:hover { opacity: 1; }
-.give-body { position: relative; flex: 1; background: #fff; }
-.give-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.give-wait { position: absolute; inset: 0; display: grid; place-items: center; color: #6b6259; font: 15px system-ui, sans-serif; }
-@media (prefers-reduced-motion: reduce) { .give-back, .give-panel { transition: none; } }
+.dn-head span b { color: #D69A4A; font-weight: 600; }
+.dn-x { border: 0; background: none; color: #FFF8EC; font: 22px/1 system-ui, sans-serif; cursor: pointer; padding: 2px 6px; opacity: .8; }
+.dn-x:hover { opacity: 1; }
+.dn-body { position: relative; flex: 1; background: #fff; }
+.dn-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.dn-wait { position: absolute; inset: 0; display: grid; place-items: center; color: #6b6259; font: 15px system-ui, sans-serif; }
+@media (prefers-reduced-motion: reduce) { .dn-back, .dn-panel { transition: none; } }
 </style>
 <script>
 // Donate. Phones and tablets: the link simply opens Zeffy's own donation page full screen - Apple Pay / Google Pay only
@@ -1391,30 +1391,30 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var touch = window.matchMedia('(hover: none) and (pointer: coarse)'), give = null, giveReturn = null;
   function openDonate(){
     if (!give){
-      var back = document.createElement('div'); back.className = 'give-back';
-      var panel = document.createElement('div'); panel.className = 'give-panel';
+      var back = document.createElement('div'); back.className = 'dn-back';
+      var panel = document.createElement('div'); panel.className = 'dn-panel';
       panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', 'Donate to Rolling Oaks Club');
-      panel.innerHTML = '<div class="give-head"><span>Support the <b>Club &amp; Grounds</b></span><button type="button" class="give-x" aria-label="Close">×</button></div>' +
-        '<div class="give-body"><div class="give-wait">Loading secure donation form…</div></div>';
+      panel.innerHTML = '<div class="dn-head"><span>Support the <b>Club &amp; Grounds</b></span><button type="button" class="dn-x" aria-label="Close">×</button></div>' +
+        '<div class="dn-body"><div class="dn-wait">Loading secure donation form…</div></div>';
       var f = document.createElement('iframe');
       f.title = 'Donation form, powered and secured by Zeffy'; f.setAttribute('allow', 'payment');
-      f.addEventListener('load', function(){ var w = panel.querySelector('.give-wait'); if (w) w.remove(); try { f.contentWindow.postMessage({ id: 'zeffy-iframe', open: true }, '*'); } catch(x){} });
+      f.addEventListener('load', function(){ var w = panel.querySelector('.dn-wait'); if (w) w.remove(); try { f.contentWindow.postMessage({ id: 'zeffy-iframe', open: true }, '*'); } catch(x){} });
       f.src = DONATE_URL;
-      panel.querySelector('.give-body').appendChild(f);
+      panel.querySelector('.dn-body').appendChild(f);
       document.body.appendChild(back); document.body.appendChild(panel);
       back.addEventListener('click', closeDonate);
-      panel.querySelector('.give-x').addEventListener('click', closeDonate);
+      panel.querySelector('.dn-x').addEventListener('click', closeDonate);
       give = { back: back, panel: panel, frame: f };
     } else {
       try { give.frame.contentWindow.postMessage({ id: 'zeffy-iframe', open: true }, '*'); } catch(x){}
     }
     giveReturn = document.activeElement;
     give.back.hidden = false; give.panel.hidden = false; give.panel.tabIndex = -1;
-    setTimeout(function(){ document.body.classList.add('give-open'); try { give.panel.focus(); } catch(x){} }, 20);
+    setTimeout(function(){ document.body.classList.add('dn-open'); try { give.panel.focus(); } catch(x){} }, 20);
   }
   function closeDonate(){
-    if (!give || !document.body.classList.contains('give-open')) return;
-    document.body.classList.remove('give-open');
+    if (!give || !document.body.classList.contains('dn-open')) return;
+    document.body.classList.remove('dn-open');
     setTimeout(function(){ give.back.hidden = true; give.panel.hidden = true; }, 260);
     if (giveReturn && giveReturn.focus) try { giveReturn.focus(); } catch(x){}
   }
