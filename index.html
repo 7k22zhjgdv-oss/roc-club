@@ -471,6 +471,11 @@ html{overflow-x:clip}
 .bg-sky,.bg-beams{background-repeat:no-repeat;background-size:100% 100%}
 .bg-tint{left:0;right:0;bottom:-600px}
 .bg-shade{inset:0}
+/* a copy of the beams (with their share of the darkening) IN FRONT of the hanging sign, shown only while the sign is
+   smacked: the sign flies up behind the beam and its bottom peeks over the top, between the beam and the tree.
+   Masked by the beams picture itself so only beam/tree pixels cover the sign; placed by the script "Background". */
+.bgfront{position:absolute;left:0;top:0;bottom:0;width:100vw;z-index:1;overflow:hidden;pointer-events:none}
+.bf-beams{position:absolute;background-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 @keyframes bgDrift { from { transform: translateY(0); } to { transform: translateY(var(--drift, 0px)); } }
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
@@ -561,6 +566,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   </div>
 
 </main>
+<div class="bgfront" aria-hidden="true" hidden><div class="bf-beams"></div></div>
 
 <div class="lower">
 <div class="scenery" aria-hidden="true"><div class="ripples"><i class="rip r1"></i><i class="rip r2"></i></div></div>
@@ -1474,7 +1480,9 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var mq = window.matchMedia('(max-aspect-ratio: 9/10), (max-width: 560px)');
   var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky'), beams = stack.querySelector('.bg-beams');
   var tint = stack.querySelector('.bg-tint'), shade = stack.querySelector('.bg-shade'), root = document.documentElement;
-  var heroH = 0;
+  var heroH = 0, fbeams = document.querySelector('.bf-beams');
+  // the darkening at the top of the page, for a box whose top is `top` px down the page
+  function shadeAt(top){ return 'linear-gradient(180deg, rgba(20,15,9,.62) ' + (0 - top) + 'px, rgba(20,15,9,.22) ' + (170 - top) + 'px, rgba(20,15,9,0) ' + (320 - top) + 'px)'; }
   function px(el, l, t, w, h){ el.style.left = Math.round(l) + 'px'; el.style.top = Math.round(t) + 'px'; el.style.width = Math.round(w) + 'px'; el.style.height = Math.round(h) + 'px'; }
   function place(){
     // desktop: size to the FULL window width (innerWidth): Safari keeps a scrollbar-wide strip at the right edge and the
@@ -1498,8 +1506,15 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     // past the picture's bottom the page fades into the pool's colour
     tint.style.top = Math.round(y + h - 380) + 'px';
     tint.style.background = 'linear-gradient(180deg, rgba(' + TINT + ',0) 0, rgba(' + TINT + ',1) 378px)';
-    shade.style.background = 'linear-gradient(180deg, rgba(20,15,9,.62) 0px, rgba(20,15,9,.22) 170px, rgba(20,15,9,0) 320px),' +
+    shade.style.background = shadeAt(0) + ',' +
       'linear-gradient(180deg, rgba(8,12,14,0) ' + Math.round(heroH - 60) + 'px, rgba(8,12,14,.32) ' + Math.round(heroH + 220) + 'px, rgba(8,12,14,.42) 100%)';
+    // the copy in front of the sign: same picture and place, with the top darkening shifted to match
+    if (layered){
+      px(fbeams, x, y, w, h * BEAMH);
+      fbeams.style.backgroundImage = shadeAt(Math.round(y)) + ', url("' + BEAMS + '")';
+      fbeams.style.backgroundSize = '100% 100%';
+      fbeams.style.webkitMaskImage = fbeams.style.maskImage = 'url("' + BEAMS + '")';
+    }
     root.style.setProperty('--hero-h', heroH + 'px');
     root.style.setProperty('--drift', (layered ? Math.round(DEPTH * heroH) : 0) + 'px');
     if (scen && lower) scen.style.top = Math.max(0, Math.round(y + h * WATER - lower.offsetTop)) + 'px';
@@ -1509,7 +1524,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   function low(){ var on = window.pageYOffset > heroH; if (on !== root.classList.contains('low')) root.classList.toggle('low', on); }
   window.addEventListener('scroll', low, { passive: true });
   // WebP check: if this browser can't show the sky layer, switch to the single flat photo
-  var probe = new Image(); probe.onerror = function(){ layered = false; place(); }; probe.src = SKY;
+  var probe = new Image(); probe.onerror = function(){ layered = false; window.rocBeamsFront = false; place(); }; probe.src = SKY;
   // the sign's entrance waits for the beams to be drawn (at most 3 seconds)
   var beamImg = new Image();
   window.rocBeamsReady = new Promise(function(res){ beamImg.onload = beamImg.onerror = function(){ res(); }; setTimeout(res, 3000); });
@@ -1531,10 +1546,10 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   if (!hb || !board || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   hb.classList.add('pre');
   setTimeout(function(){ hb.classList.remove('pre'); }, 6000);   // safety: never leave the sign hidden
-  var jos = hb.querySelector('.jostle'), smackAnim = null;
+  var jos = hb.querySelector('.jostle'), front = document.querySelector('.bgfront'), smackAnim = null, textAnims = [];
   function play(smack){
     if (smack) return doSmack();
-    if (smackAnim){ smackAnim.cancel(); smackAnim = null; }
+    if (smackAnim){ smackAnim.cancel(); smackAnim = null; if (front) front.hidden = true; }
     hb.classList.remove('pre', 'enter', 'in-swing');
     if (board.hidden) return;
     void hb.offsetWidth;
@@ -1545,10 +1560,10 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   });
 
   // Smack (replay button, or a tap anywhere on the sign): it flies up behind the beam (fast, slowing like it's thrown
-  // upward), hangs a moment, then falls and rocks to rest - bigger and longer than the entrance (each swing about 3/4
+  // upward) until its bottom peeks over the top of the beam (the beams copy .bgfront is in front of it meanwhile), turns over smoothly at the top, then falls and rocks to rest - bigger and longer than the entrance (each swing about 3/4
   // of the last). It starts from wherever the sign is at that moment, so smacking it again mid-swing carries on smoothly.
   // [time 0-1, angle (deg), easing to the next point]; 4.6s in all
-  var SMACK = [[0, null, 'cubic-bezier(.1, .8, .35, 1)'], [.083, -119, 'ease-in-out'], [.1, -121, 'cubic-bezier(.5, 0, .9, .55)'],
+  var SMACK = [[0, null, 'cubic-bezier(.2, .75, .45, 1)'], [.09, -140, 'cubic-bezier(.5, 0, .9, .55)'],
     [.224, 0, 'cubic-bezier(.15, .5, .5, 1)'], [.291, 34, 'ease-in-out'], [.4, -26, 'ease-in-out'], [.507, 19, 'ease-in-out'],
     [.611, -13, 'ease-in-out'], [.713, 8, 'ease-in-out'], [.813, -4, 'ease-in-out'], [.909, 1.5, 'ease-in-out'], [1, 0, 'linear']];
   function angleNow(){   // the sign's current front-to-back angle, read from what is on screen
@@ -1561,12 +1576,20 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     if (board.hidden || !jos.animate) return;
     var from = angleNow();
     if (smackAnim) smackAnim.cancel();
-    hb.classList.remove('pre', 'in-swing');
-    hb.classList.add('enter');
+    hb.classList.remove('pre', 'in-swing', 'enter');
+    // flat-photo fallback (no separate beams): cut off at the beam as in the entrance instead
+    if (front && window.rocBeamsFront !== false) front.hidden = false; else hb.classList.add('enter');
     var anim = smackAnim = jos.animate(SMACK.map(function(k){
       return { offset: k[0], transform: 'rotateX(' + (k[1] === null ? from : k[1]) + 'deg)', easing: k[2] };
     }), { duration: 4600 });
-    anim.onfinish = function(){ if (smackAnim === anim){ smackAnim = null; hb.classList.remove('enter'); } };
+    // while it is tipped past flat we see its back: the words and drawing fade out (so no mirror-image text over the beam)
+    var o0 = from < -90 ? 0 : 1;
+    textAnims.forEach(function(t){ t.cancel(); });
+    textAnims = Array.prototype.map.call(board.querySelectorAll('.bm-body, .bm-side, .bm-date > *, .bm-replay'), function(el){
+      return el.animate([{ offset: 0, opacity: o0 }, { offset: .015, opacity: o0 }, { offset: .03, opacity: 0 },
+        { offset: .168, opacity: 0 }, { offset: .18, opacity: 1 }, { offset: 1, opacity: 1 }], { duration: 4600 });
+    });
+    anim.onfinish = function(){ if (smackAnim === anim){ smackAnim = null; hb.classList.remove('enter'); if (front) front.hidden = true; } };
   }
 
   function addReplay(){
