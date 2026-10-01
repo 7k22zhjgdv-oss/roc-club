@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <script>if (/[?&]r=/.test(location.search)) history.replaceState(null, '', location.pathname);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
@@ -2117,7 +2117,7 @@ window.rocStartPump = function (DATA) {
 <script>
 (function(){
   // Splashscreen (home) link. Paste its .../exec URL between the quotes once it is deployed.
-  var HOME_URL = '../home/';
+  var HOME_URL = '../';
   var dlg = document.getElementById('navDlg'), btn = document.getElementById('navBtn'), home = document.getElementById('homeLink');
   if (HOME_URL) home.href = HOME_URL; else home.removeAttribute('href');
   dlg.addEventListener('close', function(){ btn.setAttribute('aria-expanded', 'false'); });
@@ -2160,7 +2160,7 @@ window.rocStartPump = function (DATA) {
   }
   function signOut(){
     CODE = ''; setLevel('public'); gate('in');
-    try { localStorage.removeItem(KEY); } catch(e){}
+    try { localStorage.removeItem(KEY); localStorage.removeItem('rocChemData'); } catch(e){}
     wrapSend({roc: 'forget'});
   }
   /** code: from the wrapper (fromWrap) or this device; typed = from the dialog (shows errors there). */
