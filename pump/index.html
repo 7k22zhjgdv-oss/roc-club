@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>if (/[?&]r=/.test(location.search)) history.replaceState(null, '', location.pathname);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="../apple-touch-icon.png">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -1197,7 +1198,7 @@ window.rocStartPump = function (DATA) {
         return;
       }
       scheduleStatusEl.textContent = 'Saved — reloading with the new schedule…';
-      window.location.reload();
+      window.location.replace(location.pathname + '?r=' + Date.now());
     }).withFailureHandler(function (err) {
       scheduleStatusEl.textContent = 'Save failed — try again.';
       scheduleSaveBtnEl.disabled = false;
