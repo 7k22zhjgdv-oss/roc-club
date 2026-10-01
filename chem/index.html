@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
@@ -887,7 +887,7 @@ var PRINT_COLS = ['fc','cc','ph','ta','ch','cya','salt','bor','tempF','csi'].map
 // Tint the printed column headers with each reading's color. Set to false to go back to plain gray headers.
 var PRINT_HEADER_TINT = false;
 // Splashscreen (home) link. Paste its .../exec URL between the quotes once it is deployed.
-var HOME_URL = '../home/';
+var HOME_URL = '../';
 var PRINT_TITLE = 'Rolling Oaks Club - Pool Report';
 var SAFARI_SCALE = 1.0667;         // Safari prints every CSS length (px, pt, in) 6.67% larger than Chrome, but its page area stays 10in
 var PRINT_BOX_IN = 9.25;           // CSS height of one page box (also in the .ppage rule). Must stay under 10 / 1.0667 = 9.37in
@@ -2049,7 +2049,7 @@ var WRAP_ORIGIN = 'https://7k22zhjgdv-oss.github.io';
 function wrapSend(msg){ try { if (window.top !== window) window.top.postMessage(msg, WRAP_ORIGIN); } catch(e){} }
 function saveCode(c, res){ try { localStorage.setItem('rocPass', c); } catch(e){} wrapSend({roc: 'save', code: c, level: res && res.level, who: res && res.who}); }
 function loadCode(){ try { return localStorage.getItem('rocPass') || ''; } catch(e){ return ''; } }
-function forgetCode(){ try { localStorage.removeItem('rocPass'); } catch(e){} wrapSend({roc: 'forget'}); }
+function forgetCode(){ try { localStorage.removeItem('rocPass'); localStorage.removeItem('rocChemData'); } catch(e){} wrapSend({roc: 'forget'}); }
 function setUnlocked(on, level, who){
   var was = LEVEL;
   unlocked = on;
@@ -2068,6 +2068,7 @@ function setUnlocked(on, level, who){
 }
 function applyUnlocked(data, code, res){
   DATA = data; CODE = code; setUnlocked(true, (res && res.level) || data.level, res && res.who); renderAll();
+  try { localStorage.setItem('rocChemData', JSON.stringify({ level: LEVEL, who: WHO, data: data })); } catch(e){}
 }
 function lockNow(msg){
   CODE = ''; forgetCode();
@@ -2136,7 +2137,7 @@ function autoUnlock(code){
     if (code){                                   // the wrapper's copy is stale: drop it there, never sign this page out for it
       if (res && res.why === 'wrong') wrapSend({roc: 'forget'});
       if (unlocked && CODE) wrapSend({roc: 'save', code: CODE});
-    } else if (!unlocked) handleDenied(res);
+    } else handleDenied(res);
   }, function(){ done(); /* offline or slow: stay locked quietly */ });
 }
 // the wrapper answers {roc:'hello'} with {roc:'code', code} - the key number / password signed in on any ROC tool
@@ -2916,7 +2917,11 @@ document.addEventListener('DOMContentLoaded', function(){
     setLoading(true); wrapSend({roc: 'hello'});
     setTimeout(function(){ autoUnlock(); if (!autoBusy) setLoading(false); }, 900);
   }
-  else autoUnlock();
+  else {
+    autoUnlock();
+    var kept = null; try { kept = JSON.parse(localStorage.getItem('rocChemData') || 'null'); } catch(e){}
+    if (kept && kept.data && loadCode()){ DATA = kept.data; CODE = loadCode(); setUnlocked(true, kept.level, kept.who); renderAll(); setLoading(false); }
+  }
   serverCall('publicData', [], function(res){
     if (!res || !res.ok || !res.data) return;
     try { localStorage.setItem('rocChemPublic', JSON.stringify(res.data)); } catch(e){}
