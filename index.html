@@ -124,7 +124,15 @@ if (SWITCHABLE[start]) {
   };
   FRAMES[start].addEventListener('load', function () { setTimeout(preload, 2500); });
   setTimeout(preload, 8000);
+  // signed in: start Chemistry at once alongside the first page (it needs ~3-5 s from Google, then its readings), so it is
+  // usually ready by the time someone taps it on Home
+  if (start !== 'chem' && signedIn()) setTimeout(function () { frameFor('chem'); }, 300);
 }
+// iPhone: typing in a tool (sign-in) can scroll this page under the frame, and it may stay shifted after the keyboard closes,
+// so taps land off from the buttons. This page never scrolls, so put it back at the top whenever it moves.
+function unshift() { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }
+window.addEventListener('scroll', unshift);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { setTimeout(unshift, 100); });
 window.addEventListener('popstate', function (e) {
   var p = (e.state && e.state.p) || pageFrom(location.search);
   if (SWITCHABLE[p] && SWITCHABLE[current]) show(p, false); else location.reload();
