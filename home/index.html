@@ -372,9 +372,10 @@ dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-
 .bm-date span { font-size: .78rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
 .bm-date b { font-size: 2.3rem; line-height: 1; font-weight: 700; }
 .bm-body { flex: 1; min-width: 0; padding: 14px 20px; display: flex; flex-direction: column; gap: 3px; text-shadow: 0 1px 3px rgba(20,12,4,.55); }
-/* replay: a small, faint dark icon on the oak date tile swings the sign in again - bottom-right of the tile on phones,
-   top-right on desktop (the tile is 88px wide). The hover circle is for mouse pointers only (phones keep it after a tap). */
-.bm-replay { position: absolute; left: 54px; bottom: 2px; z-index: 2; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
+/* replay: a small, faint dark icon inside the oak date tile swings the sign in again - bottom-right corner on phones,
+   top-right on desktop. The hover circle is for mouse pointers only (phones keep it after a tap). */
+.bm-date { position: relative; }
+.bm-replay { position: absolute; right: 2px; bottom: 2px; z-index: 2; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
   display: grid; place-items: center; background: transparent; color: var(--bark); opacity: .45; cursor: pointer; transition: opacity .2s, background .2s; }
 @media (hover: hover) { .bm-replay:hover { opacity: .9; background: rgba(20,15,9,.1); } }
 .bm-replay:focus-visible { opacity: .9; background: rgba(20,15,9,.1); }
@@ -452,7 +453,27 @@ dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-
    at the end (measurements are there; the phone numbers below must match it). */
 .photo{display:none!important}
 .lower{background:transparent!important}
-body{background-color:#16110B;background-repeat:no-repeat}
+/* The picture lives in .bgstack (behind everything, the full height of the page): .bg-move holds the sky/pool and the
+   pool-colour fade below it; .bg-beams and .bg-shade (darkening at the top and below the hero) sit still on top.
+   Depth: .bg-move and the ripples drift down a little while the top section scrolls (CSS scroll-driven animation, so the
+   browser moves them in step with scrolling; no script runs on scroll). Placed by the script "Background". */
+body{position:relative;z-index:0;background-color:#16110B}
+/* page colour: Safari colours its top bar with it at the top of the page, and shows it past the ends. Near-black at the
+   top (the roof), the footer's teal-slate once the top section has scrolled away (html.low, set by the script). */
+html.low body{background-color:#263437}
+html{overflow-x:clip}
+.bgstack{position:absolute;left:0;top:0;bottom:0;width:100vw;z-index:-1;overflow:hidden;pointer-events:none}
+.bgstack div{position:absolute}
+.bg-move{left:0;top:0;width:100%;height:100%}
+.bg-sky,.bg-beams{background-repeat:no-repeat;background-size:100% 100%}
+.bg-tint{left:0;right:0;bottom:-600px}
+.bg-shade{inset:0}
+@keyframes bgDrift { from { transform: translateY(0); } to { transform: translateY(var(--drift, 0px)); } }
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .bg-move, .scenery { animation: bgDrift linear both; animation-timeline: scroll(root); animation-range: 0px var(--hero-h, 600px); }
+  }
+}
 /* no visible scrollbar on this page: with "always show scroll bars" Safari paints the scrollbar channel in plain
    background colour, never the photo, leaving a strip down the right edge. Scrolling (trackpad, wheel, keys) still works. */
 html{scrollbar-width:none}
@@ -518,6 +539,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 </style>
 </head>
 <body>
+<div class="bgstack" aria-hidden="true"><div class="bg-move"><div class="bg-sky"></div><div class="bg-tint"></div></div><div class="bg-beams"></div><div class="bg-shade"></div></div>
 
 <main class="splash">
   <div class="photo" role="img" aria-label="A metal oak tree silhouette under a timber pavilion roof, with the inscription: Designed and built by your neighbors for the love of community"></div>
@@ -1069,16 +1091,22 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   }
   function hideTip(){ tip.hidden = true; tipFor = null; }
   function tipTarget(t){ return t && t.closest ? t.closest('[data-i]') : null; }
+  // a tap on a phone also fires mouseover/focus first; those would open the tip and the tap's click would close it again,
+  // so for touch only the click counts
+  var touchTap = false;
+  document.addEventListener('pointerdown', function(ev){ touchTap = ev.pointerType === 'touch' || ev.pointerType === 'pen'; }, true);
   [calGrid, calList, $('wkGrid')].forEach(function(box){
-    box.addEventListener('mouseover', function(ev){ var el = tipTarget(ev.target); if (el && el !== tipFor) showTip(el); });
+    box.addEventListener('mouseover', function(ev){ if (touchTap) return; var el = tipTarget(ev.target); if (el && el !== tipFor) showTip(el); });
     box.addEventListener('mouseout', function(ev){ var el = tipTarget(ev.target); if (el && !el.contains(ev.relatedTarget)) hideTip(); });
-    box.addEventListener('focusin', function(ev){ var el = tipTarget(ev.target); if (el) showTip(el); });
+    box.addEventListener('focusin', function(ev){ if (touchTap) return; var el = tipTarget(ev.target); if (el) showTip(el); });
     box.addEventListener('focusout', hideTip);
     box.addEventListener('click', function(ev){ var el = tipTarget(ev.target); if (!el) return; if (tipFor === el) hideTip(); else showTip(el); });
   });
   document.addEventListener('click', function(ev){ if (!tipTarget(ev.target)) hideTip(); });
   window.addEventListener('scroll', hideTip, { passive: true });
-  window.addEventListener('resize', hideTip);
+  // phones resize the window when the browser's bars slide in or out; only a width change should close the tip
+  var tipW = window.innerWidth;
+  window.addEventListener('resize', function(){ if (window.innerWidth !== tipW){ tipW = window.innerWidth; hideTip(); } });
 
   // month data, kept for the visit: {"year-month": events}. Months are fetched three at a time and the next ones ahead of time.
   var monthCache = {}, pending = {};
@@ -1253,7 +1281,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         var when = d.toLocaleDateString('en-US', { weekday: 'long' }) + (ev.allDay ? '' : ' \u00b7 ' + fmtTime(ev.start));
         calBoard.hidden = false;
         calBoard.innerHTML =
-          '<div class="bm-date" aria-hidden="true"><span>' + monthNames[d.getMonth()].slice(0, 3) + '</span><b>' + d.getDate() + '</b></div>' +
+          '<div class="bm-date"><span aria-hidden="true">' + monthNames[d.getMonth()].slice(0, 3) + '</span><b aria-hidden="true">' + d.getDate() + '</b></div>' +
           '<div class="bm-body">' +
             '<div class="bm-top"><span class="bm-eyebrow">Next board meeting</span>' + (badge ? '<span class="bm-badge' + (days <= 1 ? ' now' : '') + '">' + badge + '</span>' : '') + '</div>' +
             '<div class="bm-when"><span class="sr-only">' + fmtDate(ev.start) + ', </span>' + when + '</div>' +
@@ -1377,15 +1405,19 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
    (pool-beams.webp, the top 953 rows of the same 2000x4615 picture, so both share one size and position). Both on the
    wrapper's GitHub site. Browsers that can't show WebP get the single flat photo (pool-flat.jpg).
    Measured in the picture: beam bottom 20.5% down, inscription 31.5% wide centred at 49.75%, left treetop 11.4%,
-   water starts 49.1%. Depth: while the top section scrolls, the sky and pool drift a little slower than the beams. */
+   water starts 49.1%. Depth: while the top section scrolls, the sky and pool drift a little slower than the beams
+   (CSS bgDrift; --drift and --hero-h are set here). */
 (function(){
   var BASE = 'https://7k22zhjgdv-oss.github.io/roc-club/';
   var SKY = BASE + 'pool-sky.webp', BEAMS = BASE + 'pool-beams.webp', FLAT = BASE + 'pool-flat.jpg';
   var RATIO = 4615 / 2000, BEAMH = 953 / 4615, PHONE = .75, UP = 56, GAP = 36, TREETOP = .114, BEAM = .205, INS = .315, INSX = .4975, WATER = .491, TINT = '129,166,165';
-  var DEPTH = .18, layered = true, depthOn = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DEPTH = .18, layered = true;
   var splash = document.querySelector('.splash'), lower = document.querySelector('.lower'), scen = document.querySelector('.scenery');
   var mq = window.matchMedia('(max-aspect-ratio: 9/10), (max-width: 560px)');
-  var g = null, lastD = 0, bs = document.body.style;
+  var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky'), beams = stack.querySelector('.bg-beams');
+  var tint = stack.querySelector('.bg-tint'), shade = stack.querySelector('.bg-shade'), root = document.documentElement;
+  var heroH = 0;
+  function px(el, l, t, w, h){ el.style.left = Math.round(l) + 'px'; el.style.top = Math.round(t) + 'px'; el.style.width = Math.round(w) + 'px'; el.style.height = Math.round(h) + 'px'; }
   function place(){
     // desktop: size to the FULL window width (innerWidth): Safari keeps a scrollbar-wide strip at the right edge and the
     // picture has to run underneath it or it shows as a light strip
@@ -1400,34 +1432,24 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
       if (target < need){ splash.style.minHeight = Math.ceil(splash.offsetHeight + need - target) + 'px'; target = need; }
       w = h / RATIO; x = (W - w) / 2; y = target - BEAM * h;
     }
-    g = { W: W, w: Math.round(w), h: Math.round(h), x: Math.round(x), y: Math.round(y), heroH: splash.offsetHeight,
-          page: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) };
+    heroH = splash.offsetHeight;
+    sky.style.backgroundImage = 'url("' + (layered ? SKY : FLAT) + '")';
+    px(sky, x, y, w, h);
+    beams.hidden = !layered;
+    if (layered){ beams.style.backgroundImage = 'url("' + BEAMS + '")'; px(beams, x, y, w, h * BEAMH); }
+    // past the picture's bottom the page fades into the pool's colour
+    tint.style.top = Math.round(y + h - 380) + 'px';
+    tint.style.background = 'linear-gradient(180deg, rgba(' + TINT + ',0) 0, rgba(' + TINT + ',1) 378px)';
+    shade.style.background = 'linear-gradient(180deg, rgba(20,15,9,.62) 0px, rgba(20,15,9,.22) 170px, rgba(20,15,9,0) 320px),' +
+      'linear-gradient(180deg, rgba(8,12,14,0) ' + Math.round(heroH - 60) + 'px, rgba(8,12,14,.32) ' + Math.round(heroH + 220) + 'px, rgba(8,12,14,.42) 100%)';
+    root.style.setProperty('--hero-h', heroH + 'px');
+    root.style.setProperty('--drift', (layered ? Math.round(DEPTH * heroH) : 0) + 'px');
     if (scen && lower) scen.style.top = Math.max(0, Math.round(y + h * WATER - lower.offsetTop)) + 'px';
-    // the colour underneath never shows, but Safari tints its window frame with it and picks the scrollbar shade from it
-    bs.backgroundColor = '#16110B';
-    bs.backgroundRepeat = 'no-repeat';
-    paint();
+    low();
   }
-  // sky/pool offset: grows while the top section scrolls past, then holds (so the pool below lines up again)
-  function drift(){ return (layered && depthOn) ? Math.round(DEPTH * Math.min(window.pageYOffset, g.heroH)) : 0; }
-  function paint(){
-    if (!g) return;
-    var d = lastD = drift(), bottom = g.y + g.h + d, full = g.W + 'px ' + g.page + 'px';
-    var img = [
-      'linear-gradient(180deg, rgba(20,15,9,.62) 0px, rgba(20,15,9,.22) 170px, rgba(20,15,9,0) 320px)',
-      'linear-gradient(180deg, rgba(8,12,14,0) ' + Math.round(g.heroH - 60) + 'px, rgba(8,12,14,.32) ' + Math.round(g.heroH + 220) + 'px, rgba(8,12,14,.42) 100%)',
-      'linear-gradient(180deg, rgba(' + TINT + ',0) ' + (bottom - 380) + 'px, rgba(' + TINT + ',1) ' + (bottom - 2) + 'px)'
-    ], size = [full, full, full], pos = ['0 0', '0 0', '0 0'];
-    if (layered){ img.push('url("' + BEAMS + '")'); size.push(g.w + 'px ' + Math.round(g.w * 953 / 2000) + 'px'); pos.push(g.x + 'px ' + g.y + 'px'); }
-    img.push('url("' + (layered ? SKY : FLAT) + '")'); size.push(g.w + 'px ' + g.h + 'px'); pos.push(g.x + 'px ' + (g.y + d) + 'px');
-    bs.backgroundImage = img.join(','); bs.backgroundSize = size.join(','); bs.backgroundPosition = pos.join(',');
-    if (scen) scen.style.transform = d ? 'translateY(' + d + 'px)' : '';
-  }
-  var ticking = false;
-  window.addEventListener('scroll', function(){
-    if (!depthOn || !layered || ticking || !g) return;
-    ticking = true; requestAnimationFrame(function(){ ticking = false; if (drift() !== lastD) paint(); });
-  }, { passive: true });
+  // page colour (see the CSS): teal-slate once the top section has scrolled away. Only a class flips; nothing is redrawn.
+  function low(){ var on = window.pageYOffset > heroH; if (on !== root.classList.contains('low')) root.classList.toggle('low', on); }
+  window.addEventListener('scroll', low, { passive: true });
   // WebP check: if this browser can't show the sky layer, switch to the single flat photo
   var probe = new Image(); probe.onerror = function(){ layered = false; place(); }; probe.src = SKY;
   // the sign's entrance waits for the beams to be drawn (at most 3 seconds)
@@ -1467,7 +1489,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     b.type = 'button'; b.className = 'bm-replay'; b.title = 'Swing the sign again'; b.setAttribute('aria-label', 'Swing the sign again');
     b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v4.5H8"/></svg>';
     b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); play(); });
-    board.appendChild(b);
+    (board.querySelector('.bm-date') || board).appendChild(b);
   }
   window.rocSignEnter = function(){
     if (board.hidden){ hb.classList.remove('pre'); return; }
