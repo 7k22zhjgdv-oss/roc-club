@@ -467,7 +467,7 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 
 /* ---------------------------------------------------------------- print */
 @media print{
-  @page{size:letter portrait;margin:.5in}
+  @page{size:letter portrait;margin:.5in .5in .25in}
   html,body{background:#fff !important;color:#000 !important}
   body{padding:0;font-size:10pt}
   .wrap{display:none !important}
@@ -532,7 +532,7 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 #printView tr.predrow td{color:#777;font-style:italic;background:linear-gradient(90deg,#777 50%,transparent 0) top left/6px 1px repeat-x #fff;white-space:nowrap}
 #printView tr.dim td.green,#printView tr.dim td.yellow,#printView tr.dim td.red,#printView tr.dim td.purple{background:#fff;font-weight:400}
 #printView tr.dim td[class*=" "]{}
-#printView .ppage{display:flex;flex-direction:column;height:9.25in;break-after:page;page-break-after:always}
+#printView .ppage{display:flex;flex-direction:column;height:9.55in;break-after:page;page-break-after:always}
 #printView .ppage.last{break-after:auto;page-break-after:auto}
 #printView .ppage table{flex:0 0 auto}
 #printView .pgap{flex:0 0 auto}
@@ -890,10 +890,11 @@ var PRINT_HEADER_TINT = false;
 var HOME_URL = '../';
 var PRINT_TITLE = 'Rolling Oaks Club - Pool Report';
 var SAFARI_SCALE = 1.0667;         // Safari prints every CSS length (px, pt, in) 6.67% larger than Chrome, but its page area stays 10in
-var PRINT_BOX_IN = 9.25;           // CSS height of one page box (also in the .ppage rule). Must stay under 10 / 1.0667 = 9.37in
+var PRINT_BOX_IN = 9.55;           // CSS height of one page box (also in the .ppage rule). Page area is 10.25in (@page margins .5in top, .25in bottom; Safari obeys them, tested 2026-10-01), so this must stay under 10.25 / 1.0667 = 9.61in
 var PRINT_PAGE_PT = PRINT_BOX_IN * 72 * SAFARI_SCALE;   // that box as Safari really prints it (Chrome is smaller, so anything that fits here fits there)
-var PRINT_ROW_PT = 15.5;           // Safari row = 13.5pt*1.0667 + 0.8pt border = 15.2pt (Chrome 14.25pt); count 15.5pt so a page can never overfill
-var PRINT_LEGEND_PT = 0.68 * 72 * SAFARI_SCALE;   // room kept for the legend at the bottom of each page
+var PRINT_ROW_PT = 15.3;           // Safari row = 13.5pt*1.0667 + 0.8pt border = 15.2pt (measured from a Safari PDF; Chrome 14.25pt); count 15.3pt so a page can never overfill
+var PRINT_LIST_GAP_PT = 6;         // extra space above the separate "Chemical additions" heading, below the test log
+var PRINT_LEGEND_PT = 0.56 * 72 * SAFARI_SCALE;   // room kept for the legend at the bottom of each page (it measures 0.50in)
 
 /* ------------------------------------------------------------ helpers */
 function $(id){ return document.getElementById(id); }
@@ -1875,6 +1876,7 @@ function buildPrint(o){
     esc(o.whole && (from || to) ? 'Highlighted: ' + rangeText + ' (full log shown)' : rangeText) + '</span></div>';
   var showCost = !!(o.chem && unlocked && DATA.hasPrices);
   var printSpend = showCost ? spendFor(from, to) : null;
+  var testCost = showCost && !o.group;   // with chemicals listed separately the test table has no Cost column
   if (printSpend && (printSpend.priced || printSpend.unpriced)){
     head += '<div class="pmeta pcost"><b>Chemical Use:</b> ' + (printSpend.priced
       ? spendParts(printSpend).map(function(p, i, all){ return (i === all.length - 1 ? '<b>' : '') + p[0] + ' ' + money(p[1]) + (i === all.length - 1 ? '</b>' : ''); }).join(' &nbsp;·&nbsp; ') + (spendNote(printSpend) ? ' &nbsp;(' + esc(spendNote(printSpend)) + ')' : '')
@@ -1887,7 +1889,7 @@ function buildPrint(o){
 
   var thead ='<thead><tr><th style="text-align:left">Date / Time</th>' +
     PRINT_COLS.map(function(c){ return '<th' + (PRINT_HEADER_TINT ? ' class="r-' + c[0] + '"' : c[0] === 'bor' ? ' class="pbor"' : '') + '>' + (c[0] === 'bor' ? 'Bor' : c[1]) + '</th>'; }).join('') +
-    (showCost ? '<th>Cost</th>' : '') + '</tr></thead>';
+    (testCost ? '<th>Cost</th>' : '') + '</tr></thead>';
   var theadB = '<thead><tr><th style="text-align:left">Date / Time</th><th colspan="' + PRINT_COLS.length + '" style="text-align:left">Chemical additions</th>' + (showCost ? '<th>Cost</th>' : '') + '</tr></thead>';
   var rowHtml = rows.map(function(r){
     var dim = o.whole && (from || to) && !inRange(r.d.day, from, to);
@@ -1900,7 +1902,7 @@ function buildPrint(o){
           if (!isNum(v)) return '<td' + (storeBlank ? ' class="noread"' : '') + '></td>';
           var col = (c[2] && !dim) ? colorOf(c[2], v) : '';
           return '<td class="' + col + (storeBlank && !col ? ' noread' : '') + '">' + (col ? '<span class="pg">' + GLYPH[col] + '</span>' : '') + fmtNum(v) + '</td>';
-        }).join('') + (showCost ? '<td' + (storeBlank ? ' class="noread"' : '') + '></td>' : '') + '</tr>';
+        }).join('') + (testCost ? '<td' + (storeBlank ? ' class="noread"' : '') + '></td>' : '') + '</tr>';
     }
     if (r.type === 'p'){
       var by = {}; r.pred.vals.forEach(function(v){ by[v.k] = v; });
@@ -1922,14 +1924,14 @@ function buildPrint(o){
   if (o.group){
     var nT = 0, nC = 0;
     rows.forEach(function(r, ix){ if (r.type === 't'){ items.push({t: 'a', h: rowHtml[ix], m: meta[ix]}); nT++; } });
-    if (!nT) items.push({t: 'a', h: '<tr><td colspan="' + (PRINT_COLS.length + 1 + (showCost ? 1 : 0)) + '">No readings in this range.</td></tr>'});
+    if (!nT) items.push({t: 'a', h: '<tr><td colspan="' + (PRINT_COLS.length + 1 + (testCost ? 1 : 0)) + '">No readings in this range.</td></tr>'});
     rows.forEach(function(r, ix){ if (r.type !== 't'){ if (!nC) items.push({t: 's'}); nC++; items.push({t: 'b', h: rowHtml[ix], m: meta[ix]}); } });
   }
   if (!rowHtml.length) rowHtml.push('<tr><td colspan="' + (PRINT_COLS.length + 1 + (showCost ? 1 : 0)) + '">No readings in this range.</td></tr>');
   var legend = '<div class="plegend">' + legendItems() + '</div>';
 
-  // Every page is its own fixed-height box with the legend pinned to its bottom, so the footer shows on all pages
-  // and never depends on how a browser paginates tables (Safari does not repeat table footers or fixed elements).
+  // Every page is its own fixed-height box; page 1 has the legend pinned to its bottom (later pages use that room for rows),
+  // so nothing depends on how a browser paginates tables (Safari does not repeat table footers or fixed elements).
   // Every table row is forced to a fixed height in POINTS (Safari's CSS pixel is 0.8pt, not 0.75pt, so anything
   // sized in px comes out 7% bigger there; points and inches are physical everywhere), so how many rows fit on a page
   // is plain arithmetic. Only the title block on page 1 is measured (with a margin).
@@ -1943,22 +1945,20 @@ function buildPrint(o){
   // The stock block is one last "item" as tall as it measures, so pagination keeps room for it (or starts a new page);
   // it is drawn after that page's tables, pushed down to sit just above the legend.
   if (stockHtml) items.push({t: 'k', w: stockPt});
-  function paginate(newPageForList){
+  function paginate(){
     var out = [], i = 0;
     while (i < items.length || !out.length){
-      var availPt = PRINT_PAGE_PT - PRINT_LEGEND_PT - PRINT_ROW_PT - (out.length ? 0 : headPt), used = 0, pg = [];
+      var availPt = PRINT_PAGE_PT - PRINT_ROW_PT - (out.length ? 0 : headPt + PRINT_LEGEND_PT), used = 0, pg = [];   // the legend is on page 1 only
       while (i < items.length){
-        var w = items[i].t === 's' ? 2 * PRINT_ROW_PT : items[i].t === 'k' ? items[i].w : PRINT_ROW_PT;
-        if (pg.length && (used + w > availPt || (items[i].t === 's' && (newPageForList || used + w + PRINT_ROW_PT > availPt)))) break;   // no heading left alone at the bottom of a page
+        var w = items[i].t === 's' ? 2 * PRINT_ROW_PT + PRINT_LIST_GAP_PT * SAFARI_SCALE + 1 : items[i].t === 'k' ? items[i].w : PRINT_ROW_PT;
+        if (pg.length && (used + w > availPt || (items[i].t === 's' && used + w + PRINT_ROW_PT > availPt))) break;   // no heading left alone at the bottom of a page
         pg.push(items[i]); used += w; i++;
       }
       out.push(pg);
     }
     return out;
   }
-  // Separate chemical list: it shares a page with the test log only when everything fits on one page; otherwise it starts a new page.
-  var pages = paginate(false);
-  if (o.group && pages.length > 1) pages = paginate(true);
+  var pages = paginate();   // a separate chemical list follows straight on below the test log, on the same page when there is room
   function pageTables(pg){
     var out = '', buf = [], cur = '';
     // The day is written once at the first row of each day (and again at the top of every page).
@@ -1977,7 +1977,7 @@ function buildPrint(o){
       if (it.t === 'k') return;                          // the stock block is added after the tables (below)
       // start of the separate chemical list: its heading fills the one-row gap (already counted in the separator's height),
       // drawn whether the list continues a page or starts a new one
-      if (it.t === 's'){ flush(); out += '<div class="pgap psech pgaph" style="height:' + PRINT_ROW_PT + 'pt">Chemical additions</div>'; cur = 'b'; return; }
+      if (it.t === 's'){ flush(); out += '<div class="pgap psech pgaph" style="height:' + (PRINT_ROW_PT + PRINT_LIST_GAP_PT) + 'pt">Chemical additions</div>'; cur = 'b'; return; }
       if (it.t !== cur){ flush(); cur = it.t; }
       buf.push(it);
     });
@@ -1988,7 +1988,7 @@ function buildPrint(o){
   pv.innerHTML = pages.map(function(pg, n){
     var hasStock = pg.some(function(it){ return it.t === 'k'; });
     return '<div class="ppage' + (n === pages.length - 1 ? ' last' : '') + '">' + (n === 0 ? head : '') + pageTables(pg) +
-      (hasStock ? '<div class="pstockend">' + stockHtml + '</div>' : '') + legend + '</div>';
+      (hasStock ? '<div class="pstockend">' + stockHtml + '</div>' : '') + (n === 0 ? legend : '') + '</div>';
   }).join('');
   return {rows: rowHtml.length, pages: pages.length};
 }
