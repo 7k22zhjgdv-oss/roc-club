@@ -239,7 +239,7 @@ dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-
        (--board-h is set by the page once the meeting has loaded; 0 when there is none) */
     --mid: 50vh;
     height: calc(var(--mid) - 20px + var(--ih) * .205 + 22px + var(--board-h, 150px) + 28px); min-height: 0;
-    overflow: hidden;
+    overflow-x: clip; overflow-y: visible;   /* not hidden: that cut the sign's shadow off in a hard line 28px under it */
     justify-content: flex-end;
     gap: 0;
     padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px));
@@ -329,7 +329,8 @@ dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-
 }
 .sec-eyebrow.cal-title { margin-bottom: 6px; }
 /* welcome: a centred "lead" paragraph, grouped with the board card above (small gap) and set apart from the calendar */
-.welcome { margin: 0 auto 68px; padding: 22px 0 14px; max-width: 760px; text-align: center; font-size: 1.38rem; line-height: 1.45; text-wrap: pretty; color: var(--paper); text-shadow: 0 1px 2px rgba(0,0,0,.6), 0 0 16px rgba(20,15,9,.65); }
+.welcome { margin: 0 auto 68px; padding: 22px 0 14px; max-width: 760px; text-align: center; font-size: 1.38rem; line-height: 1.45; text-wrap: pretty; color: var(--paper); text-shadow: 0 1px 2px rgba(0,0,0,.6), 0 0 16px rgba(20,15,9,.65);
+  position: relative; z-index: 2; }   /* above the hanging sign, so the sign's shadow falls behind the words, not across them */
 @media (max-width: 560px) { .welcome { font-size: 1rem; margin: 0 auto 60px; padding: 0; } }
 .cal-legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 16px; font-size: .9rem; color: var(--paper-2); }
 .cal-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
@@ -379,6 +380,9 @@ dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-
 @media (hover: hover) { .bm-replay:hover { opacity: .9; background: rgba(255,248,236,.12); } }
 .bm-replay:focus-visible { opacity: .9; background: rgba(255,248,236,.12); }
 .bm-replay svg { width: 15px; height: 15px; }
+/* the whole sign can be smacked (script "Sign entrance"); not while editing its wording */
+.hero-board #calBoard:not(.loading) { cursor: pointer; }
+body.editing .hero-board #calBoard { cursor: auto; }
 @media (hover: none) { .bm-replay { opacity: .6; } }
 @media (min-aspect-ratio: 9/10) and (min-width: 561px) { .bm-replay { bottom: auto; top: 2px; } }
 .bm-top { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
@@ -534,6 +538,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   82%  { transform: rotateX(-3deg);   animation-timing-function: ease-in-out; }
   100% { transform: rotateX(0deg); }
 }
+
 
 </style>
 </head>
@@ -1526,28 +1531,69 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   if (!hb || !board || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   hb.classList.add('pre');
   setTimeout(function(){ hb.classList.remove('pre'); }, 6000);   // safety: never leave the sign hidden
-  function play(){
+  var jos = hb.querySelector('.jostle'), smackAnim = null;
+  function play(smack){
+    if (smack) return doSmack();
+    if (smackAnim){ smackAnim.cancel(); smackAnim = null; }
     hb.classList.remove('pre', 'enter', 'in-swing');
     if (board.hidden) return;
     void hb.offsetWidth;
     hb.classList.add('enter', 'in-swing');
   }
-  hb.querySelector('.jostle').addEventListener('animationend', function(e){
+  jos.addEventListener('animationend', function(e){
     if (e.target === e.currentTarget) hb.classList.remove('enter', 'in-swing');
   });
+
+  // Smack (replay button, or a tap anywhere on the sign): it flies up behind the beam (fast, slowing like it's thrown
+  // upward), hangs a moment, then falls and rocks to rest - bigger and longer than the entrance (each swing about 3/4
+  // of the last). It starts from wherever the sign is at that moment, so smacking it again mid-swing carries on smoothly.
+  // [time 0-1, angle (deg), easing to the next point]; 4.6s in all
+  var SMACK = [[0, null, 'cubic-bezier(.1, .8, .35, 1)'], [.083, -119, 'ease-in-out'], [.1, -121, 'cubic-bezier(.5, 0, .9, .55)'],
+    [.224, 0, 'cubic-bezier(.15, .5, .5, 1)'], [.291, 34, 'ease-in-out'], [.4, -26, 'ease-in-out'], [.507, 19, 'ease-in-out'],
+    [.611, -13, 'ease-in-out'], [.713, 8, 'ease-in-out'], [.813, -4, 'ease-in-out'], [.909, 1.5, 'ease-in-out'], [1, 0, 'linear']];
+  function angleNow(){   // the sign's current front-to-back angle, read from what is on screen
+    var m = /matrix3d\(([^)]+)\)/.exec(getComputedStyle(jos).transform || '');
+    if (!m) return 0;
+    var n = m[1].split(',').map(parseFloat);
+    return Math.atan2(n[6], n[5]) * 180 / Math.PI;
+  }
+  function doSmack(){
+    if (board.hidden || !jos.animate) return;
+    var from = angleNow();
+    if (smackAnim) smackAnim.cancel();
+    hb.classList.remove('pre', 'in-swing');
+    hb.classList.add('enter');
+    var anim = smackAnim = jos.animate(SMACK.map(function(k){
+      return { offset: k[0], transform: 'rotateX(' + (k[1] === null ? from : k[1]) + 'deg)', easing: k[2] };
+    }), { duration: 4600 });
+    anim.onfinish = function(){ if (smackAnim === anim){ smackAnim = null; hb.classList.remove('enter'); } };
+  }
 
   function addReplay(){
     if (board.querySelector('.bm-replay')) return;
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'bm-replay'; b.title = 'Swing the sign again'; b.setAttribute('aria-label', 'Swing the sign again');
     b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v4.5H8"/></svg>';
-    b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); play(); });
+    b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); play(true); });
     board.appendChild(b);
   }
+  // a tap or click anywhere else on the sign smacks it too - except on or near (GAP px) its two links, while editing
+  // the wording, or when the click ends a text selection
+  var GAP = 14;
+  board.addEventListener('click', function(e){
+    if (e.target.closest('a, button, [contenteditable="true"]') || document.body.classList.contains('editing') || board.classList.contains('loading')) return;
+    var sel = window.getSelection && window.getSelection();
+    if (sel && !sel.isCollapsed && board.contains(sel.anchorNode)) return;
+    var near = Array.prototype.some.call(board.querySelectorAll('a'), function(a){
+      var r = a.getBoundingClientRect();
+      return e.clientX > r.left - GAP && e.clientX < r.right + GAP && e.clientY > r.top - GAP && e.clientY < r.bottom + GAP;
+    });
+    if (!near) play(true);
+  });
   window.rocSignEnter = function(){
     if (board.hidden){ hb.classList.remove('pre'); return; }
     addReplay();
-    Promise.resolve(window.rocBeamsReady).then(function(){ requestAnimationFrame(function(){ setTimeout(play, 120); }); });
+    Promise.resolve(window.rocBeamsReady).then(function(){ requestAnimationFrame(function(){ setTimeout(function(){ play(false); }, 120); }); });
   };
 })();
 </script>
