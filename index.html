@@ -19,12 +19,6 @@
   .tool { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; visibility: hidden; pointer-events: none; z-index: 0; }
   .tool.on { visibility: visible; pointer-events: auto; z-index: 1; }
   @supports (height: 100dvh) { .tool { height: 100dvh; } }
-  /* phone bar colours: Safari tints its top and bottom bars from what sits at each edge of THIS page (it can't see into
-     the frames), so a page can give each edge its own colour (TOOLS edge: [top, bottom]). Touch screens only. */
-  .edge { position: fixed; left: 0; right: 0; z-index: 2; pointer-events: none; display: none; }
-  .edge.top { top: 0; height: max(2px, env(safe-area-inset-top, 0px)); }
-  .edge.bot { bottom: 0; height: max(2px, env(safe-area-inset-bottom, 0px)); }
-  @media (hover: none) and (pointer: coarse) { body.edges .edge { display: block; } }
   /* donation popup (Zeffy form), opened by a tool's Donate button */
   .give-back { position: fixed; inset: 0; z-index: 20; background: rgba(8,6,3,.62); opacity: 0; transition: opacity .25s; }
   .give-panel:focus { outline: none; }
@@ -51,16 +45,15 @@
 </style>
 </head>
 <body>
-<div class="edge top" id="edgeTop"></div><div class="edge bot" id="edgeBot"></div>
 <noscript>This page needs JavaScript. You can also open the tools directly:
   <a href="https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec">Home</a>.</noscript>
 <script>
 // The three tools. If a tool's Apps Script address ever changes, edit it here
 // (this is the only place it lives now, besides the wrapper links inside each tool).
 var TOOLS = {
-  // bg: [light, dark] colour behind the frame (and the browser's tinted bar). edge: [top, bottom] colours for the phone's
-  // top and bottom bars. Home: near-black (the darkened roof behind the title) on top, deep pool teal-slate at the bottom.
-  home: { title: 'Rolling Oaks Club', bg: ['#16110B', '#16110B'], edge: ['#16110B', '#2E4748'],
+  // bg: [light, dark] colour behind the frame. On iPhone Safari this colours the BOTTOM bar; the top bar takes the
+  // background colour of the page inside the frame (Home sets near-black). Home: deep pool teal-slate.
+  home: { title: 'Rolling Oaks Club', bg: ['#2E4748', '#2E4748'], top: '#16110B',
           url: 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec' },
   pump: { title: 'Rolling Oaks Club - Water Systems Dashboard',
           url: 'https://script.google.com/macros/s/AKfycbyT2vJWAEfvHBqsMxAdcuO4xUCuDDVUZ6Uw-0xbxJSfFM0rsj0oJNRX53gclWo-hWMRQg/exec' },
@@ -118,10 +111,8 @@ function applyBg(t) {
   var bg = t.bg || ['#ffffff', '#111111'];
   bgStyle.textContent = 'html, body { background: ' + bg[1] + '; } @media (prefers-color-scheme: light) { html, body { background: ' + bg[0] + '; } }';
   document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
-    m.content = /dark/.test(m.getAttribute('media')) ? bg[1] : bg[0];
+    m.content = t.top || (/dark/.test(m.getAttribute('media')) ? bg[1] : bg[0]);
   });
-  document.body.classList.toggle('edges', !!t.edge);
-  if (t.edge) { document.getElementById('edgeTop').style.background = t.edge[0]; document.getElementById('edgeBot').style.background = t.edge[1]; }
 }
 show(start, false);
 // once the first page is up, quietly load the others in PRELOAD so switching to them is instant
