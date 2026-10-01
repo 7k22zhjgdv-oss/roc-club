@@ -6,8 +6,7 @@
 <link rel="icon" href="../apple-touch-icon.png">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script>
-// Server calls: the page is not inside Apps Script here, so google.script.run.x(...) is sent to the Home web app (doPost)
-// as plain text (no CORS preflight); the reply {value} or {error} goes to the success / failure handler as usual.
+// Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
   var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText"];
   function call(fn, args, ok, fail){
@@ -647,14 +646,14 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     </div>
     <div class="si-in">
     <nav class="links" aria-label="Dashboards">
-      <a class="card" id="pumping-card" href="https://7k22zhjgdv-oss.github.io/roc-club/?p=pump" target="_top" rel="noopener">
+      <a class="card" id="pumping-card" href="https://7k22zhjgdv-oss.github.io/roc-club/?p=pump" rel="noopener">
         <h2 class="dash-h">Water Pumping<span class="dash"> Dashboard</span></h2>
         <p>Water use from well and pool.</p>
         <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
       </a>
 
       <div class="card-wrap">
-        <a class="card" id="chem-card" href="https://7k22zhjgdv-oss.github.io/roc-club/?p=chem" target="_top" rel="noopener">
+        <a class="card" id="chem-card" href="../chem/" rel="noopener">
           <h2 class="dash-h">Pool Chemistry<span class="dash"> Dashboard</span></h2>
           <p>Test readings against target ranges.</p>
           <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
@@ -686,7 +685,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     </div>
     <div class="foot-col">
       <h3>Contact</h3>
-      <a href="mailto:inforollingoaksclub@yahoo.com" target="_top">inforollingoaksclub@yahoo.com</a>
+      <a href="mailto:inforollingoaksclub@yahoo.com">inforollingoaksclub@yahoo.com</a>
     </div>
     <nav class="foot-col" aria-label="Quick links">
       <h3>Quick links</h3>
