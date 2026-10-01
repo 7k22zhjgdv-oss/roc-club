@@ -2160,7 +2160,7 @@ window.rocStartPump = function (DATA) {
   }
   function signOut(){
     CODE = ''; setLevel('public'); gate('in');
-    try { localStorage.removeItem(KEY); } catch(e){}
+    try { localStorage.removeItem(KEY); localStorage.removeItem('rocChemData'); } catch(e){}
     wrapSend({roc: 'forget'});
   }
   /** code: from the wrapper (fromWrap) or this device; typed = from the dialog (shows errors there). */
