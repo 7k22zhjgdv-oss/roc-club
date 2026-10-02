@@ -1689,8 +1689,8 @@ function renderTrackers(){
   $('up').hidden = el.hidden && $('tdue').hidden;
   renderUpDetails(ts);
 }
-/** Coming up "Details": Stock (each dosing card's chemical: Plenty / Low stock / Out of stock and about how many more
- *  fillings / doses / shocks it covers - t.stock from the server; then any other chemical running low) and Next 7 days. */
+/** Coming up "Details": Next 7 days, Stock alerts (Low stock / Out of stock only) and Full stock;
+ *  "about N more fillings / doses / shocks" comes from t.stock (server) and shows on both lists. */
 function renderUpDetails(ts){
   var st = DATA.stock || {}, shown = {}, rows = [];
   function chemName(key){
@@ -1708,19 +1708,21 @@ function renderUpDetails(ts){
     return '<li><b>' + esc(chemName(key)) + '</b> · <span class="s lv-' + lv[0] + '">' + lv[1] + '</span>' +
       (x.left > 0 ? ' · ' + (more ? esc(more) + ' (' + esc(fmtNum(x.left) + ' ' + x.unit) + ' left)' : esc(fmtNum(x.left) + ' ' + x.unit) + ' left') : '') + '</li>';
   }
-  var ord = trkOrder(ts);
+  // "about N more fillings / doses / shocks" per chemical, from the dosing cards (t.stock, server); shown on alerts and in Full stock
+  var moreBy = {}, ord = trkOrder(ts), alertKeys = [];
   ord.main.concat(ord.extra).forEach(function(i){
     var t = ts[i], x = t.stock;
-    if (!x || shown[x.key] || !st[x.key]) return;
-    shown[x.key] = true;
+    if (!x || moreBy[x.key] != null || !st[x.key]) return;
     var word = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['filling', 'fillings'];
-    var more = x.n == null ? '' : (level(st[x.key])[1] === 'Plenty' ? 'enough for about ' : 'about ') + x.n + ' more ' + word[x.n === 1 ? 0 : 1];
-    rows.push(line(x.key, st[x.key], more));
+    moreBy[x.key] = x.n == null ? '' : (level(st[x.key])[1] === 'Plenty' ? 'enough for about ' : 'about ') + x.n + ' more ' + word[x.n === 1 ? 0 : 1];
+    alertKeys.push(x.key);
   });
-  Object.keys(st).sort().forEach(function(key){
+  // Stock alerts: Low stock / Out of stock only - the dosing cards' chemicals first, then any other active chemical
+  alertKeys.concat(Object.keys(st).sort()).forEach(function(key){
     var x = st[key];
-    if (shown[key] || isInactive({name: key}) || x.pct >= STOCK_YELLOW_PCT) return;
-    rows.push(line(key, x, ''));
+    if (shown[key] || isInactive({name: key}) || level(x)[1] === 'Plenty') return;
+    shown[key] = true;
+    rows.push(line(key, x, moreBy[key] || ''));
   });
   var stockHtml = '<div><h3>Stock alerts</h3>' + (rows.length ? '<ul>' + rows.join('') + '</ul>' : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
   // Next 7 days: every card and test with a due day up to a week out (daily tests left out); past due days count as "Now"
@@ -1750,7 +1752,7 @@ function renderUpDetails(ts){
     full = '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>' +
       '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + FULL_ORDER.filter(function(g){ return groups[g].length; }).map(function(g){
-        return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ return line(c.name.toLowerCase(), st[c.name.toLowerCase()], ''); }).join('') + '</ul></div>';
+        return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ var k = c.name.toLowerCase(); return line(k, st[k], moreBy[k] || ''); }).join('') + '</ul></div>';
       }).join('') + '</div>';
   }
   $('upDet').innerHTML = weekHtml + stockHtml + full;   // Next 7 days first (left on computers, top on phones)
