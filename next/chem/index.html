@@ -1695,7 +1695,7 @@ function renderUpDetails(ts){
   var st = DATA.stock || {}, shown = {}, rows = [];
   function chemName(key){
     var c = (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === key; })[0];
-    return c ? stockPrintName(c.name) : key;
+    return shortProduct(c ? stockPrintName(c.name) : key) || key;   // no strength: "Cal-Hypo 70%" -> "Cal-Hypo"
   }
   function level(x){
     if (x.pct <= 0 || x.left <= 0) return ['red', 'Out of stock'];
