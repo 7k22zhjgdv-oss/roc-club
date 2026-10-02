@@ -36,7 +36,7 @@
   --line:#e4e3de; --accent:#1f6feb; --accentInk:#ffffff; --soft:#f1f0ec;
   --green:#0ca30c; --yellow:#fab219; --red:#d03b3b; --purple:#7a4fd0;
   --gTint:rgba(12,163,12,.14); --yTint:rgba(250,178,25,.22); --rTint:rgba(208,59,59,.14); --pTint:rgba(122,79,208,.14);
-  --chemTint:rgba(31,111,235,.07);
+  --chemTint:rgba(31,111,235,.07); --panel:#f3f4ef;
   --k-orenda:#1f6feb; --k-odd:#6f6f68;
   --k-fc:#ab23d8; --k-cc:#ab23d8; --k-ph:#c72c45; --k-ta:#517729; --k-ch:#367590; --k-cya:#98581d; --k-salt:#656565; --k-bor:#a04e4b; --k-tempF:#a95b21; --k-csi:#637c43;
 }
@@ -45,7 +45,7 @@
     --bg:#1a1a19; --card:#242423; --ink:#f2f2ee; --ink2:#c4c4bd; --muted:#9a9a92;
     --line:#3a3a37; --accent:#5b9bff; --accentInk:#0d0d0c; --soft:#2d2d2b;
     --gTint:rgba(12,163,12,.26); --yTint:rgba(250,178,25,.26); --rTint:rgba(208,59,59,.30); --pTint:rgba(150,110,235,.30);
-    --chemTint:rgba(91,155,255,.10);
+    --chemTint:rgba(91,155,255,.10); --panel:#232522;
     --k-orenda:#5b9bff; --k-odd:#9a9a92;
     --k-fc:#d48cf2; --k-cc:#d48cf2; --k-ph:#f0788d; --k-ta:#9cc46a; --k-ch:#6db5d4; --k-cya:#d99a5a; --k-salt:#b0b0b0; --k-bor:#d99590; --k-tempF:#e0955a; --k-csi:#a7c47f;
   }
@@ -209,12 +209,16 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c{flex:0 0 auto;min-width:128px;max-width:190px;scroll-snap-align:start;text-align:left;font:inherit;color:var(--ink);background:var(--card);
   border:1px solid var(--line);border-left:4px solid var(--lc,var(--line));border-radius:12px;padding:7px 11px 8px;cursor:pointer}
 .trk-c.lv-green{--lc:var(--green);background:color-mix(in srgb,var(--green) 10%,var(--card))}
-/* status line under the days (same wording as the printed report): OVERDUE · since …, DUE NOW · since …, NEXT DUE · … */
+/* status line under the days (same wording as the printed report): LATE · since …, DUE NOW · since …, DUE · … */
 .trk-w{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .trk-w .s{font-weight:800;letter-spacing:.03em;text-transform:uppercase}
 .trk-c.lv-green .trk-w .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-w .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-w .s{color:var(--red)}
+.trk-k{color:var(--ink)} .trk-d{font-size:12px;font-weight:400;color:var(--muted)}
+.trk-c.lv-green .trk-k{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
+.trk-c.lv-yellow .trk-k{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
+.trk-c.lv-red .trk-k{color:var(--red)}
 .trk-c.lv-yellow{--lc:var(--yellow);background:var(--yTint)}
 .trk-c.lv-red{--lc:var(--red);background:var(--rTint)}
 .trk-c.popopen{box-shadow:0 0 0 2px var(--accent)}
@@ -237,17 +241,23 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chipPop .mksw .tgl{flex:0 0 auto}
 .chipPop .mksw .tgl:disabled{opacity:.6}
 @media print{ .mk{display:none !important} }
-/* "Tests due" line under the cards (Trackers tab rows of Type Test; Board / Manager): TA · Next due Oct 3 ... */
+/* "Tests due" pills under the cards (Trackers tab rows of Type Test; Board / Manager): TA DUE · Oct 3, FC DONE, CYA LATE · Sep 28 */
 .tdue.priv{display:flex}
+.tbrk{display:none}
+@media (max-width:560px){ .tbrk{display:block;flex-basis:100%;height:0} }
 .tdue[hidden]{display:none !important}
 .tdue{flex-wrap:wrap;align-items:center;gap:6px;margin:-6px 0 14px;font-size:12.5px;color:var(--muted)}
-.tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:0;border-radius:999px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+.tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:1px solid transparent;border-radius:999px;padding:2px 9px;cursor:pointer;white-space:nowrap}
 .tdc b{color:var(--ink);font-weight:700;margin-right:4px}
 .tdc .s{font-weight:800;letter-spacing:.03em;text-transform:uppercase;font-size:11px}
 .tdc.lv-green{background:color-mix(in srgb,var(--green) 10%,var(--card))} .tdc.lv-green .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .tdc.lv-yellow{background:var(--yTint)} .tdc.lv-yellow .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .tdc.lv-red{background:var(--rTint)} .tdc.lv-red .s{color:var(--red)}
 .tdc.popopen{box-shadow:0 0 0 2px var(--accent)}
+/* outline in the status color so the pills and cards stand out on the Coming up panel (2026-10-02) */
+.tdc.lv-green{--lc:var(--green)} .tdc.lv-yellow{--lc:var(--yellow)} .tdc.lv-red{--lc:var(--red)}
+.tdc.lv-green,.tdc.lv-yellow,.tdc.lv-red,.trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-color:color-mix(in srgb,var(--lc) 45%,var(--card))}
+.trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-left-color:var(--lc)}
 .trk-more{flex:0 0 auto;align-self:stretch;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:transparent;border:1px dashed var(--line);border-radius:12px;padding:0 14px;cursor:pointer;white-space:nowrap}
 .trk-c.extra{border-style:dashed;border-left-style:solid}
 /* computers: the main cards share one line (no scroll bar); with "More" open they keep their size and the row scrolls */
@@ -295,6 +305,32 @@ dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 body:not(.unlocked) .priv{display:none !important}
 body.unlocked .pub{display:none !important}
 body:not(.unlocked) .seg{display:none !important}
+/* "Coming up" panel (tracker cards + tests due) and the "History" row with Options (2026-10-02).
+   Phones: panel 6px from the screen edge, 7px inside. Options (dates, view, costs) is closed on every visit; Members have nothing in it, so no button. */
+.up.priv{display:block}
+.up[hidden]{display:none !important}
+.up{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:7px;margin:0 -4px 0}
+.up .trk{margin:0;padding-bottom:2px}
+.up .tdue{margin:0}
+.up .trk:not([hidden])+.tdue{margin-top:6px}
+/* phones: the row break is its own (empty) flex line, so the 6px between pill rows comes from the pills' own margins, not row-gap */
+@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
+.seclbl{font-size:12px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.up .seclbl{display:block;margin:1px 3px 6px}
+.histrow.priv{display:flex}
+.histrow{align-items:center;gap:8px;margin:16px 2px 8px;min-height:32px}
+.hrng{font-size:12px;color:var(--muted);white-space:nowrap}
+.hrng:empty{display:none}
+.hrng::before{content:"· ";}
+.hln{flex:1;height:1px;background:var(--line);min-width:12px}
+.optbtn{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 10px 5px 12px;min-height:32px;cursor:pointer;white-space:nowrap}
+.optbtn svg{transition:transform .15s}
+.optbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.optbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts:not(.open){display:none}
+body.lvl-member .opts{display:block}
+body.lvl-member .optbtn,body.lvl-member .up{display:none !important}
+body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 /* sign-in levels (body.lvl-member / lvl-board / lvl-manager): .brd = Board and Manager, .mgr = Manager only */
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
@@ -720,8 +756,16 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
   </div>
   <div class="skel" id="skel" aria-hidden="true"></div>
   <p class="lvlnote" id="lvlNote" hidden></p>
-  <div class="trk priv" id="trk" aria-label="Last added" hidden></div>
-  <div class="tdue priv brd" id="tdue" aria-label="Tests due" hidden></div>
+  <div class="up priv" id="up" hidden>
+    <div class="seclbl">Coming up</div>
+    <div class="trk priv" id="trk" aria-label="Last added" hidden></div>
+    <div class="tdue priv brd" id="tdue" aria-label="Tests due" hidden></div>
+  </div>
+  <div class="histrow priv" id="histRow">
+    <span class="seclbl">History</span><span class="hrng" id="histRange"></span><span class="hln" aria-hidden="true"></span>
+    <button type="button" class="optbtn" id="optBtn" aria-expanded="false" aria-controls="opts">Options<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+  </div>
+  <div class="opts" id="opts">
 
   <div class="mchips">
     <button type="button" class="cbtn" id="dateChip"><span id="dateChipTxt"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
@@ -748,6 +792,7 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
       <p class="count" id="count"></p>
       <p class="spend" id="spend"></p>
     </div>
+  </div>
   </div>
   <div id="list"></div>
   <div class="legend" id="legend"></div>
@@ -1491,7 +1536,7 @@ function openPopFor(chip, pinned){
 
 // ------------------------------------------------------------------ "last added" trackers (rows of the Trackers tab; unlocked only)
 // Always all-time: the date range above does not change them. Yellow/red come from the tab's Warn / Overdue days.
-var TRK_WORD = {green: 'On track', yellow: 'Due now', red: 'Overdue', none: ''};
+var TRK_WORD = {green: 'On track', yellow: 'Due now', red: 'Late', none: ''};
 function daysBetween(a, b){ var p = a.split('-'), q = b.split('-'); return Math.round((Date.UTC(+q[0], +q[1]-1, +q[2]) - Date.UTC(+p[0], +p[1]-1, +p[2])) / 86400000); }
 function trkState(t){
   var ev = t.events && t.events[0];
@@ -1519,18 +1564,38 @@ function trkWhat(t, ev){
 var trkShowMore = false;   // "More" cards open (Show = More on the Trackers tab); closed again on every load
 var trkEdit = -1;          // index of the tracker whose timing form is open in the popover
 var trkMsg = '';           // error under that form
-// Sort order: overdue, due soon, on track, no warnings set, no record. Within a color, the one furthest into its window first.
+// Sort order: late, due now, on track, no warnings set, no record. Within a color, the earliest due date first (2026-10-02).
 var TRK_RANK = {red: 0, yellow: 1, green: 2, none: 3};
 function trkSortKey(t){
   var s = trkState(t);
   if (s.d === null) return [4, 0];
-  var span = t.over != null ? t.over : t.warn;
-  return [TRK_RANK[s.lv], span ? -s.d / span : 0];
+  var span = t.warn != null ? t.warn : t.over;   // the due day = last + Warn (or Overdue when no Warn)
+  return [TRK_RANK[s.lv], span != null ? span - s.d : 0];
 }
 /** "Acid feeder filled" / "Orenda PR-10000 dosed" / "Superchlorinated" - the card's (and report tile's) top line. */
 function trkLabel(t){ return t.name + (t.type === 'slow' ? ' filled' : t.type === 'product' ? ' dosed' : ''); }
+/** Cards with due dates (2026-10-02) lead with what to do and when: "Fill acid feeder" / "Due in 2 days · Oct 4" / "Filled 5 days ago". */
+function trkJob(t){
+  if (t.type === 'slow') return 'Fill ' + (/^[A-Z][a-z]/.test(t.name) ? t.name.charAt(0).toLowerCase() + t.name.slice(1) : t.name);
+  if (t.type === 'product') return 'Dose ' + t.name;
+  if (t.type === 'shock') return 'Superchlorinate';
+  return t.name;
+}
+function trkDoneWord(t){ return t.type === 'slow' ? 'Filled' : t.type === 'product' ? 'Dosed' : 'Done'; }
+/** {word, day, ago} for a card with Warn / Overdue days and a record; null otherwise. Days late count from the due day. */
+function trkDue(t, s, ev){
+  if (!ev || s.lv === 'none' || s.d === null) return null;
+  var span = t.warn != null ? t.warn : t.over, left = span - s.d, word;
+  if (s.lv === 'red') word = -left > 0 ? -left + (left === -1 ? ' day late' : ' days late') : 'Late';
+  else if (s.lv === 'yellow') word = 'Due now';
+  else word = left === 1 ? 'Due tomorrow' : 'Due in ' + left + ' days';
+  return {word: word, day: trkDay(addDays(ev.day, span)), ago: trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase()};
+}
 function trkCard(t, i){
-  var s = trkState(t), ev = t.events && t.events[0];
+  var s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
+  if (du) return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkJob(t) + ': ' + du.word + ', ' + du.day + '. ' + du.ago) + '">' +
+    '<span class="trk-n">' + esc(trkJob(t)) + '</span><span class="trk-a"><span class="trk-k">' + esc(du.word) + '</span><span class="trk-d"> · ' + esc(du.day) + '</span></span>' +
+    '<span class="trk-w">' + esc(du.ago) + '</span></button>';
   return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkLabel(t) + ': ' + (s.d === null ? 'no record' : agoText(s.d)) + (TRK_WORD[s.lv] ? ', ' + TRK_WORD[s.lv] : '')) + '">' +
     '<span class="trk-n">' + esc(trkLabel(t)) + '</span><span class="trk-a">' + (s.d === null ? 'No record' : esc(agoText(s.d))) + '</span>' +
     (ev ? '<span class="trk-w">' + trkWhenHtml(t, s, ev) + '</span>' : '') + '</button>';
@@ -1595,21 +1660,30 @@ function renderTrackers(){
   el.classList.toggle('open', trkShowMore && extra.length > 0);
   el.hidden = !(main.length + extra.length);
   renderTestsDue(ts);
+  $('up').hidden = el.hidden && $('tdue').hidden;
 }
-/** "Tests due" pills under the cards (no heading): one per Test row, most urgent first. */
+/** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
+ *  (other tests at the end of that row). Within a row, Late pills move to the front, then Due, then the rest in that order.
+ *  Phones start each row on its own line (.tbrk); computers show one line. */
+var TEST_ORDER = ['fc', 'cc', 'ph', 'ta', 'ch', 'cya'];
 function renderTestsDue(ts){
   var el = $('tdue'), idx = [];
   ts.forEach(function(t, i){ if (t.type === 'test' && (t.warn != null || t.err)) idx.push(i); });
-  idx.sort(function(a, b){ var sa = trkState(ts[a]), sb = trkState(ts[b]); return TRK_RANK[sa.lv] - TRK_RANK[sb.lv] || (sa.due || '').localeCompare(sb.due || '') || a - b; });
-  el.innerHTML = idx.map(function(i){
+  function pos(t){ var k = TEST_ORDER.indexOf(String(t.name).trim().toLowerCase()); return k < 0 ? 99 : k; }
+  function row(t){ return pos(t) < 3 ? 0 : 1; }
+  function urg(t){ var lv = t.err ? 'red' : trkState(t).lv; return lv === 'red' ? 0 : lv === 'yellow' ? 1 : 2; }
+  idx.sort(function(a, b){ var ta = ts[a], tb = ts[b]; return row(ta) - row(tb) || urg(ta) - urg(tb) || pos(ta) - pos(tb) || a - b; });
+  var brk = idx.findIndex(function(i){ return row(ts[i]) === 1; });
+  el.innerHTML = idx.map(function(i, n){
     var t = ts[i], s = trkState(t), txt;
     if (t.err) txt = '<span class="s">Check setting</span>';
     else if (s.d === null) txt = '<span class="s">No test on record</span>';
-    else if (s.lv === 'red') txt = '<span class="s">Overdue</span> · was due ' + esc(trkDay(s.due));
-    else if (s.lv === 'yellow') txt = '<span class="s">Due now</span> · ' + esc(s.d >= t.warn ? (s.d === t.warn ? 'today' : 'was due ' + trkDay(s.due)) : 'by ' + trkDay(s.due));
-    else if (t.warn <= 1) txt = '<span class="s">Done</span> · today';
-    else txt = '<span class="s">Next due</span> · ' + esc(trkDay(s.due));
-    return '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
+    else if (s.lv === 'red') txt = '<span class="s">Late</span> · ' + esc(trkDay(s.due));
+    else if (s.lv === 'yellow') txt = '<span class="s">Due</span> · ' + esc(s.d >= t.warn ? 'today' : trkDay(s.due));
+    else if (t.warn <= 1) txt = '<span class="s">Done</span>';
+    else txt = '<span class="s">Due</span> · ' + esc(trkDay(s.due));
+    return (n && n === brk ? '<span class="tbrk" aria-hidden="true"></span>' : '') +
+      '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
   }).join('');
   el.hidden = !idx.length;
 }
@@ -1638,22 +1712,25 @@ function trkPrintHtml(){
   if (!main.length) return '';
   return '<div class="psech">Chemicals to add next</div><div class="ptiles" style="grid-template-columns:repeat(' + Math.min(6, Math.max(4, main.length)) + ',1fr)">' +
     main.map(function(i){
-      var t = ts[i], s = trkState(t), ev = t.events && t.events[0];
+      var t = ts[i], s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
+      // paper tiles are too narrow for the date on the big line, so it goes on the small one
+      if (du) return '<div class="pt ' + s.lv + '"><div class="n">' + esc(trkJob(t)) + '</div><div class="a">' + esc(du.word) + '</div>' +
+        '<div class="w">Due ' + esc(du.day) + ' · ' + esc(du.ago.toLowerCase()) + '</div></div>';
       return '<div class="pt' + (s.lv !== 'none' ? ' ' + s.lv : '') + '">' +
         '<div class="n">' + esc(trkLabel(t)) + '</div><div class="a">' + (ev ? esc(agoText(s.d)) : 'No record') + '</div>' +
         '<div class="w">' + trkWhenHtml(t, s, ev) + '</div></div>';
     }).join('') + '</div>';
 }
 // The tile's bottom line (2026-09-29): the date that matters for its status, not the last-added date -
-// red "OVERDUE · since <overdue day>", yellow "DUE · <due day>", green "NEXT DUE · <due day>"; no due dates set: the last date.
+// red "LATE · since <overdue day>", yellow "DUE NOW · since <due day>", green "DUE · <due day>"; no due dates set: the last date.
 function trkWhenHtml(t, s, ev){
   if (!ev) return '&nbsp;';
   var dueDay = (t.warn != null || t.over != null) ? addDays(ev.day, t.warn != null ? t.warn : t.over) : '';
   var overDay = t.over != null ? addDays(ev.day, t.over) : dueDay;
   function lab(word, rest){ return '<span class="s">' + word + '</span> · ' + esc(rest); }
-  if (s.lv === 'red') return lab('Overdue', 'since ' + trkDay(overDay));
+  if (s.lv === 'red') return lab('Late', 'since ' + trkDay(overDay));
   if (s.lv === 'yellow') return lab('Due now', 'since ' + trkDay(dueDay));
-  if (s.lv === 'green') return lab('Next due', trkDay(dueDay));
+  if (s.lv === 'green') return lab('Due', trkDay(dueDay));
   return esc('Last ' + trkDay(ev.day));
 }
 // Print: "Chemical stock" - active chemicals with a stock count, in the Prices window's group order, 3 columns:
@@ -1798,6 +1875,12 @@ function dateLabel(){
   var yr = !!f && f.slice(0, 4) !== t.slice(0, 4);
   return (f ? fmtDayRel(f, yr) : 'Start') + ' – ' + fmtDayRel(t, yr);
 }
+/** Small grey text on the History row: what the list below covers ("Last 30 days", "Sep 1 – Today"). */
+function histRangeText(){
+  if (LEVEL === 'member') return 'Last ' + ((DATA && DATA.memberDays) || 7) + ' days';
+  var names = {'30': 'Last 30 days', month: 'This month', last: 'Last month', all: 'All time'};
+  return names[state.preset] || dateLabel();
+}
 function renderPresets(){
   var defs = [['30','Last 30 days'],['month','This month'],['last','Last month'],['all','All time']];
   var ph = defs.map(function(d){
@@ -1817,6 +1900,7 @@ function renderPresets(){
   $('vPred').setAttribute('aria-checked', state.pred ? 'true' : 'false');
   $('vPredRow').style.display = showP ? '' : 'none';
   $('dateChipTxt').textContent = dateLabel();
+  $('histRange').textContent = histRangeText();
   $('viewChipTxt').textContent = state.mode === 'both' ? 'Readings + chemicals' : (state.mode === 'chem' ? 'Chemicals' : 'Readings');
 }
 function renderLegend(){
@@ -2803,6 +2887,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrint').addEventListener('click', function(){ closeDlg('menuDlg'); openPrint(); });
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
+  $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg'].forEach(function(id){
     $(id).addEventListener('click', function(e){
