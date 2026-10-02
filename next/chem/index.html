@@ -239,6 +239,8 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 @media print{ .mk{display:none !important} }
 /* "Tests due" pills under the cards (Trackers tab rows of Type Test; Board / Manager): TA DUE · Oct 3, FC DONE, CYA LATE · Sep 28 */
 .tdue.priv{display:flex}
+.tbrk{display:none}
+@media (max-width:560px){ .tbrk{display:block;flex-basis:100%;height:0;margin-top:-6px} }
 .tdue[hidden]{display:none !important}
 .tdue{flex-wrap:wrap;align-items:center;gap:6px;margin:-6px 0 14px;font-size:12.5px;color:var(--muted)}
 .tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:0;border-radius:999px;padding:3px 10px;cursor:pointer;white-space:nowrap}
@@ -1630,12 +1632,19 @@ function renderTrackers(){
   renderTestsDue(ts);
   $('up').hidden = el.hidden && $('tdue').hidden;
 }
-/** "Tests due" pills under the cards (no heading): one per Test row, most urgent first. */
+/** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
+ *  (other tests at the end of that row). Within a row, Late pills move to the front, then Due, then the rest in that order.
+ *  Phones start each row on its own line (.tbrk); computers show one line. */
+var TEST_ORDER = ['fc', 'cc', 'ph', 'ta', 'ch', 'cya'];
 function renderTestsDue(ts){
   var el = $('tdue'), idx = [];
   ts.forEach(function(t, i){ if (t.type === 'test' && (t.warn != null || t.err)) idx.push(i); });
-  idx.sort(function(a, b){ var sa = trkState(ts[a]), sb = trkState(ts[b]); return TRK_RANK[sa.lv] - TRK_RANK[sb.lv] || (sa.due || '').localeCompare(sb.due || '') || a - b; });
-  el.innerHTML = idx.map(function(i){
+  function pos(t){ var k = TEST_ORDER.indexOf(String(t.name).trim().toLowerCase()); return k < 0 ? 99 : k; }
+  function row(t){ return pos(t) < 3 ? 0 : 1; }
+  function urg(t){ var lv = t.err ? 'red' : trkState(t).lv; return lv === 'red' ? 0 : lv === 'yellow' ? 1 : 2; }
+  idx.sort(function(a, b){ var ta = ts[a], tb = ts[b]; return row(ta) - row(tb) || urg(ta) - urg(tb) || pos(ta) - pos(tb) || a - b; });
+  var brk = idx.findIndex(function(i){ return row(ts[i]) === 1; });
+  el.innerHTML = idx.map(function(i, n){
     var t = ts[i], s = trkState(t), txt;
     if (t.err) txt = '<span class="s">Check setting</span>';
     else if (s.d === null) txt = '<span class="s">No test on record</span>';
@@ -1643,7 +1652,8 @@ function renderTestsDue(ts){
     else if (s.lv === 'yellow') txt = '<span class="s">Due</span> · ' + esc(s.d >= t.warn ? 'today' : trkDay(s.due));
     else if (t.warn <= 1) txt = '<span class="s">Done</span>';
     else txt = '<span class="s">Due</span> · ' + esc(trkDay(s.due));
-    return '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
+    return (n && n === brk ? '<span class="tbrk" aria-hidden="true"></span>' : '') +
+      '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
   }).join('');
   el.hidden = !idx.length;
 }
