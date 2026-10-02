@@ -336,6 +336,9 @@ body:not(.unlocked) .seg{display:none !important}
 .updet .s{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
 .updet .lv-green{color:color-mix(in srgb,var(--green) 80%,var(--ink))} .updet .lv-yellow{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))} .updet .lv-red{color:var(--red)}
 .updet .none{color:var(--muted)}
+.upfull{grid-column:1 / -1;display:flex;justify-content:flex-end}
+.upfulllist{grid-column:1 / -1;display:grid;gap:10px}
+@media (min-width:561px){ .upfulllist{grid-template-columns:1fr 1fr;gap:10px 16px} }
 .histrow.priv{display:flex}
 .histrow{align-items:center;gap:8px;margin:16px 2px 8px;min-height:32px}
 .hrng{font-size:12px;color:var(--muted);white-space:nowrap}
@@ -1734,8 +1737,22 @@ function renderUpDetails(ts){
     var lab = d === today ? 'Now' : d === addDays(today, 1) ? 'Tomorrow' : fmtDayLong(d).replace(/, \d{4}$/, '');
     return '<li><b>' + esc(lab) + '</b> · ' + esc(byDay[d].join(', ')) + '</li>';
   }).join('') + '</ul>' : '<p class="none" style="margin:0">Nothing due in the next 7 days.</p>') + '</div>';
-  $('upDet').innerHTML = stockHtml + weekHtml;
+  // "Full stock" (lower right): every active chemical with a stock count, grouped like the Prices window
+  var all = (DATA.chemicals || []).filter(function(c){ return st[c.name.toLowerCase()] && !isInactive(c); });
+  var full = '';
+  if (all.length){
+    var groups = {};
+    PRICE_GROUPS.forEach(function(g){ groups[g] = []; });
+    all.forEach(function(c){ groups[priceGroup(c)].push(c); });
+    full = '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>' +
+      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + PRICE_GROUPS.filter(function(g){ return groups[g].length; }).map(function(g){
+        return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ return line(c.name.toLowerCase(), st[c.name.toLowerCase()], ''); }).join('') + '</ul></div>';
+      }).join('') + '</div>';
+  }
+  $('upDet').innerHTML = stockHtml + weekHtml + full;
 }
+var upFullOpen = false;   // "Full stock" list under Details; closed again on every load
 /** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
  *  (other tests at the end of that row). Within a row, Late pills move to the front, then Due, then the rest in that order.
  *  Phones start each row on its own line (.tbrk); computers show one line. */
@@ -2961,6 +2978,12 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrint').addEventListener('click', function(){ closeDlg('menuDlg'); openPrint(); });
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
+  $('upDet').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('#upFullBtn');
+    if (!b) return;
+    upFullOpen = !upFullOpen; b.setAttribute('aria-expanded', upFullOpen ? 'true' : 'false');
+    var l = this.querySelector('.upfulllist'); if (l) l.hidden = !upFullOpen;
+  });
   $('upBtn').addEventListener('click', function(){ var o = $('upDet').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
