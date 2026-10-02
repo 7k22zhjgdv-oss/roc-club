@@ -73,7 +73,7 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}
-.wrap{max-width:1000px;margin:0 auto}   /* 1000 (was 820, 2026-10-02): room for the 5 main tracker cards on one line (computer cards a little tighter below) */
+.wrap{max-width:900px;margin:0 auto}   /* 900 (was 820, 2026-10-02): room for the 5 main tracker cards on one line (computer cards a little tighter below) */
 h1{font-size:22px;margin:0 0 2px}
 .sub{color:var(--muted);font-size:13px}
 .sub span{white-space:nowrap}
@@ -223,7 +223,7 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c.lv-green .trk-w .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-w .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-w .s{color:var(--red)}
-.trk-k{color:var(--ink)} .trk-d{font-size:12px;font-weight:400;color:var(--muted)}
+.trk-k{color:var(--ink)}
 .trk-c.lv-green .trk-k{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-k{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-k{color:var(--red)}
@@ -323,7 +323,7 @@ body:not(.unlocked) .seg{display:none !important}
 .up .tdue{margin:0}
 .up .trk:not([hidden])+.tdue{margin-top:6px}
 /* phones: the row break is its own (empty) flex line, so the 6px between pill rows comes from the pills' own margins, not row-gap */
-@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
+@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0;padding-left:6px;padding-right:6px} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
 .seclbl{font-size:12px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
 .up .seclbl{display:block;margin:1px 3px 6px}
 .histrow.priv{display:flex}
@@ -1603,7 +1603,7 @@ function trkDue(t, s, ev){
 function trkCard(t, i){
   var s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
   if (du) return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkJob(t) + ': ' + du.word + ', ' + du.day + '. ' + du.ago) + '">' +
-    '<span class="trk-n">' + esc(trkJob(t)) + '</span><span class="trk-a"><span class="trk-k">' + esc(du.word) + '</span><span class="trk-d"> · ' + esc(du.day) + '</span></span>' +
+    '<span class="trk-n">' + esc(trkJob(t)) + '</span><span class="trk-a"><span class="trk-k">' + esc(du.word) + '</span></span>' +
     '<span class="trk-w">' + esc(du.ago) + '</span></button>';
   return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkLabel(t) + ': ' + (s.d === null ? 'no record' : agoText(s.d)) + (TRK_WORD[s.lv] ? ', ' + TRK_WORD[s.lv] : '')) + '">' +
     '<span class="trk-n">' + esc(trkLabel(t)) + '</span><span class="trk-a">' + (s.d === null ? 'No record' : esc(agoText(s.d))) + '</span>' +
@@ -1689,7 +1689,7 @@ function renderTestsDue(ts){
     else if (s.d === null) txt = '<span class="s">No test on record</span>';
     else if (s.lv === 'red') txt = '<span class="s">Late</span> · ' + esc(trkDay(s.due));
     else if (s.lv === 'yellow') txt = '<span class="s">Due</span> · ' + esc(s.d >= t.warn ? 'today' : trkDay(s.due));
-    else if (t.warn <= 1) txt = '<span class="s">Done</span>';
+    else if (t.warn <= 1) txt = '<span class="s">Done</span> · today';
     else txt = '<span class="s">Due</span> · ' + esc(trkDay(s.due));
     return (n && n === brk ? '<span class="tbrk" aria-hidden="true"></span>' : '') +
       '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
