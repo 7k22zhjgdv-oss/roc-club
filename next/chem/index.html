@@ -2033,12 +2033,15 @@ function legendItems(){
   items.push('<div class="lr">' + GLYPH.green + ' in range &nbsp;! watch &nbsp;' + GLYPH.red + ' out of range (bold) &nbsp;' + GLYPH.purple + ' high</div>');
   return items.join('');
 }
-var PRINT_LINE_MAX = 82;    // characters that fit one printed addition line ("Added ..." + effect / "what" text; 2026-10-02 Safari PDF: 91 wrapped, 78 fit)
-/** "1 gal Liquid Chlorine • 12.5%" -> "1 gal Liquid Chlorine"; "20 oz 70% Cal-Hypo" -> "20 oz Cal-Hypo". */
-function shortSummary(c){
-  var s = String(c.summary || '').replace(/\s*•\s*[\d.]+\s*%\s*$/, ''), sp = shortProduct(c.product);
-  return c.product && sp && s.indexOf(c.product) >= 0 ? s.replace(c.product, sp) : s;
+var PRINT_LINE_MAX = 82;    // characters that fit one printed addition line ("Added ..." + effect / "what" text; 2026-10-02 Safari PDF: 91 wrapped, 78 fit). Longer -> one line per chemical
+/** Characters a combined addition line would take: "Added a + b" plus the arrow/effect or "what" text. */
+function printLineLen(blk){
+  var c = blk.first, aff = AFFECT_LABEL[c.affects] ? c.affects : '';
+  var tail = aff ? 3 + AFFECT_LABEL[aff].length + (c.slow ? 10 : blk.calc.eff !== null ? 9 : 0) + blk.calc.also.reduce(function(n, a){ return n + a.k.length + 8; }, 0)
+                 : printWhat(blk.items).length + 1;
+  return 6 + blk.items.map(function(x){ return x.summary; }).join(' + ').length + tail;
 }
+function printWhat(items){ return items.map(function(x){ return x.what; }).filter(function(w, i, all){ return w && all.indexOf(w) === i; }).join(' · '); }
 /** The tests a report prints (before any are left out to fit). */
 function printTests(o){
   return (DATA.tests || []).filter(function(t){ return hasReading(t) && (o.whole || inRange(t.day, o.from, o.to)); });
@@ -2091,7 +2094,10 @@ function buildPrint(o){
   Object.keys(pblock).forEach(function(k){ pblock[k].calc = blockCalc(pblock[k].items); });
   chems.forEach(function(c){
     var blk = pblock[c.gid + '|' + blockKey(c)];
-    if (blk.first === c) rows.push({type:'c', ms:c.ms, d:c, blk:blk});   // one line per block (same group, same reading): amounts joined with "+"
+    // one line per block (same group, same reading), amounts joined with "+"; a block too long for one line prints a line per chemical
+    if (blk.one === undefined) blk.one = blk.items.length < 2 || printLineLen(blk) <= PRINT_LINE_MAX;
+    if (!blk.one) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:[c], lead: blk.first === c});
+    else if (blk.first === c) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:blk.items, lead: true});
     var pr = DATA.preds && DATA.preds[c.gid];
     if (o.est && pr && !seenG[c.gid]){ seenG[c.gid] = 1; rows.push({type:'p', ms: groupInfo(c).ms + 1, d: {day: groupInfo(c).day}, pred: pr}); }
   });
@@ -2138,17 +2144,12 @@ function buildPrint(o){
       return '<tr class="{{L}}predrow' + (dim ? ' dim' : '') + '"><td class="dt" title="Estimated water chemistry right after these additions"><span class="pd"></span><span class="ptm">Estimate</span></td>' +
         PRINT_COLS.map(function(c){ return '<td>' + (by[c[0]] ? fmtNum(by[c[0]].to) : '') + '</td>'; }).join('') + (showCost ? '<td></td>' : '') + '</tr>';
     }
-    var c2 = r.d, aff = AFFECT_LABEL[c2.affects] ? c2.affects : '', bi = r.blk.items.slice().sort(function(a, b){ return a.ms - b.ms; });
-    // a combined line must stay ONE line (a wrapped row is taller than the page count allows): too long -> short names, then no "what" text
-    var what = aff ? '' : bi.map(function(x){ return x.what; }).filter(function(w, i, all){ return w && all.indexOf(w) === i; }).join(' · ');
-    var tail = aff ? 3 + AFFECT_LABEL[aff].length + (c2.slow ? 10 : r.blk.calc.eff !== null ? 9 : 0) + r.blk.calc.also.reduce(function(n, a){ return n + a.k.length + 8; }, 0) : what.length + 1;
-    var added = bi.map(function(x){ return x.summary; }).join(' + ');
-    if (bi.length > 1 && added.length + tail > PRINT_LINE_MAX) added = bi.map(shortSummary).join(' + ');
-    if (bi.length > 1 && !aff && added.length + tail > PRINT_LINE_MAX) what = '';
+    var c2 = r.d, aff = AFFECT_LABEL[c2.affects] ? c2.affects : '', bi = r.items.slice().sort(function(a, b){ return a.ms - b.ms; });
+    var added = bi.map(function(x){ return x.summary; }).join(' + '), what = aff ? '' : printWhat(bi);
     var costs = bi.filter(function(x){ return isNum(x.cost); }), cost = costs.reduce(function(n, x){ return n + x.cost; }, 0);
     return '<tr class="{{L}}chemrow' + (o.tint ? ' tint' : '') + (aff ? ' r-' + aff : '') + (dim ? ' dim' : '') + '"><td class="dt"><span class="pd">{{D}}</span><span class="ptm">' + esc(groupInfo(c2).time) + '</span></td><td colspan="' + PRINT_COLS.length + '">Added ' + esc(added) +
-      (aff ? '<span class="tag">' + (c2.dir === 'down' ? '↓' : '↑') + ' ' + AFFECT_LABEL[aff] + '</span>' +
-        effHtml({affects: c2.affects, slow: c2.slow, eff: r.blk.calc.eff, also: r.blk.calc.also}) : whatHtml(what)) + '</td>' +
+      (aff && r.lead ? '<span class="tag">' + (c2.dir === 'down' ? '↓' : '↑') + ' ' + AFFECT_LABEL[aff] + '</span>' +
+        effHtml({affects: c2.affects, slow: c2.slow, eff: r.blk.calc.eff, also: r.blk.calc.also}) : aff ? '' : whatHtml(what)) + '</td>' +
       (showCost ? '<td class="cost">' + (costs.length ? money(cost) : '–') + '</td>' : '') + '</tr>';
   });
   var meta = rows.map(function(r){ return {day: r.type === 'c' ? groupInfo(r.d).day : r.d.day, date: r.type !== 'p'}; });
