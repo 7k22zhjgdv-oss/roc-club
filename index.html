@@ -483,7 +483,7 @@ html{overflow-x:clip}
 @keyframes bgDrift { from { transform: translateY(0); } to { transform: translateY(var(--drift, 0px)); } }
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .bg-move, .scenery { animation: bgDrift linear both; animation-timeline: scroll(root); animation-range: 0px var(--hero-h, 600px); }
+    .bg-move, .scenery { animation: bgDrift linear both; animation-timeline: scroll(root); animation-range: 0px var(--drift-end, 600px); }
   }
 }
 /* no visible scrollbar on this page: with "always show scroll bars" Safari paints the scrollbar channel in plain
@@ -1474,12 +1474,13 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
    wrapper's GitHub site. Browsers that can't show WebP get the single flat photo (pool-flat.jpg).
    Measured in the picture: beam bottom 20.5% down, inscription 31.5% wide centred at 49.75%, left treetop 11.4%,
    water starts 49.1%. Depth: while the top section scrolls, the sky and pool drift a little slower than the beams
-   (CSS bgDrift; --drift and --hero-h are set here). */
+   (CSS bgDrift; --drift and --drift-end are set here). */
 (function(){
   var BASE = 'https://7k22zhjgdv-oss.github.io/roc-club/';
   var SKY = BASE + 'pool-sky.webp', BEAMS = BASE + 'pool-beams.webp', FLAT = BASE + 'pool-flat.jpg';
   var RATIO = 4615 / 2000, BEAMH = 953 / 4615, PHONE = .75, UP = 56, GAP = 36, TREETOP = .114, BEAM = .205, INS = .315, INSX = .4975, WATER = .491, TINT = '129,166,165';
-  var DEPTH = .18, layered = true;
+  // background moves DEPTH slower than the page, for the first DRIFT_FOR x the top section's height of scrolling
+  var DEPTH = .09, DRIFT_FOR = 1.6, layered = true;
   var splash = document.querySelector('.splash'), lower = document.querySelector('.lower'), scen = document.querySelector('.scenery');
   var mq = window.matchMedia('(max-aspect-ratio: 9/10), (max-width: 560px)');
   var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky'), beams = stack.querySelector('.bg-beams');
@@ -1519,8 +1520,10 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
       fbeams.style.backgroundSize = '100% 100%';
       fbeams.style.webkitMaskImage = fbeams.style.maskImage = 'url("' + BEAMS + '")';
     }
-    root.style.setProperty('--hero-h', heroH + 'px');
-    root.style.setProperty('--drift', (layered ? Math.round(DEPTH * heroH) : 0) + 'px');
+    // (never past the bottom of the page, so the ripples always end up meeting the footer)
+    var driftEnd = Math.max(1, Math.min(DRIFT_FOR * heroH, document.documentElement.scrollHeight - window.innerHeight));
+    root.style.setProperty('--drift-end', Math.round(driftEnd) + 'px');
+    root.style.setProperty('--drift', (layered ? Math.round(DEPTH * driftEnd) : 0) + 'px');
     if (scen && lower) scen.style.top = Math.max(0, Math.round(y + h * WATER - lower.offsetTop)) + 'px';
     low();
   }
