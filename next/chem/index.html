@@ -124,6 +124,14 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chip.red .v{font-weight:800}
 .chip.purple{background:var(--pTint)} .chip.purple .g{background:var(--purple)}
 .chip.csi{grid-column:-2 / -1;grid-row:1}   /* CSI always sits top right, so the column lines up down the page */
+/* computers (2026-10-02): every reading has its own fixed spot, as in a full test (FC CC pH TA CH CYA Salt Borates Temp CSI),
+   so each kind of reading lines up in one column down the page; a missing reading leaves its spot empty */
+@media (min-width:900px){
+  .chips{grid-template-columns:repeat(10,minmax(0,1fr))}
+  .chip{grid-row:1}
+  .chip.k-fc{grid-column:1} .chip.k-cc{grid-column:2} .chip.k-ph{grid-column:3} .chip.k-ta{grid-column:4} .chip.k-ch{grid-column:5}
+  .chip.k-cya{grid-column:6} .chip.k-salt{grid-column:7} .chip.k-bor{grid-column:8} .chip.k-tempF{grid-column:9} .chip.k-csi{grid-column:10}
+}
 .sr{position:absolute;left:-9999px}
 .card.store{border-color:var(--accent)}
 .store-tag{color:var(--accent);font-size:12px;font-weight:600;margin-left:8px}
@@ -1110,7 +1118,7 @@ function chipHtml(c, t){
   if (!isNum(v)) return '';
   var col = c[2] ? colorOf(c[2], v) : '';
   var title = c[1] + ' ' + fmtNum(v) + (col ? ' – ' + COLNAMES[col] : '');
-  return '<div class="chip ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-tms="' + t.ms + '" title="' + esc(title) + '">' +
+  return '<div class="chip k-' + c[0] + ' ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-tms="' + t.ms + '" title="' + esc(title) + '">' +
     (col ? '<span class="g" aria-hidden="true">' + GLYPH[col] + '</span>' : '') +
     '<span class="v">' + numHtml(c[0], v) + '</span><span class="l">' + c[3] +
     (col ? '<span class="sr"> ' + COLNAMES[col] + '</span>' : '') + '</span></div>';
@@ -1244,7 +1252,7 @@ function predCard(p, day, gid){
   var by = {}; p.vals.forEach(function(v){ by[v.k] = v; });
   var chips = COLS.filter(function(c){ return by[c[0]]; }).map(function(c){
     var v = by[c[0]], col = c[2] ? colorOf(c[2], v.to) : '';
-    return '<div class="chip pc ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-gid="' + esc(gid) + '" data-pfrom="' + v.from + '" data-pto="' + v.to + '" title="' + esc(c[1] + ' about ' + fmtNum(v.to) + ', from ' + fmtNum(v.from) + (col ? ' – ' + COLNAMES[col] : '')) + '">' +
+    return '<div class="chip pc k-' + c[0] + ' ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-gid="' + esc(gid) + '" data-pfrom="' + v.from + '" data-pto="' + v.to + '" title="' + esc(c[1] + ' about ' + fmtNum(v.to) + ', from ' + fmtNum(v.from) + (col ? ' – ' + COLNAMES[col] : '')) + '">' +
       (col ? '<span class="g" aria-hidden="true">' + GLYPH[col] + '</span>' : '') +
       '<span class="v">' + numHtml(c[0], v.to) + '</span><span class="l">' + c[3] +
       (col ? '<span class="sr"> ' + COLNAMES[col] + '</span>' : '') + '</span></div>';
