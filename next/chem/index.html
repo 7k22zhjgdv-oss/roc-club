@@ -325,7 +325,17 @@ body:not(.unlocked) .seg{display:none !important}
 /* phones: the row break is its own (empty) flex line, so the 6px between pill rows comes from the pills' own margins, not row-gap */
 @media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0;padding-left:6px;padding-right:6px} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
 .seclbl{font-size:12px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
-.up .seclbl{display:block;margin:1px 3px 6px}
+.uprow{display:flex;align-items:center;gap:8px;margin:0 2px 6px 3px}
+/* "Details" under the test pills (2026-10-02): Stock and Next 7 days; closed on every visit */
+.updet:not(.open){display:none}
+.updet{display:grid;gap:10px;margin:8px 3px 2px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+@media (min-width:561px){ .updet{grid-template-columns:1fr 1fr;gap:16px} }
+.updet h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.updet ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.updet li b{color:var(--ink);font-weight:600}
+.updet .s{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.updet .lv-green{color:color-mix(in srgb,var(--green) 80%,var(--ink))} .updet .lv-yellow{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))} .updet .lv-red{color:var(--red)}
+.updet .none{color:var(--muted)}
 .histrow.priv{display:flex}
 .histrow{align-items:center;gap:8px;margin:16px 2px 8px;min-height:32px}
 .hrng{font-size:12px;color:var(--muted);white-space:nowrap}
@@ -766,9 +776,11 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
   <div class="skel" id="skel" aria-hidden="true"></div>
   <p class="lvlnote" id="lvlNote" hidden></p>
   <div class="up priv" id="up" hidden>
-    <div class="seclbl">Coming up</div>
+    <div class="uprow"><span class="seclbl">Coming up</span><span class="hln" aria-hidden="true"></span>
+      <button type="button" class="optbtn" id="upBtn" aria-expanded="false" aria-controls="upDet">Details<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
     <div class="trk priv" id="trk" aria-label="Last added" hidden></div>
     <div class="tdue priv brd" id="tdue" aria-label="Tests due" hidden></div>
+    <div class="updet" id="upDet"></div>
   </div>
   <div class="histrow priv" id="histRow">
     <span class="seclbl">History</span><span class="hrng" id="histRange"></span><span class="hln" aria-hidden="true"></span>
@@ -1670,6 +1682,59 @@ function renderTrackers(){
   el.hidden = !(main.length + extra.length);
   renderTestsDue(ts);
   $('up').hidden = el.hidden && $('tdue').hidden;
+  renderUpDetails(ts);
+}
+/** Coming up "Details": Stock (each dosing card's chemical: Plenty / Low stock / Out of stock and about how many more
+ *  fillings / doses / shocks it covers - t.stock from the server; then any other chemical running low) and Next 7 days. */
+function renderUpDetails(ts){
+  var st = DATA.stock || {}, shown = {}, rows = [];
+  function chemName(key){
+    var c = (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === key; })[0];
+    return c ? stockPrintName(c.name) : key;
+  }
+  function level(x){
+    if (x.pct <= 0 || x.left <= 0) return ['red', 'Out of stock'];
+    if (x.pct < STOCK_RED_PCT) return ['red', 'Low stock'];
+    if (x.pct < STOCK_YELLOW_PCT) return ['yellow', 'Low stock'];
+    return ['green', 'Plenty'];
+  }
+  function line(key, x, more){
+    var lv = level(x);
+    return '<li><b>' + esc(chemName(key)) + '</b> · <span class="s lv-' + lv[0] + '">' + lv[1] + '</span>' +
+      (x.left > 0 ? ' · ' + (more ? esc(more) + ' (' + esc(fmtNum(x.left) + ' ' + x.unit) + ' left)' : esc(fmtNum(x.left) + ' ' + x.unit) + ' left') : '') + '</li>';
+  }
+  var ord = trkOrder(ts);
+  ord.main.concat(ord.extra).forEach(function(i){
+    var t = ts[i], x = t.stock;
+    if (!x || shown[x.key] || !st[x.key]) return;
+    shown[x.key] = true;
+    var word = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['filling', 'fillings'];
+    var more = x.n == null ? '' : (level(st[x.key])[1] === 'Plenty' ? 'enough for about ' : 'about ') + x.n + ' more ' + word[x.n === 1 ? 0 : 1];
+    rows.push(line(x.key, st[x.key], more));
+  });
+  Object.keys(st).sort().forEach(function(key){
+    var x = st[key];
+    if (shown[key] || isInactive({name: key}) || x.pct >= STOCK_YELLOW_PCT) return;
+    rows.push(line(key, x, ''));
+  });
+  var stockHtml = '<div><h3>Stock</h3>' + (rows.length ? '<ul>' + rows.join('') + '</ul>' : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
+  // Next 7 days: every card and test with a due day up to a week out (daily tests left out); past due days count as "Now"
+  var today = todayCentral(), end = addDays(today, 7), byDay = {};
+  ts.forEach(function(t){
+    var ev = t.events && t.events[0], due = '';
+    if (!ev || t.err) return;
+    if (t.type === 'test'){ if (t.warn == null || t.warn <= 1) return; due = trkState(t).due; }
+    else { var span = t.warn != null ? t.warn : t.over; if (span == null) return; due = addDays(ev.day, span); }
+    if (!due || due > end) return;
+    var d = due < today ? today : due;
+    (byDay[d] = byDay[d] || []).push(t.type === 'test' ? t.name + ' test' : trkJob(t));
+  });
+  var days = Object.keys(byDay).sort();
+  var weekHtml = '<div><h3>Next 7 days</h3>' + (days.length ? '<ul>' + days.map(function(d){
+    var lab = d === today ? 'Now' : d === addDays(today, 1) ? 'Tomorrow' : fmtDayLong(d).replace(/, \d{4}$/, '');
+    return '<li><b>' + esc(lab) + '</b> · ' + esc(byDay[d].join(', ')) + '</li>';
+  }).join('') + '</ul>' : '<p class="none" style="margin:0">Nothing due in the next 7 days.</p>') + '</div>';
+  $('upDet').innerHTML = stockHtml + weekHtml;
 }
 /** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
  *  (other tests at the end of that row). Within a row, Late pills move to the front, then Due, then the rest in that order.
@@ -2896,6 +2961,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrint').addEventListener('click', function(){ closeDlg('menuDlg'); openPrint(); });
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
+  $('upBtn').addEventListener('click', function(){ var o = $('upDet').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg'].forEach(function(id){
