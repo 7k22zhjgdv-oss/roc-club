@@ -240,16 +240,20 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 /* "Tests due" pills under the cards (Trackers tab rows of Type Test; Board / Manager): TA DUE · Oct 3, FC DONE, CYA LATE · Sep 28 */
 .tdue.priv{display:flex}
 .tbrk{display:none}
-@media (max-width:560px){ .tbrk{display:block;flex-basis:100%;height:0;margin-top:-6px} }
+@media (max-width:560px){ .tbrk{display:block;flex-basis:100%;height:0} }
 .tdue[hidden]{display:none !important}
 .tdue{flex-wrap:wrap;align-items:center;gap:6px;margin:-6px 0 14px;font-size:12.5px;color:var(--muted)}
-.tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:0;border-radius:999px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+.tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:1px solid transparent;border-radius:999px;padding:2px 9px;cursor:pointer;white-space:nowrap}
 .tdc b{color:var(--ink);font-weight:700;margin-right:4px}
 .tdc .s{font-weight:800;letter-spacing:.03em;text-transform:uppercase;font-size:11px}
 .tdc.lv-green{background:color-mix(in srgb,var(--green) 10%,var(--card))} .tdc.lv-green .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .tdc.lv-yellow{background:var(--yTint)} .tdc.lv-yellow .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .tdc.lv-red{background:var(--rTint)} .tdc.lv-red .s{color:var(--red)}
 .tdc.popopen{box-shadow:0 0 0 2px var(--accent)}
+/* outline in the status color so the pills and cards stand out on the Coming up panel (2026-10-02) */
+.tdc.lv-green{--lc:var(--green)} .tdc.lv-yellow{--lc:var(--yellow)} .tdc.lv-red{--lc:var(--red)}
+.tdc.lv-green,.tdc.lv-yellow,.tdc.lv-red,.trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-color:color-mix(in srgb,var(--lc) 45%,var(--card))}
+.trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-left-color:var(--lc)}
 .trk-more{flex:0 0 auto;align-self:stretch;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:transparent;border:1px dashed var(--line);border-radius:12px;padding:0 14px;cursor:pointer;white-space:nowrap}
 .trk-c.extra{border-style:dashed;border-left-style:solid}
 /* computers: the main cards share one line (no scroll bar); with "More" open they keep their size and the row scrolls */
@@ -305,6 +309,8 @@ body:not(.unlocked) .seg{display:none !important}
 .up .trk{margin:0;padding-bottom:2px}
 .up .tdue{margin:0}
 .up .trk:not([hidden])+.tdue{margin-top:6px}
+/* phones: the row break is its own (empty) flex line, so the 6px between pill rows comes from the pills' own margins, not row-gap */
+@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
 .seclbl{font-size:12px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
 .up .seclbl{display:block;margin:1px 3px 6px}
 .histrow.priv{display:flex}
