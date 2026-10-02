@@ -1722,7 +1722,7 @@ function renderUpDetails(ts){
     if (shown[key] || isInactive({name: key}) || x.pct >= STOCK_YELLOW_PCT) return;
     rows.push(line(key, x, ''));
   });
-  var stockHtml = '<div><h3>Stock</h3>' + (rows.length ? '<ul>' + rows.join('') + '</ul>' : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
+  var stockHtml = '<div><h3>Stock alerts</h3>' + (rows.length ? '<ul>' + rows.join('') + '</ul>' : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
   // Next 7 days: every card and test with a due day up to a week out (daily tests left out); past due days count as "Now"
   var today = todayCentral(), end = addDays(today, 7), byDay = {};
   ts.forEach(function(t){
@@ -1744,11 +1744,12 @@ function renderUpDetails(ts){
   var full = '';
   if (all.length){
     var groups = {};
-    PRICE_GROUPS.forEach(function(g){ groups[g] = []; });
+    var FULL_ORDER = ['Chlorine', 'Orenda', 'Acid', 'Other'];   // Chlorine and Orenda (the longer lists) side by side, then Acid and Other
+    FULL_ORDER.forEach(function(g){ groups[g] = []; });
     all.forEach(function(c){ groups[priceGroup(c)].push(c); });
     full = '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>' +
-      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + PRICE_GROUPS.filter(function(g){ return groups[g].length; }).map(function(g){
+      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + FULL_ORDER.filter(function(g){ return groups[g].length; }).map(function(g){
         return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ return line(c.name.toLowerCase(), st[c.name.toLowerCase()], ''); }).join('') + '</ul></div>';
       }).join('') + '</div>';
   }
