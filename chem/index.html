@@ -568,7 +568,7 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 #printView .ps.out .amt{color:#b01f1f}
 #printView table{border-collapse:separate;border-spacing:0;width:100%;font-size:9pt;border-top:1px solid #999;border-left:1px solid #999}
 #printView thead{display:table-header-group}
-#printView th,#printView td{border:0;border-right:1px solid #999;border-bottom:1px solid #999;padding:0 4px;height:13.5pt;line-height:11pt;box-sizing:content-box;text-align:center;overflow:hidden}
+#printView th,#printView td{border:0;border-right:1px solid #999;border-bottom:1px solid #999;padding:0 4px;height:12.5pt;line-height:11pt;box-sizing:content-box;text-align:center;overflow:hidden}
 #printView th{background:#e6e6e6}
 #printView th.pbor{width:1%}
 #printView td.dt{text-align:left;white-space:nowrap}
@@ -875,6 +875,7 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
   <label class="chk"><input type="checkbox" id="pEst"><span>Include estimate rows<div class="hint">The gray "Estimate" rows of predicted water chemistry.</div></span></label>
   <label class="chk"><input type="checkbox" id="pTrk"><span>Include chemicals to add next<div class="hint">The dashboard's top cards (Trackers tab): when each was last added and when it is due.</div></span></label>
   <label class="chk"><input type="checkbox" id="pStock"><span>Include chemical stock<div class="hint">How much of each active chemical is on hand, with low / out of stock marked.</div></span></label>
+  <label class="chk"><input type="checkbox" id="pFit"><span>Fit on 2 pages when possible<div class="hint">Leaves out readings taken close together on the same day (never red or Leslie's readings) until the report fits.</div></span></label>
   <label class="chk"><input type="checkbox" id="pWhole"><span>Print the whole log, with the chosen range highlighted<div class="hint">Other rows print in gray without colors.</div></span></label>
   <div class="row">
     <button class="btn mgr" type="button" id="pSave" style="margin-right:auto" title="Open the print dialog with these choices next time (any device)">Remember settings</button>
@@ -963,7 +964,9 @@ var PRINT_TITLE = 'Rolling Oaks Club - Pool Report';
 var SAFARI_SCALE = 1.0667;         // Safari prints every CSS length (px, pt, in) 6.67% larger than Chrome, but its page area stays 10in
 var PRINT_BOX_IN = 9.55;           // CSS height of one page box (also in the .ppage rule). Page area is 10.25in (@page margins .5in top, .25in bottom; Safari obeys them, tested 2026-10-01), so this must stay under 10.25 / 1.0667 = 9.61in
 var PRINT_PAGE_PT = PRINT_BOX_IN * 72 * SAFARI_SCALE;   // that box as Safari really prints it (Chrome is smaller, so anything that fits here fits there)
-var PRINT_ROW_PT = 15.3;           // Safari row = 13.5pt*1.0667 + 0.8pt border = 15.2pt (measured from a Safari PDF; Chrome 14.25pt); count 15.3pt so a page can never overfill
+var PRINT_ROW_PT = 14.3;           // Safari row = 12.5pt*1.0667 + 0.8pt border = 14.13pt (13.5pt rows measured 15.2pt in a Safari PDF, 2026-10-01; tightened 2026-10-02); count 14.3pt so a page can never overfill
+var PRINT_FIT_PAGES = 2;           // "Fit on 2 pages when possible": leave out close-together readings until the report is this many pages
+var PRINT_FIT_GAP_MS = 2 * 3600e3; // readings on the same day this close together count as a retest / before-and-after pair
 var PRINT_LIST_GAP_PT = 6;         // extra space above the separate "Chemical additions" heading, below the test log
 var PRINT_LEGEND_PT = 0.56 * 72 * SAFARI_SCALE;   // room kept for the legend at the bottom of each page (it measures 0.50in)
 
@@ -2030,9 +2033,55 @@ function legendItems(){
   items.push('<div class="lr">' + GLYPH.green + ' in range &nbsp;! watch &nbsp;' + GLYPH.red + ' out of range (bold) &nbsp;' + GLYPH.purple + ' high</div>');
   return items.join('');
 }
+var PRINT_LINE_MAX = 82;    // characters that fit one printed addition line ("Added ..." + effect / "what" text; 2026-10-02 Safari PDF: 91 wrapped, 78 fit). Longer -> one line per chemical
+/** Characters a combined addition line would take: "Added a + b" plus the arrow/effect or "what" text. */
+function printLineLen(blk){
+  var c = blk.first, aff = AFFECT_LABEL[c.affects] ? c.affects : '';
+  var tail = aff ? 3 + AFFECT_LABEL[aff].length + (c.slow ? 10 : blk.calc.eff !== null ? 9 : 0) + blk.calc.also.reduce(function(n, a){ return n + a.k.length + 8; }, 0)
+                 : printWhat(blk.items).length + 1;
+  return 6 + blk.items.map(function(x){ return x.summary; }).join(' + ').length + tail;
+}
+function printWhat(items){ return items.map(function(x){ return x.what; }).filter(function(w, i, all){ return w && all.indexOf(w) === i; }).join(' · '); }
+/** The tests a report prints (before any are left out to fit). */
+function printTests(o){
+  return (DATA.tests || []).filter(function(t){ return hasReading(t) && (o.whole || inRange(t.day, o.from, o.to)); });
+}
+/**
+ * "Fit on 2 pages": the readings that may be left out, in the order to try them. Two readings on the same day within
+ * PRINT_FIT_GAP_MS make a pair; plain retests (no chemical added between) come first, then before-and-after pairs,
+ * closest first. Of a pair the one with fewer values goes (the earlier on a tie). Red and Leslie's readings always print.
+ */
+function printDropOrder(tests){
+  var ts = tests.slice().sort(function(a, b){ return a.ms - b.ms; }), out = [];
+  function count(t){ return PRINT_COLS.filter(function(c){ return isNum(t[c[0]]); }).length; }
+  function keep(t){ return t.store || PRINT_COLS.some(function(c){ return c[2] && colorOf(c[2], t[c[0]]) === 'red'; }); }
+  for (var i = 1; i < ts.length; i++){
+    var a = ts[i - 1], b = ts[i], gap = b.ms - a.ms;
+    if (a.day !== b.day || gap > PRINT_FIT_GAP_MS) continue;
+    var v = keep(a) ? (keep(b) ? null : b) : keep(b) ? a : (count(b) < count(a) ? b : a);
+    if (!v) continue;
+    var dosed = (DATA.chems || []).some(function(c){ return c.ms > a.ms && c.ms <= b.ms; });
+    out.push({t: v, other: v === a ? b : a, step: dosed ? 2 : 1, gap: gap});
+  }
+  return out.sort(function(x, y){ return x.step - y.step || x.gap - y.gap; });
+}
+/** Builds the report; with o.fit, leaves readings out one at a time until it fits PRINT_FIT_PAGES pages (all print if it never does). */
+function buildPrintFit(o){
+  var res = buildPrint(o);
+  if (!o.fit || res.pages <= PRINT_FIT_PAGES) return res;
+  var drop = [];
+  var order = printDropOrder(printTests(o));
+  for (var i = 0; i < order.length; i++){
+    if (drop.indexOf(order[i].t) >= 0 || drop.indexOf(order[i].other) >= 0) continue;   // its partner is already gone
+    drop.push(order[i].t);
+    res = buildPrint(Object.assign({}, o, {drop: drop}));
+    if (res.pages <= PRINT_FIT_PAGES) return res;
+  }
+  return buildPrint(o);
+}
 function buildPrint(o){
   var from = o.from, to = o.to;
-  var tests = (DATA.tests || []).filter(function(t){ return hasReading(t) && (o.whole || inRange(t.day, from, to)); });
+  var tests = printTests(o).filter(function(t){ return !o.drop || o.drop.indexOf(t) < 0; });
   var chems = (o.chem && unlocked) ? (DATA.chems || []).filter(function(c){ return o.whole || inRange(c.day, from, to); }) : [];
   var rows = [];
   tests.forEach(function(t){ rows.push({type:'t', ms:t.ms, d:t}); });
@@ -2044,7 +2093,11 @@ function buildPrint(o){
   });
   Object.keys(pblock).forEach(function(k){ pblock[k].calc = blockCalc(pblock[k].items); });
   chems.forEach(function(c){
-    rows.push({type:'c', ms:c.ms, d:c});
+    var blk = pblock[c.gid + '|' + blockKey(c)];
+    // one line per block (same group, same reading), amounts joined with "+"; a block too long for one line prints a line per chemical
+    if (blk.one === undefined) blk.one = blk.items.length < 2 || printLineLen(blk) <= PRINT_LINE_MAX;
+    if (!blk.one) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:[c], lead: blk.first === c});
+    else if (blk.first === c) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:blk.items, lead: true});
     var pr = DATA.preds && DATA.preds[c.gid];
     if (o.est && pr && !seenG[c.gid]){ seenG[c.gid] = 1; rows.push({type:'p', ms: groupInfo(c).ms + 1, d: {day: groupInfo(c).day}, pred: pr}); }
   });
@@ -2091,11 +2144,13 @@ function buildPrint(o){
       return '<tr class="{{L}}predrow' + (dim ? ' dim' : '') + '"><td class="dt" title="Estimated water chemistry right after these additions"><span class="pd"></span><span class="ptm">Estimate</span></td>' +
         PRINT_COLS.map(function(c){ return '<td>' + (by[c[0]] ? fmtNum(by[c[0]].to) : '') + '</td>'; }).join('') + (showCost ? '<td></td>' : '') + '</tr>';
     }
-    var c2 = r.d, aff = AFFECT_LABEL[c2.affects] ? c2.affects : '';
-    return '<tr class="{{L}}chemrow' + (o.tint ? ' tint' : '') + (aff ? ' r-' + aff : '') + (dim ? ' dim' : '') + '"><td class="dt"><span class="pd">{{D}}</span><span class="ptm">' + esc(groupInfo(c2).time) + '</span></td><td colspan="' + PRINT_COLS.length + '">Added ' + esc(c2.summary) +
-      (aff && pblock[c2.gid + '|' + blockKey(c2)].first === c2 ? '<span class="tag">' + (c2.dir === 'down' ? '↓' : '↑') + ' ' + AFFECT_LABEL[aff] + '</span>' +
-        effHtml({affects: c2.affects, slow: c2.slow, eff: pblock[c2.gid + '|' + blockKey(c2)].calc.eff, also: pblock[c2.gid + '|' + blockKey(c2)].calc.also}) : '') + (!aff ? whatHtml(c2.what) : '') + '</td>' +
-      (showCost ? '<td class="cost">' + (isNum(c2.cost) ? money(c2.cost) : '–') + '</td>' : '') + '</tr>';
+    var c2 = r.d, aff = AFFECT_LABEL[c2.affects] ? c2.affects : '', bi = r.items.slice().sort(function(a, b){ return a.ms - b.ms; });
+    var added = bi.map(function(x){ return x.summary; }).join(' + '), what = aff ? '' : printWhat(bi);
+    var costs = bi.filter(function(x){ return isNum(x.cost); }), cost = costs.reduce(function(n, x){ return n + x.cost; }, 0);
+    return '<tr class="{{L}}chemrow' + (o.tint ? ' tint' : '') + (aff ? ' r-' + aff : '') + (dim ? ' dim' : '') + '"><td class="dt"><span class="pd">{{D}}</span><span class="ptm">' + esc(groupInfo(c2).time) + '</span></td><td colspan="' + PRINT_COLS.length + '">Added ' + esc(added) +
+      (aff && r.lead ? '<span class="tag">' + (c2.dir === 'down' ? '↓' : '↑') + ' ' + AFFECT_LABEL[aff] + '</span>' +
+        effHtml({affects: c2.affects, slow: c2.slow, eff: r.blk.calc.eff, also: r.blk.calc.also}) : aff ? '' : whatHtml(what)) + '</td>' +
+      (showCost ? '<td class="cost">' + (costs.length ? money(cost) : '–') + '</td>' : '') + '</tr>';
   });
   var meta = rows.map(function(r){ return {day: r.type === 'c' ? groupInfo(r.d).day : r.d.day, date: r.type !== 'p'}; });
   var yrs = {}; meta.forEach(function(m){ yrs[m.day.slice(0, 4)] = 1; });
@@ -2182,18 +2237,18 @@ function openPrint(){
     });
   }
   // saved defaults ("Remember settings", server: printPrefs) or the built-in ones
-  var pp = DATA.printPrefs || {range: '2m', chem: true, tint: true, group: true, est: false, trk: false, stock: false, whole: false};
+  var pp = DATA.printPrefs || {range: '2m', chem: true, tint: true, group: true, est: false, trk: false, stock: false, whole: false, fit: true};
   sel.value = pp.range || '2m';
   $('pCustom').style.display = sel.value === 'custom' ? 'block' : 'none';
   if (sel.value === 'custom'){ $('pFrom').value = pp.from || ''; $('pTo').value = pp.to || ''; }
   $('pChem').checked = !!pp.chem; $('pWhole').checked = !!pp.whole; $('pTint').checked = !!pp.tint; $('pEst').checked = !!pp.est;
-  $('pTrk').checked = !!pp.trk; $('pStock').checked = !!pp.stock; $('pGroup').checked = !!pp.group; syncGroupOpt();
+  $('pTrk').checked = !!pp.trk; $('pStock').checked = !!pp.stock; $('pGroup').checked = !!pp.group; $('pFit').checked = pp.fit !== false; syncGroupOpt();
   $('pSave').disabled = false; $('pSave').textContent = 'Remember settings';
   openDlg('printDlg');
 }
 function printChoices(){
   return {range: $('pRange').value, from: $('pFrom').value, to: $('pTo').value, chem: $('pChem').checked, tint: $('pTint').checked,
-          group: $('pGroup').checked, est: $('pEst').checked, trk: $('pTrk').checked, stock: $('pStock').checked, whole: $('pWhole').checked};
+          group: $('pGroup').checked, est: $('pEst').checked, trk: $('pTrk').checked, stock: $('pStock').checked, whole: $('pWhole').checked, fit: $('pFit').checked};
 }
 function rememberPrint(){
   var b = $('pSave'); b.disabled = true; b.textContent = 'Saving…';
@@ -2207,7 +2262,7 @@ function doPrint(){
   var p = $('pRange').value, from, to;
   if (p === 'custom'){ from = $('pFrom').value; to = $('pTo').value; }
   else { var r = presetRange(p); from = r[0]; to = r[1]; }
-  buildPrint({from: from, to: to, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked});
+  buildPrintFit({from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked});
   closeDlg('printDlg');
   setTimeout(function(){ window.print(); }, 50);
 }
