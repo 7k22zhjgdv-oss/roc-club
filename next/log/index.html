@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pump Log</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B1712" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FAF7F1" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pump Log">
+<link rel="apple-touch-icon" href="https://7k22zhjgdv-oss.github.io/roc-club/log-icon.png">
+<link rel="icon" type="image/png" href="https://7k22zhjgdv-oss.github.io/roc-club/log-icon.png">
+<style>
+  /* The Pump Log (Well Log Tool, Board and Manager only) stays an Apps Script page; this page only frames it, which hides
+     Google's banner, and gives it its own home-screen name, icon and colours. Not linked from the other pages.
+     (What's left of the old Hosting Wrapper - Archive/index.wrapper-final.html.) */
+  html, body { margin: 0; height: 100%; background: #1B1712; }
+  @media (prefers-color-scheme: light) { html, body { background: #FAF7F1; } }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+  @supports (height: 100dvh) { iframe { height: 100dvh; } }
+  noscript { color: #999; font: 16px/1.4 system-ui, sans-serif; display: block; padding: 24px; }
+</style>
+</head>
+<body>
+<noscript>This page needs JavaScript.</noscript>
+<iframe id="tool" title="Pump Log" allow="fullscreen"
+  src="https://script.google.com/macros/s/AKfycbxuGpuW9uzpKp97sc9vTkFS5o_1WoonL7_q9fH0SH-HJJAZ3Dy29LtqreUofuBLp238/exec"></iframe>
+<script>
+// Sign in once: the Pump Log sends its key number / password up here ({roc:'save'}) and asks for it when it loads
+// ({roc:'hello'} -> {roc:'code'}); this page keeps it in its own storage, which survives reloads (storage inside the
+// frame doesn't). Only ever answered for the Apps Script page in OUR frame, and never when this page is itself framed.
+var FRAME = document.getElementById('tool'), KEY = 'rocSignIn', LEVEL_KEY = 'rocLevel';
+function fromTool(e) {
+  if (window.top !== window || !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(e.origin)) return false;
+  for (var w = e.source, i = 0; w && i < 6; i++) { if (w === FRAME.contentWindow) return true; if (w === w.parent) break; w = w.parent; }
+  return false;
+}
+window.addEventListener('message', function (e) {
+  if (!fromTool(e)) return;
+  var d = e.data || {};
+  try {
+    if (d.roc === 'hello') {
+      var lv = {}; try { lv = JSON.parse(localStorage.getItem(LEVEL_KEY) || '{}') || {}; } catch (x) {}
+      e.source.postMessage({ roc: 'code', code: localStorage.getItem(KEY) || '', level: lv.level || '', who: lv.who || '' }, e.origin);
+    } else if (d.roc === 'save' && typeof d.code === 'string' && d.code.length < 200) {
+      localStorage.setItem(KEY, d.code);
+      if (/^(member|board|manager)$/.test(d.level || '')) localStorage.setItem(LEVEL_KEY, JSON.stringify({ level: d.level, who: String(d.who || '').slice(0, 80) }));
+    } else if (d.roc === 'forget') {
+      localStorage.removeItem(KEY); localStorage.removeItem(LEVEL_KEY);
+    }
+  } catch (err) {}
+});
+// iPhone: typing in the frame (sign-in) can scroll this page under it, and it may stay shifted after the keyboard closes,
+// so taps land off from the buttons. This page never scrolls, so put it back at the top whenever it moves.
+function unshift() { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }
+window.addEventListener('scroll', unshift);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { setTimeout(unshift, 100); });
+</script>
+</body>
+</html>
