@@ -73,7 +73,7 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}
-.wrap{max-width:820px;margin:0 auto}
+.wrap{max-width:900px;margin:0 auto}   /* 900 (was 820, 2026-10-02): room for the 5 main tracker cards on one line (computer cards a little tighter below) */
 h1{font-size:22px;margin:0 0 2px}
 .sub{color:var(--muted);font-size:13px}
 .sub span{white-space:nowrap}
@@ -124,6 +124,14 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chip.red .v{font-weight:800}
 .chip.purple{background:var(--pTint)} .chip.purple .g{background:var(--purple)}
 .chip.csi{grid-column:-2 / -1;grid-row:1}   /* CSI always sits top right, so the column lines up down the page */
+/* computers (2026-10-02): every reading has its own fixed spot, as in a full test (FC CC pH TA CH CYA Salt Borates Temp CSI),
+   so each kind of reading lines up in one column down the page; a missing reading leaves its spot empty */
+@media (min-width:900px){
+  .chips{grid-template-columns:repeat(10,minmax(0,1fr))}
+  .chip{grid-row:1}
+  .chip.k-fc{grid-column:1} .chip.k-cc{grid-column:2} .chip.k-ph{grid-column:3} .chip.k-ta{grid-column:4} .chip.k-ch{grid-column:5}
+  .chip.k-cya{grid-column:6} .chip.k-salt{grid-column:7} .chip.k-bor{grid-column:8} .chip.k-tempF{grid-column:9} .chip.k-csi{grid-column:10}
+}
 .sr{position:absolute;left:-9999px}
 .card.store{border-color:var(--accent)}
 .store-tag{color:var(--accent);font-size:12px;font-weight:600;margin-left:8px}
@@ -215,7 +223,7 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c.lv-green .trk-w .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-w .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-w .s{color:var(--red)}
-.trk-k{color:var(--ink)} .trk-d{font-size:12px;font-weight:400;color:var(--muted)}
+.trk-k{color:var(--ink)}
 .trk-c.lv-green .trk-k{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-k{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-k{color:var(--red)}
@@ -260,10 +268,11 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-left-color:var(--lc)}
 .trk-more{flex:0 0 auto;align-self:stretch;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:transparent;border:1px dashed var(--line);border-radius:12px;padding:0 14px;cursor:pointer;white-space:nowrap}
 .trk-c.extra{border-style:dashed;border-left-style:solid}
-/* computers: the main cards share one line (no scroll bar); with "More" open they keep their size and the row scrolls */
+/* computers: the main cards share one line and stretch to fill it, never squeezed below their text;
+   in a narrow window (or with "More" open) the row scrolls instead */
 @media (min-width:561px){
-  .trk:not(.open){overflow-x:hidden}
-  .trk:not(.open) .trk-c{flex:1 1 0;min-width:0;max-width:none}
+  .trk:not(.open) .trk-c{flex:1 0 auto;max-width:none}
+  .up .trk{gap:6px} .up .trk-c{padding-left:9px;padding-right:9px} .trk-more{padding:0 10px}
 }
 /* "More" open (any screen): every card as wide as its text, nothing cut off; the row scrolls */
 .trk.open .trk-c{max-width:none}
@@ -314,16 +323,31 @@ body:not(.unlocked) .seg{display:none !important}
 .up .tdue{margin:0}
 .up .trk:not([hidden])+.tdue{margin-top:6px}
 /* phones: the row break is its own (empty) flex line, so the 6px between pill rows comes from the pills' own margins, not row-gap */
-@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
+@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0;padding-left:6px;padding-right:6px} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
 .seclbl{font-size:12px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
-.up .seclbl{display:block;margin:1px 3px 6px}
+.uprow{display:flex;align-items:center;gap:8px;margin:0 2px 6px 3px}
+/* "Details" under the test pills (2026-10-02): Stock and Next 7 days; closed on every visit */
+.updet:not(.open){display:none}
+.updet{display:grid;gap:10px;margin:8px 3px 2px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+@media (min-width:561px){ .updet{grid-template-columns:1fr 1fr;gap:16px} }
+.updet h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.updet ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.updet li b{color:var(--ink);font-weight:600}
+.updet .s{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.updet .lv-green{color:color-mix(in srgb,var(--green) 80%,var(--ink))} .updet .lv-yellow{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))} .updet .lv-red{color:var(--red)}
+.updet .none{color:var(--muted)}
+.upfull{grid-column:1 / -1;display:flex;justify-content:flex-end}
+.upfulllist{grid-column:1 / -1;display:grid;gap:10px}
+.upfulllist[hidden]{display:none}
+@media (min-width:561px){ .upfulllist{grid-template-columns:1fr 1fr;gap:10px 16px} }
 .histrow.priv{display:flex}
-.histrow{align-items:center;gap:8px;margin:16px 2px 8px;min-height:32px}
+.histrow{align-items:center;gap:8px;margin:16px 2px 8px}
 .hrng{font-size:12px;color:var(--muted);white-space:nowrap}
 .hrng:empty{display:none}
 .hrng::before{content:"· ";}
 .hln{flex:1;height:1px;background:var(--line);min-width:12px}
-.optbtn{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 10px 5px 12px;min-height:32px;cursor:pointer;white-space:nowrap}
+/* plain blue text + arrow, no pill (2026-10-02, saves height); the 6px padding keeps a finger-sized tap area, cancelled by the negative margin */
+.optbtn{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:none;border:0;border-radius:6px;padding:6px 2px 6px 6px;margin:-6px 0;cursor:pointer;white-space:nowrap}
 .optbtn svg{transition:transform .15s}
 .optbtn[aria-expanded="true"] svg{transform:rotate(180deg)}
 .optbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -757,9 +781,11 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
   <div class="skel" id="skel" aria-hidden="true"></div>
   <p class="lvlnote" id="lvlNote" hidden></p>
   <div class="up priv" id="up" hidden>
-    <div class="seclbl">Coming up</div>
+    <div class="uprow"><span class="seclbl">Coming up</span><span class="hln" aria-hidden="true"></span>
+      <button type="button" class="optbtn" id="upBtn" aria-expanded="false" aria-controls="upDet">Details<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
     <div class="trk priv" id="trk" aria-label="Last added" hidden></div>
     <div class="tdue priv brd" id="tdue" aria-label="Tests due" hidden></div>
+    <div class="updet" id="upDet"></div>
   </div>
   <div class="histrow priv" id="histRow">
     <span class="seclbl">History</span><span class="hrng" id="histRange"></span><span class="hln" aria-hidden="true"></span>
@@ -1110,7 +1136,7 @@ function chipHtml(c, t){
   if (!isNum(v)) return '';
   var col = c[2] ? colorOf(c[2], v) : '';
   var title = c[1] + ' ' + fmtNum(v) + (col ? ' – ' + COLNAMES[col] : '');
-  return '<div class="chip ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-tms="' + t.ms + '" title="' + esc(title) + '">' +
+  return '<div class="chip k-' + c[0] + ' ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-tms="' + t.ms + '" title="' + esc(title) + '">' +
     (col ? '<span class="g" aria-hidden="true">' + GLYPH[col] + '</span>' : '') +
     '<span class="v">' + numHtml(c[0], v) + '</span><span class="l">' + c[3] +
     (col ? '<span class="sr"> ' + COLNAMES[col] + '</span>' : '') + '</span></div>';
@@ -1244,7 +1270,7 @@ function predCard(p, day, gid){
   var by = {}; p.vals.forEach(function(v){ by[v.k] = v; });
   var chips = COLS.filter(function(c){ return by[c[0]]; }).map(function(c){
     var v = by[c[0]], col = c[2] ? colorOf(c[2], v.to) : '';
-    return '<div class="chip pc ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-gid="' + esc(gid) + '" data-pfrom="' + v.from + '" data-pto="' + v.to + '" title="' + esc(c[1] + ' about ' + fmtNum(v.to) + ', from ' + fmtNum(v.from) + (col ? ' – ' + COLNAMES[col] : '')) + '">' +
+    return '<div class="chip pc k-' + c[0] + ' ' + col + (c[0] === 'csi' ? ' csi' : '') + '" tabindex="0" data-rk="' + c[0] + '" data-gid="' + esc(gid) + '" data-pfrom="' + v.from + '" data-pto="' + v.to + '" title="' + esc(c[1] + ' about ' + fmtNum(v.to) + ', from ' + fmtNum(v.from) + (col ? ' – ' + COLNAMES[col] : '')) + '">' +
       (col ? '<span class="g" aria-hidden="true">' + GLYPH[col] + '</span>' : '') +
       '<span class="v">' + numHtml(c[0], v.to) + '</span><span class="l">' + c[3] +
       (col ? '<span class="sr"> ' + COLNAMES[col] + '</span>' : '') + '</span></div>';
@@ -1594,7 +1620,7 @@ function trkDue(t, s, ev){
 function trkCard(t, i){
   var s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
   if (du) return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkJob(t) + ': ' + du.word + ', ' + du.day + '. ' + du.ago) + '">' +
-    '<span class="trk-n">' + esc(trkJob(t)) + '</span><span class="trk-a"><span class="trk-k">' + esc(du.word) + '</span><span class="trk-d"> · ' + esc(du.day) + '</span></span>' +
+    '<span class="trk-n">' + esc(trkJob(t)) + '</span><span class="trk-a"><span class="trk-k">' + esc(du.word) + '</span></span>' +
     '<span class="trk-w">' + esc(du.ago) + '</span></button>';
   return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkLabel(t) + ': ' + (s.d === null ? 'no record' : agoText(s.d)) + (TRK_WORD[s.lv] ? ', ' + TRK_WORD[s.lv] : '')) + '">' +
     '<span class="trk-n">' + esc(trkLabel(t)) + '</span><span class="trk-a">' + (s.d === null ? 'No record' : esc(agoText(s.d))) + '</span>' +
@@ -1661,7 +1687,77 @@ function renderTrackers(){
   el.hidden = !(main.length + extra.length);
   renderTestsDue(ts);
   $('up').hidden = el.hidden && $('tdue').hidden;
+  renderUpDetails(ts);
 }
+/** Coming up "Details": Next 7 days, Stock alerts (Low stock / Out of stock only) and Full stock;
+ *  "about N more fillings / doses / shocks" comes from t.stock (server) and shows on both lists. */
+function renderUpDetails(ts){
+  var st = DATA.stock || {}, shown = {}, rows = [];
+  function chemName(key){
+    var c = (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === key; })[0];
+    return shortProduct(c ? stockPrintName(c.name) : key) || key;   // no strength: "Cal-Hypo 70%" -> "Cal-Hypo"
+  }
+  function level(x){
+    if (x.pct <= 0 || x.left <= 0) return ['red', 'Out of stock'];
+    if (x.pct < STOCK_RED_PCT) return ['red', 'Low stock'];
+    if (x.pct < STOCK_YELLOW_PCT) return ['yellow', 'Low stock'];
+    return ['green', 'Plenty'];
+  }
+  function line(key, x, more){
+    var lv = level(x);
+    return '<li><b>' + esc(chemName(key)) + '</b> · <span class="s lv-' + lv[0] + '">' + lv[1] + '</span>' +
+      (x.left > 0 ? ' · ' + (more ? esc(more) + ' (' + esc(fmtNum(x.left) + ' ' + x.unit) + ' left)' : esc(fmtNum(x.left) + ' ' + x.unit) + ' left') : '') + '</li>';
+  }
+  // "about N more fillings / doses / shocks" per chemical, from the dosing cards (t.stock, server); shown on alerts and in Full stock
+  var moreBy = {}, ord = trkOrder(ts), alertKeys = [];
+  ord.main.concat(ord.extra).forEach(function(i){
+    var t = ts[i], x = t.stock;
+    if (!x || moreBy[x.key] != null || !st[x.key]) return;
+    var word = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['filling', 'fillings'];
+    moreBy[x.key] = x.n == null ? '' : (level(st[x.key])[1] === 'Plenty' ? 'enough for about ' : 'about ') + x.n + ' more ' + word[x.n === 1 ? 0 : 1];
+    alertKeys.push(x.key);
+  });
+  // Stock alerts: Low stock / Out of stock only - the dosing cards' chemicals first, then any other active chemical
+  alertKeys.concat(Object.keys(st).sort()).forEach(function(key){
+    var x = st[key];
+    if (shown[key] || isInactive({name: key}) || level(x)[1] === 'Plenty') return;
+    shown[key] = true;
+    rows.push(line(key, x, moreBy[key] || ''));
+  });
+  var stockHtml = '<div><h3>Stock alerts</h3>' + (rows.length ? '<ul>' + rows.join('') + '</ul>' : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
+  // Next 7 days: every card and test with a due day up to a week out (daily tests left out); past due days count as "Now"
+  var today = todayCentral(), end = addDays(today, 7), byDay = {};
+  ts.forEach(function(t){
+    var ev = t.events && t.events[0], due = '';
+    if (!ev || t.err) return;
+    if (t.type === 'test'){ if (t.warn == null || t.warn <= 1) return; due = trkState(t).due; }
+    else { var span = t.warn != null ? t.warn : t.over; if (span == null) return; due = addDays(ev.day, span); }
+    if (!due || due > end) return;
+    var d = due < today ? today : due;
+    (byDay[d] = byDay[d] || []).push(t.type === 'test' ? t.name + ' test' : trkJob(t));
+  });
+  var days = Object.keys(byDay).sort();
+  var weekHtml = '<div><h3>Next 7 days</h3>' + (days.length ? '<ul>' + days.map(function(d){
+    var lab = d === today ? 'Now' : d === addDays(today, 1) ? 'Tomorrow' : fmtDayLong(d).replace(/, \d{4}$/, '');
+    return '<li><b>' + esc(lab) + '</b> · ' + esc(byDay[d].join(', ')) + '</li>';
+  }).join('') + '</ul>' : '<p class="none" style="margin:0">Nothing due in the next 7 days.</p>') + '</div>';
+  // "Full stock" (lower right): every active chemical with a stock count, grouped like the Prices window
+  var all = (DATA.chemicals || []).filter(function(c){ return st[c.name.toLowerCase()] && !isInactive(c); });
+  var full = '';
+  if (all.length){
+    var groups = {};
+    var FULL_ORDER = ['Chlorine', 'Orenda', 'Acid', 'Other'];   // Chlorine and Orenda (the longer lists) side by side, then Acid and Other
+    FULL_ORDER.forEach(function(g){ groups[g] = []; });
+    all.forEach(function(c){ groups[priceGroup(c)].push(c); });
+    full = '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>' +
+      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + FULL_ORDER.filter(function(g){ return groups[g].length; }).map(function(g){
+        return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ var k = c.name.toLowerCase(); return line(k, st[k], moreBy[k] || ''); }).join('') + '</ul></div>';
+      }).join('') + '</div>';
+  }
+  $('upDet').innerHTML = weekHtml + stockHtml + full;   // Next 7 days first (left on computers, top on phones)
+}
+var upFullOpen = false;   // "Full stock" list under Details; closed again on every load
 /** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
  *  (other tests at the end of that row). Within a row, Late pills move to the front, then Due, then the rest in that order.
  *  Phones start each row on its own line (.tbrk); computers show one line. */
@@ -1680,7 +1776,7 @@ function renderTestsDue(ts){
     else if (s.d === null) txt = '<span class="s">No test on record</span>';
     else if (s.lv === 'red') txt = '<span class="s">Late</span> · ' + esc(trkDay(s.due));
     else if (s.lv === 'yellow') txt = '<span class="s">Due</span> · ' + esc(s.d >= t.warn ? 'today' : trkDay(s.due));
-    else if (t.warn <= 1) txt = '<span class="s">Done</span>';
+    else if (t.warn <= 1) txt = '<span class="s">Done</span> · today';
     else txt = '<span class="s">Due</span> · ' + esc(trkDay(s.due));
     return (n && n === brk ? '<span class="tbrk" aria-hidden="true"></span>' : '') +
       '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
@@ -2887,6 +2983,13 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrint').addEventListener('click', function(){ closeDlg('menuDlg'); openPrint(); });
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
+  $('upDet').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('#upFullBtn');
+    if (!b) return;
+    upFullOpen = !upFullOpen; b.setAttribute('aria-expanded', upFullOpen ? 'true' : 'false');
+    var l = this.querySelector('.upfulllist'); if (l) l.hidden = !upFullOpen;
+  });
+  $('upBtn').addEventListener('click', function(){ var o = $('upDet').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg'].forEach(function(id){
