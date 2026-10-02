@@ -456,6 +456,10 @@ body.editing .hero-board #calBoard { cursor: auto; }
    at the end (measurements are there; the phone numbers below must match it). */
 .photo{display:none!important}
 .lower{background:transparent!important}
+/* the ripples drift down as the page scrolls (bgDrift, up to --drift), which pushed them ~100px past the footer: Safari
+   then let the page scroll on into a strip of ripples under the footer. So they end --drift short of the bottom, and
+   once drifted they end exactly at it. */
+.scenery{bottom:var(--drift,0px)}
 /* The picture lives in .bgstack (behind everything, the full height of the page): .bg-move holds the sky/pool and the
    pool-colour fade below it; .bg-beams and .bg-shade (darkening at the top and below the hero) sit still on top.
    Depth: .bg-move and the ripples drift down a little while the top section scrolls (CSS scroll-driven animation, so the
