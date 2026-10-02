@@ -1750,7 +1750,7 @@ function renderUpDetails(ts){
         return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ return line(c.name.toLowerCase(), st[c.name.toLowerCase()], ''); }).join('') + '</ul></div>';
       }).join('') + '</div>';
   }
-  $('upDet').innerHTML = stockHtml + weekHtml + full;
+  $('upDet').innerHTML = weekHtml + stockHtml + full;   // Next 7 days first (left on computers, top on phones)
 }
 var upFullOpen = false;   // "Full stock" list under Details; closed again on every load
 /** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
