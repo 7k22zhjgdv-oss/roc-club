@@ -73,7 +73,7 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));}
-.wrap{max-width:820px;margin:0 auto}
+.wrap{max-width:1080px;margin:0 auto}   /* 1080 (was 820, 2026-10-02): room for the 5 main tracker cards on one line */
 h1{font-size:22px;margin:0 0 2px}
 .sub{color:var(--muted);font-size:13px}
 .sub span{white-space:nowrap}
@@ -215,6 +215,10 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c.lv-green .trk-w .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-w .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-w .s{color:var(--red)}
+.trk-k{color:var(--ink)} .trk-d{font-size:12px;font-weight:400;color:var(--muted)}
+.trk-c.lv-green .trk-k{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
+.trk-c.lv-yellow .trk-k{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
+.trk-c.lv-red .trk-k{color:var(--red)}
 .trk-c.lv-yellow{--lc:var(--yellow);background:var(--yTint)}
 .trk-c.lv-red{--lc:var(--red);background:var(--rTint)}
 .trk-c.popopen{box-shadow:0 0 0 2px var(--accent)}
@@ -256,10 +260,10 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-left-color:var(--lc)}
 .trk-more{flex:0 0 auto;align-self:stretch;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:transparent;border:1px dashed var(--line);border-radius:12px;padding:0 14px;cursor:pointer;white-space:nowrap}
 .trk-c.extra{border-style:dashed;border-left-style:solid}
-/* computers: the main cards share one line (no scroll bar); with "More" open they keep their size and the row scrolls */
+/* computers: the main cards share one line and stretch to fill it, never squeezed below their text;
+   in a narrow window (or with "More" open) the row scrolls instead */
 @media (min-width:561px){
-  .trk:not(.open){overflow-x:hidden}
-  .trk:not(.open) .trk-c{flex:1 1 0;min-width:0;max-width:none}
+  .trk:not(.open) .trk-c{flex:1 0 auto;max-width:none}
 }
 /* "More" open (any screen): every card as wide as its text, nothing cut off; the row scrolls */
 .trk.open .trk-c{max-width:none}
@@ -1570,8 +1574,28 @@ function trkSortKey(t){
 }
 /** "Acid feeder filled" / "Orenda PR-10000 dosed" / "Superchlorinated" - the card's (and report tile's) top line. */
 function trkLabel(t){ return t.name + (t.type === 'slow' ? ' filled' : t.type === 'product' ? ' dosed' : ''); }
+/** Cards with due dates (2026-10-02) lead with what to do and when: "Fill acid feeder" / "Due in 2 days · Oct 4" / "Filled 5 days ago". */
+function trkJob(t){
+  if (t.type === 'slow') return 'Fill ' + (/^[A-Z][a-z]/.test(t.name) ? t.name.charAt(0).toLowerCase() + t.name.slice(1) : t.name);
+  if (t.type === 'product') return 'Dose ' + t.name;
+  if (t.type === 'shock') return 'Superchlorinate';
+  return t.name;
+}
+function trkDoneWord(t){ return t.type === 'slow' ? 'Filled' : t.type === 'product' ? 'Dosed' : 'Done'; }
+/** {word, day, ago} for a card with Warn / Overdue days and a record; null otherwise. Days late count from the due day. */
+function trkDue(t, s, ev){
+  if (!ev || s.lv === 'none' || s.d === null) return null;
+  var span = t.warn != null ? t.warn : t.over, left = span - s.d, word;
+  if (s.lv === 'red') word = -left > 0 ? -left + (left === -1 ? ' day late' : ' days late') : 'Late';
+  else if (s.lv === 'yellow') word = 'Due now';
+  else word = left === 1 ? 'Due tomorrow' : 'Due in ' + left + ' days';
+  return {word: word, day: trkDay(addDays(ev.day, span)), ago: trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase()};
+}
 function trkCard(t, i){
-  var s = trkState(t), ev = t.events && t.events[0];
+  var s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
+  if (du) return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkJob(t) + ': ' + du.word + ', ' + du.day + '. ' + du.ago) + '">' +
+    '<span class="trk-n">' + esc(trkJob(t)) + '</span><span class="trk-a"><span class="trk-k">' + esc(du.word) + '</span><span class="trk-d"> · ' + esc(du.day) + '</span></span>' +
+    '<span class="trk-w">' + esc(du.ago) + '</span></button>';
   return '<button type="button" class="trk-c lv-' + s.lv + (t.more ? ' extra' : '') + '" data-ti="' + i + '" aria-label="' + esc(trkLabel(t) + ': ' + (s.d === null ? 'no record' : agoText(s.d)) + (TRK_WORD[s.lv] ? ', ' + TRK_WORD[s.lv] : '')) + '">' +
     '<span class="trk-n">' + esc(trkLabel(t)) + '</span><span class="trk-a">' + (s.d === null ? 'No record' : esc(agoText(s.d))) + '</span>' +
     (ev ? '<span class="trk-w">' + trkWhenHtml(t, s, ev) + '</span>' : '') + '</button>';
@@ -1688,7 +1712,10 @@ function trkPrintHtml(){
   if (!main.length) return '';
   return '<div class="psech">Chemicals to add next</div><div class="ptiles" style="grid-template-columns:repeat(' + Math.min(6, Math.max(4, main.length)) + ',1fr)">' +
     main.map(function(i){
-      var t = ts[i], s = trkState(t), ev = t.events && t.events[0];
+      var t = ts[i], s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
+      // paper tiles are too narrow for the date on the big line, so it goes on the small one
+      if (du) return '<div class="pt ' + s.lv + '"><div class="n">' + esc(trkJob(t)) + '</div><div class="a">' + esc(du.word) + '</div>' +
+        '<div class="w">Due ' + esc(du.day) + ' · ' + esc(du.ago.toLowerCase()) + '</div></div>';
       return '<div class="pt' + (s.lv !== 'none' ? ' ' + s.lv : '') + '">' +
         '<div class="n">' + esc(trkLabel(t)) + '</div><div class="a">' + (ev ? esc(agoText(s.d)) : 'No record') + '</div>' +
         '<div class="w">' + trkWhenHtml(t, s, ev) + '</div></div>';
