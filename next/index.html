@@ -675,7 +675,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
           <div class="join-step">
             <span class="join-num" aria-hidden="true">1</span>
             <div><h3>Download the form</h3><p>The membership form is in the current Rules &amp; Regulations. Print it and fill it out.</p></div>
-            <a class="mem-btn join-btn" id="rulesCard" href="#" target="_blank" rel="noopener">Download</a>
+            <a class="mem-btn join-btn" id="rulesCard" href="#" download>Download</a>
           </div>
           <div class="join-step">
             <span class="join-num" aria-hidden="true">2</span>
@@ -773,7 +773,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     <nav class="foot-col" aria-label="Quick links">
       <h3>Quick links</h3>
       <a href="#" id="footSignup">Clubhouse Sign-Up</a>
-      <a href="#" id="footMember" target="_blank" rel="noopener">Membership Form</a>
+      <a href="#" id="footMember" download>Membership Form</a>
       <a href="#" id="footForm">Upload Membership Form</a>
       <a href="https://www.zeffy.com/embed/donation-form/help-support-the-club-and-grounds" target="_blank" rel="noopener" data-donate>Donate</a>
     </nav>
@@ -856,7 +856,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   </div>
   <div id="memNoMsg" hidden>
     <h3>Membership Required</h3>
-    <p class="memno">You must be a member to rent the clubhouse and pool. <span id="memFormLine">Download the form <a id="memFormLink" href="#" target="_blank" rel="noopener">here</a>,</span> fill it out, and upload it here or return it to our membership coordinator. Thank you!</p>
+    <p class="memno">You must be a member to rent the clubhouse and pool. <span id="memFormLine">Download the form <a id="memFormLink" href="#" download>here</a>,</span> fill it out, and upload it here or return it to our membership coordinator. Thank you!</p>
     <div class="row">
       <button type="button" id="memClose">Close</button>
       <button type="button" class="primary" id="memUpload">Upload form</button>
@@ -1040,7 +1040,9 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (!window.google || !google.script || !google.script.run) return;
     google.script.run.withSuccessHandler(function(r){
       if (r && r.ok && r.url) {
-        rulesCard.setAttribute('href', r.url); rulesCard.classList.remove('off'); rulesCard.textContent = 'Download';
+        // Drive's direct-download link (same file id), so the PDF saves instead of opening Drive's preview
+        var id = /\/d\/([\w-]+)/.exec(r.url);
+        rulesCard.setAttribute('href', id ? 'https://drive.google.com/uc?export=download&id=' + id[1] : r.url); rulesCard.classList.remove('off'); rulesCard.textContent = 'Download';
         $('rulesUpd').textContent = r.updated ? (' Updated ' + r.updated + '.') : '';
       } else {
         rulesCard.setAttribute('href', '#'); rulesCard.classList.add('off'); rulesCard.textContent = 'Not available yet';
