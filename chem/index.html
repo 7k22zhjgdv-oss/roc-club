@@ -216,7 +216,7 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk{gap:8px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin;margin:0 0 14px;padding:2px 1px 6px}
 .trk-c{flex:0 0 auto;min-width:128px;max-width:190px;scroll-snap-align:start;text-align:left;font:inherit;color:var(--ink);background:var(--card);
   border:1px solid var(--line);border-left:4px solid var(--lc,var(--line));border-radius:12px;padding:7px 11px 8px;cursor:pointer}
-.trk-c.lv-green{--lc:var(--green);background:color-mix(in srgb,var(--green) 10%,var(--card))}
+.trk-c.lv-green{--lc:var(--green);background:color-mix(in srgb,var(--green) 20%,var(--card))}
 /* status line under the days (same wording as the printed report): LATE · since …, DUE NOW · since …, DUE · … */
 .trk-w{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .trk-w .s{font-weight:800;letter-spacing:.03em;text-transform:uppercase}
@@ -227,8 +227,8 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk-c.lv-green .trk-k{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
 .trk-c.lv-yellow .trk-k{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
 .trk-c.lv-red .trk-k{color:var(--red)}
-.trk-c.lv-yellow{--lc:var(--yellow);background:var(--yTint)}
-.trk-c.lv-red{--lc:var(--red);background:var(--rTint)}
+.trk-c.lv-yellow{--lc:var(--yellow);background:color-mix(in srgb,var(--yellow) 32%,var(--card))}
+.trk-c.lv-red{--lc:var(--red);background:color-mix(in srgb,var(--red) 22%,var(--card))}
 .trk-c.popopen{box-shadow:0 0 0 2px var(--accent)}
 .trk-n{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trk-a{display:block;font-size:15px;font-weight:600;white-space:nowrap;margin-top:1px}
@@ -250,22 +250,19 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chipPop .mksw .tgl:disabled{opacity:.6}
 @media print{ .mk{display:none !important} }
 /* "Tests due" pills under the cards (Trackers tab rows of Type Test; Board / Manager): TA DUE · Oct 3, FC DONE, CYA LATE · Sep 28 */
-.tdue.priv{display:flex}
+/* equal columns (2026-10-03): 3 per row on phones (FC CC pH / TA CH CYA), all 6 in one row on computers */
+.tdue.priv{display:grid}
 .tbrk{display:none}
-@media (max-width:560px){ .tbrk{display:block;flex-basis:100%;height:0} }
 .tdue[hidden]{display:none !important}
-.tdue{flex-wrap:wrap;align-items:center;gap:6px;margin:-6px 0 14px;font-size:12.5px;color:var(--muted)}
-.tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:1px solid transparent;border-radius:999px;padding:2px 9px;cursor:pointer;white-space:nowrap}
+.tdue{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:-6px 0 14px;font-size:12.5px;color:var(--muted)}
+.tdc{font:inherit;font-size:12.5px;color:var(--ink2);background:var(--soft);border:1px solid transparent;border-radius:999px;padding:2px 6px;cursor:pointer;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
 .tdc b{color:var(--ink);font-weight:700;margin-right:4px}
 .tdc .s{font-weight:800;letter-spacing:.03em;text-transform:uppercase;font-size:11px}
-.tdc.lv-green{background:color-mix(in srgb,var(--green) 10%,var(--card))} .tdc.lv-green .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
-.tdc.lv-yellow{background:var(--yTint)} .tdc.lv-yellow .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
-.tdc.lv-red{background:var(--rTint)} .tdc.lv-red .s{color:var(--red)}
+.tdc.lv-green{background:color-mix(in srgb,var(--green) 20%,var(--card))} .tdc.lv-green .s{color:color-mix(in srgb,var(--green) 80%,var(--ink))}
+.tdc.lv-yellow{background:color-mix(in srgb,var(--yellow) 32%,var(--card))} .tdc.lv-yellow .s{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
+.tdc.lv-red{background:color-mix(in srgb,var(--red) 22%,var(--card))} .tdc.lv-red .s{color:var(--red)}
 .tdc.popopen{box-shadow:0 0 0 2px var(--accent)}
-/* outline in the status color so the pills and cards stand out on the Coming up panel (2026-10-02) */
-.tdc.lv-green{--lc:var(--green)} .tdc.lv-yellow{--lc:var(--yellow)} .tdc.lv-red{--lc:var(--red)}
-.tdc.lv-green,.tdc.lv-yellow,.tdc.lv-red,.trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-color:color-mix(in srgb,var(--lc) 45%,var(--card))}
-.trk-c.lv-green,.trk-c.lv-yellow,.trk-c.lv-red{border-left-color:var(--lc)}
+/* stronger fills, no colored outlines (2026-10-03): green 20%, yellow 32%, red 22% over the card color, so they stand out on the Coming up panel */
 .trk-more{flex:0 0 auto;align-self:stretch;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:transparent;border:1px dashed var(--line);border-radius:12px;padding:0 14px;cursor:pointer;white-space:nowrap}
 .trk-c.extra{border-style:dashed;border-left-style:solid}
 /* computers: the main cards share one line and stretch to fill it, never squeezed below their text;
@@ -323,23 +320,34 @@ body:not(.unlocked) .seg{display:none !important}
 .up .tdue{margin:0}
 .up .trk:not([hidden])+.tdue{margin-top:6px}
 /* phones: the row break is its own (empty) flex line, so the 6px between pill rows comes from the pills' own margins, not row-gap */
-@media (max-width:560px){ .tdue{row-gap:0} .tdc{margin:3px 0;padding-left:6px;padding-right:6px} .up .tdue{margin:-3px 0} .up .trk:not([hidden])+.tdue{margin-top:3px} }
+@media (max-width:560px){ .tdue{grid-template-columns:repeat(3,minmax(0,1fr))} .tdc{padding-left:3px;padding-right:3px;font-size:12px} .tdc .s{font-size:10.5px;letter-spacing:.01em} .tdc b{margin-right:3px} }
 .seclbl{font-size:12px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
 .uprow{display:flex;align-items:center;gap:8px;margin:0 2px 6px 3px}
 /* "Details" under the test pills (2026-10-02): Stock and Next 7 days; closed on every visit */
 .updet:not(.open){display:none}
 .updet{display:grid;gap:10px;margin:8px 3px 2px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
-@media (min-width:561px){ .updet{grid-template-columns:1fr 1fr;gap:16px} }
+@media (min-width:561px){ .updet{grid-template-columns:1fr 1fr;gap:10px 24px} .updet .upfull,.updet .upfulllist{grid-column:2} }   /* computers: Full stock sits under Stock alerts, same columns */
 .updet h3{margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.updet ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
-.updet li b{color:var(--ink);font-weight:600}
-.updet .s{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
-.updet .lv-green{color:color-mix(in srgb,var(--green) 80%,var(--ink))} .updet .lv-yellow{color:color-mix(in srgb,var(--yellow) 55%,var(--ink))} .updet .lv-red{color:var(--red)}
+/* Details tables (2026-10-03): fixed columns so the numbers line up down both stock lists */
+.stbl{display:grid;grid-template-columns:minmax(0,1fr) 36px 34px 39px 28px 46px;font-size:13.5px;font-variant-numeric:tabular-nums}
+.stbl>div,.wtbl>div{padding:4px 0;border-top:1px solid var(--line);white-space:nowrap}
+.stbl>div:nth-child(-n+6){border-top:0}
+.stbl .nm{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;padding-right:6px}
+.stbl .n{text-align:right;color:var(--ink);padding-right:4px}
+.stbl .u{color:var(--muted)}
+.stbl .hd{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:0 0 2px}
+.stbl .hc{grid-column:span 2;text-align:center}
+.updet .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 5px}
+.updet .tag.lv-yellow{background:color-mix(in srgb,var(--yellow) 32%,var(--card));color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
+.updet .tag.lv-red{background:color-mix(in srgb,var(--red) 22%,var(--card));color:var(--red)}
+.wtbl{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;font-size:13.5px}
+.wtbl>div:nth-child(-n+2){border-top:0}
+.wtbl>div{white-space:normal;color:var(--ink2)} .wtbl .d{font-weight:600;color:var(--ink);white-space:nowrap}
 .updet .none{color:var(--muted)}
 .upfull{grid-column:1 / -1;display:flex;justify-content:flex-end}
 .upfulllist{grid-column:1 / -1;display:grid;gap:10px}
 .upfulllist[hidden]{display:none}
-@media (min-width:561px){ .upfulllist{grid-template-columns:1fr 1fr;gap:10px 16px} }
+
 .histrow.priv{display:flex}
 .histrow{align-items:center;gap:8px;margin:16px 2px 8px}
 .hrng{font-size:12px;color:var(--muted);white-space:nowrap}
@@ -1695,39 +1703,39 @@ function renderTrackers(){
 /** Coming up "Details": Next 7 days, Stock alerts (Low stock / Out of stock only) and Full stock;
  *  "about N more fillings / doses / shocks" comes from t.stock (server) and shows on both lists. */
 function renderUpDetails(ts){
-  var st = DATA.stock || {}, shown = {}, rows = [];
-  function chemName(key){
+  var st = DATA.stock || {};
+  function chemName(key){   // short: no strength, no "(20 Mule)", "TriChlor Pucks"
     var c = (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === key; })[0];
-    return shortProduct(c ? stockPrintName(c.name) : key) || key;   // no strength: "Cal-Hypo 70%" -> "Cal-Hypo"
+    var n = shortProduct(c ? stockPrintName(c.name) : key).replace(/\s*\([^)]*\)/g, '').replace(/\s+-\s+/g, ' ').trim();
+    return n || key;
   }
   function level(x){
-    if (x.pct <= 0 || x.left <= 0) return ['red', 'Out of stock'];
-    if (x.pct < STOCK_RED_PCT) return ['red', 'Low stock'];
-    if (x.pct < STOCK_YELLOW_PCT) return ['yellow', 'Low stock'];
-    return ['green', 'Plenty'];
+    if (x.pct <= 0 || x.left <= 0) return ['red', 'Out'];
+    if (x.pct < STOCK_RED_PCT) return ['red', 'Low'];
+    if (x.pct < STOCK_YELLOW_PCT) return ['yellow', 'Low'];
+    return ['green', ''];
   }
-  function line(key, x, more){
-    var lv = level(x);
-    return '<li><b>' + esc(chemName(key)) + '</b> · <span class="s lv-' + lv[0] + '">' + lv[1] + '</span>' +
-      (x.left > 0 ? ' · ' + (more ? esc(more) + ' (' + esc(fmtNum(x.left) + ' ' + x.unit) + ' left)' : esc(fmtNum(x.left) + ' ' + x.unit) + ' left') : '') + '</li>';
-  }
-  // "about N more fillings / doses / shocks" per chemical, from the dosing cards (t.stock, server); shown on alerts and in Full stock
-  var moreBy = {}, ord = trkOrder(ts), alertKeys = [];
+  // how many more fillings / doses / shocks each chemical covers, from the dosing cards (t.stock, server)
+  var lasts = {}, ord = trkOrder(ts), cardKeys = [];
   ord.main.concat(ord.extra).forEach(function(i){
     var t = ts[i], x = t.stock;
-    if (!x || moreBy[x.key] != null || !st[x.key]) return;
-    var word = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['filling', 'fillings'];
-    moreBy[x.key] = x.n == null ? '' : (level(st[x.key])[1] === 'Plenty' ? 'enough for about ' : 'about ') + x.n + ' more ' + word[x.n === 1 ? 0 : 1];
-    alertKeys.push(x.key);
+    if (!x || lasts[x.key] || !st[x.key]) return;
+    var w = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['fill', 'fills'];
+    lasts[x.key] = x.n == null ? {n: '', w: ''} : {n: '~' + x.n, w: w[x.n === 1 ? 0 : 1]};
+    cardKeys.push(x.key);
   });
-  // Stock alerts: Low stock / Out of stock only - the dosing cards' chemicals first, then any other active chemical
-  alertKeys.concat(Object.keys(st).sort()).forEach(function(key){
-    var x = st[key];
-    if (shown[key] || isInactive({name: key}) || level(x)[1] === 'Plenty') return;
-    shown[key] = true;
-    rows.push(line(key, x, moreBy[key] || ''));
-  });
-  var stockHtml = '<div><h3>Stock alerts</h3>' + (rows.length ? '<ul>' + rows.join('') + '</ul>' : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
+  // one row = six fixed columns (name, tag, amount, unit, lasts number, lasts word), the same in both tables so the numbers line up
+  function row(key){
+    var x = st[key], lv = level(x), l = (x.left > 0 && lasts[key]) || {n: '', w: ''};
+    return '<div class="nm">' + esc(chemName(key)) + '</div><div>' + (lv[1] ? '<span class="tag lv-' + lv[0] + '">' + lv[1] + '</span>' : '') + '</div>' +
+      '<div class="n">' + esc(fmtNum(Math.max(0, x.left))) + '</div><div class="u">' + esc(x.unit) + '</div><div class="n">' + esc(l.n) + '</div><div class="u">' + esc(l.w) + '</div>';
+  }
+  var head = '<div class="hd"></div><div class="hd"></div><div class="hd hc">Left</div><div class="hd hc">Lasts</div>';
+  function table(keys){ return '<div class="stbl">' + head + keys.map(row).join('') + '</div>'; }
+  var active = Object.keys(st).filter(function(k){ return !isInactive({name: k}); });
+  // Stock alerts: Low / Out only - the dosing cards' chemicals first, then any other
+  var alerts = cardKeys.concat(active.sort()).filter(function(k, i, a){ return a.indexOf(k) === i && active.indexOf(k) >= 0 && level(st[k])[1]; });
+  var stockHtml = '<div><h3>Stock alerts</h3>' + (alerts.length ? table(alerts) : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
   // Next 7 days: every card and test with a due day up to a week out (daily tests left out); past due days count as "Now"
   var today = todayCentral(), end = addDays(today, 7), byDay = {};
   ts.forEach(function(t){
@@ -1740,24 +1748,19 @@ function renderUpDetails(ts){
     (byDay[d] = byDay[d] || []).push(t.type === 'test' ? t.name + ' test' : trkJob(t));
   });
   var days = Object.keys(byDay).sort();
-  var weekHtml = '<div><h3>Next 7 days</h3>' + (days.length ? '<ul>' + days.map(function(d){
+  var weekHtml = '<div><h3>Next 7 days</h3>' + (days.length ? '<div class="wtbl">' + days.map(function(d){
     var lab = d === today ? 'Now' : d === addDays(today, 1) ? 'Tomorrow' : fmtDayLong(d).replace(/, \d{4}$/, '');
-    return '<li><b>' + esc(lab) + '</b> · ' + esc(byDay[d].join(', ')) + '</li>';
-  }).join('') + '</ul>' : '<p class="none" style="margin:0">Nothing due in the next 7 days.</p>') + '</div>';
-  // "Full stock" (lower right): every active chemical with a stock count, grouped like the Prices window
-  var all = (DATA.chemicals || []).filter(function(c){ return st[c.name.toLowerCase()] && !isInactive(c); });
-  var full = '';
-  if (all.length){
-    var groups = {};
-    var FULL_ORDER = ['Chlorine', 'Orenda', 'Acid', 'Other'];   // Chlorine and Orenda (the longer lists) side by side, then Acid and Other
-    FULL_ORDER.forEach(function(g){ groups[g] = []; });
-    all.forEach(function(c){ groups[priceGroup(c)].push(c); });
-    full = '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
+    return '<div class="d">' + esc(lab) + '</div><div>' + esc(byDay[d].join(', ')) + '</div>';
+  }).join('') + '</div>' : '<p class="none" style="margin:0">Nothing due in the next 7 days.</p>') + '</div>';
+  // "Full stock" (lower right): everything not already in the alerts, Chlorine / Orenda / Acid / Other order
+  var FULL_ORDER = ['Chlorine', 'Orenda', 'Acid', 'Other'];
+  var rest = (DATA.chemicals || []).filter(function(c){ var k = c.name.toLowerCase(); return st[k] && !isInactive(c) && alerts.indexOf(k) < 0; })
+    .sort(function(a, b){ return FULL_ORDER.indexOf(priceGroup(a)) - FULL_ORDER.indexOf(priceGroup(b)); })
+    .map(function(c){ return c.name.toLowerCase(); })
+    .filter(function(k, i, a){ return a.indexOf(k) === i; });
+  var full = rest.length ? '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>' +
-      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + FULL_ORDER.filter(function(g){ return groups[g].length; }).map(function(g){
-        return '<div><h3>' + g + '</h3><ul>' + groups[g].map(function(c){ var k = c.name.toLowerCase(); return line(k, st[k], moreBy[k] || ''); }).join('') + '</ul></div>';
-      }).join('') + '</div>';
-  }
+      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '><div><h3>Everything else</h3>' + table(rest) + '</div></div>' : '';
   $('upDet').innerHTML = weekHtml + stockHtml + full;   // Next 7 days first (left on computers, top on phones)
 }
 var upFullOpen = false;   // "Full stock" list under Details; closed again on every load
