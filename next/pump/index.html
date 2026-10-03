@@ -858,9 +858,9 @@ window.rocStartPump = function (DATA) {
       unit: 'gpd',
       raw: DATA.pool,
       trendColor: 'var(--accent)',
-      trendLegendLabel: '7‑reading trend',
-      trendTileLabel: '7-reading trend',
-      trendTileSub: 'current median',
+      trendLegendLabel: 'EWMA-5 trend',
+      trendTileLabel: 'Trend (EWMA-5)',
+      trendTileSub: 'smoothed estimate',
       sourceLine: 'Source: &ldquo;Pool&rdquo; sheet, PUMPING LOG (Google Sheets).'
     }
   };
@@ -1433,7 +1433,7 @@ window.rocStartPump = function (DATA) {
           };
         }
       }
-      // Pool keeps its original 2nd tile (7-reading trend). Well shows the
+      // Pool keeps its original 2nd tile (EWMA-5 trend). Well shows the
       // weekly trend there instead, falling back to the old EWMA-5 tile
       // only if the server hasn't returned a weekly-trend verdict at all.
       var secondStat = (cfg.key === 'well' && weeklyTrendStat) ? weeklyTrendStat :
@@ -1812,7 +1812,7 @@ window.rocStartPump = function (DATA) {
       } else {
         var exLenShort = cfg.raw.excludedShort.length;
         footer.innerHTML =
-          '<strong>Reading this chart (Adjusted):</strong> the pool is topped off in bursts on a fixed cycle, not continuously, so a plain meter-delta GPD can land mid-burst or mid-lull and imply a rate that has nothing to do with real usage. This view fixes that by lining every reading up against the pool&rsquo;s actual fill-cycle boundaries — currently configured as every ' + s.intervalHours + ' hour' + (s.intervalHours === 1 ? '' : 's') + ' starting ' + hourLabel12(s.startHour) + ' (' + perDayTxt + '&times;/day; change it in the schedule below the chart) — rather than diffing whatever two readings happen to be adjacent in the sheet: each point represents the gallons added between two fill-cycle boundaries, using the two real readings nearest each one. ' + exLenShort + ' reading' + (exLenShort === 1 ? '' : 's') + ' that landed in the same fill window as the reading before ' + (exLenShort === 1 ? 'is' : 'are') + ' merged forward into whichever later reading finally crosses into a new window, rather than being dropped — so a run of close-together readings never permanently vanishes from the chart, it just collapses into fewer, more meaningful points. ' + clippedCount + ' remaining reading' + (clippedCount === 1 ? '' : 's') + ' above ' + Y_MAX + ' gpd ' + (clippedCount === 1 ? 'is' : 'are') + ' clipped to the top of the chart (▲, real value in the tooltip) but stay in the trend — those are genuine big top-off days, not artifacts. The trend line is the median of the 7 most recent adjusted readings, running continuously rather than resetting at logged notes the way the well chart resets at equipment changes. Prefer to see the numbers exactly as logged, with no adjustment at all? Switch to Raw above. The "//" breaks mark stretches of 30+ days with no logging at all, compressed to a fixed width so the surrounding bursts of real readings get more room on screen; shorter gaps are drawn as a normal connecting line at true scale. The time-range toggle above the chart (All time / YTD / Last 30 days) only changes what&rsquo;s drawn here — the rest of this page always reflects the full history. ' + cfg.sourceLine;
+          '<strong>Reading this chart (Adjusted):</strong> the pool is topped off in bursts on a fixed cycle, not continuously, so a plain meter-delta GPD can land mid-burst or mid-lull and imply a rate that has nothing to do with real usage. This view fixes that by lining every reading up against the pool&rsquo;s actual fill-cycle boundaries — currently configured as every ' + s.intervalHours + ' hour' + (s.intervalHours === 1 ? '' : 's') + ' starting ' + hourLabel12(s.startHour) + ' (' + perDayTxt + '&times;/day; change it in the schedule below the chart) — rather than diffing whatever two readings happen to be adjacent in the sheet: each point represents the gallons added between two fill-cycle boundaries, using the two real readings nearest each one. ' + exLenShort + ' reading' + (exLenShort === 1 ? '' : 's') + ' that landed in the same fill window as the reading before ' + (exLenShort === 1 ? 'is' : 'are') + ' merged forward into whichever later reading finally crosses into a new window, rather than being dropped — so a run of close-together readings never permanently vanishes from the chart, it just collapses into fewer, more meaningful points. ' + clippedCount + ' remaining reading' + (clippedCount === 1 ? '' : 's') + ' above ' + Y_MAX + ' gpd ' + (clippedCount === 1 ? 'is' : 'are') + ' clipped to the top of the chart (▲, real value in the tooltip) but stay in the trend — those are genuine big top-off days, not artifacts. The trend line is an exponentially weighted average of the adjusted readings (the most recent reading counts most, older ones less), so a real change such as a reading of zero pulls it down right away; it runs continuously rather than resetting at logged notes the way the well chart resets at equipment changes. Prefer to see the numbers exactly as logged, with no adjustment at all? Switch to Raw above. The "//" breaks mark stretches of 30+ days with no logging at all, compressed to a fixed width so the surrounding bursts of real readings get more room on screen; shorter gaps are drawn as a normal connecting line at true scale. The time-range toggle above the chart (All time / YTD / Last 30 days) only changes what&rsquo;s drawn here — the rest of this page always reflects the full history. ' + cfg.sourceLine;
       }
     }
   }
@@ -1957,7 +1957,7 @@ window.rocStartPump = function (DATA) {
     svg.appendChild(hoverDotPool);
 
     footer.innerHTML =
-      '<strong>Reading this chart:</strong> each line is that dataset&rsquo;s own trend line, exactly as shown on its own tab — well: an exponentially weighted average that resets at real equipment changes; pool: a 7-reading rolling median that never resets, currently showing the <b>' + (poolMode === 'raw' ? 'Raw' : 'Adjusted') + '</b> pool view (switch it on the Pool tab) — plotted here on one shared time axis and one shared gallons-per-day scale so the two are directly comparable. Unlike the individual charts, this axis doesn&rsquo;t compress long no-logging stretches into a fixed-width break — doing that separately for each line would throw off the date alignment between them, which is the whole point of this view. A real gap of 30+ days in either dataset just breaks that line rather than drawing a false connection across it; the other line keeps going if it has data there. ' + VIEWS.well.sourceLine + ' ' + VIEWS.pool.sourceLine;
+      '<strong>Reading this chart:</strong> each line is that dataset&rsquo;s own trend line, exactly as shown on its own tab — well: an exponentially weighted average that resets at real equipment changes; pool: the same kind of weighted average, but it never resets, currently showing the <b>' + (poolMode === 'raw' ? 'Raw' : 'Adjusted') + '</b> pool view (switch it on the Pool tab) — plotted here on one shared time axis and one shared gallons-per-day scale so the two are directly comparable. Unlike the individual charts, this axis doesn&rsquo;t compress long no-logging stretches into a fixed-width break — doing that separately for each line would throw off the date alignment between them, which is the whole point of this view. A real gap of 30+ days in either dataset just breaks that line rather than drawing a false connection across it; the other line keeps going if it has data there. ' + VIEWS.well.sourceLine + ' ' + VIEWS.pool.sourceLine;
   }
 
   function onMoveCombined(evt) {
