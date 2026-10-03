@@ -152,15 +152,16 @@ a.card:focus-visible { outline: 3px solid var(--oak); outline-offset: 3px; }
 .card.off .arrow { background: transparent; border: 1px dashed var(--glass-line); color: var(--paper-2); }
 .card-wrap{display:flex;flex-direction:column}
 /* Become a Member: the tile opens in place (1 download, 2 upload); open, it takes the whole row */
-.join{background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);border:1px solid var(--glass-line);border-radius:14px;transition:border-color .15s}
+/* header keeps the frosted card look; the opened steps get the lighter dashboard-tile background (#pumping-card) */
+.join{border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;transition:border-color .15s}
 .join.open{grid-column:1/-1;border-color:var(--oak)}
-.join>.card.join-head{background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none;cursor:pointer;border-radius:13px}
+.join>.card.join-head{border:0;cursor:pointer;border-radius:0}
 .join>.card.join-head:hover{background:var(--glass-hover)}
 .join:hover{border-color:var(--oak)}
-.join-head:focus-visible{outline:3px solid var(--oak);outline-offset:3px}
+.join-head:focus-visible{outline:3px solid var(--oak);outline-offset:-3px}
 .join-head .arrow svg{transition:transform .2s}
 .join.open .join-head .arrow svg{transform:rotate(90deg)}
-.join-body{padding:4px 20px 18px;border-top:1px solid var(--glass-line)}
+.join-body{padding:4px 20px 18px;border-top:1px solid var(--glass-line);background:rgba(6,12,16,.22)}
 .join-step{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 14px;padding:14px 0}
 .join-step:not(:first-child){border-top:1px solid var(--glass-line)}
 .join-num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--oak);color:var(--oak);font-weight:600;font-size:.9rem;transition:background .2s,border-color .2s}
