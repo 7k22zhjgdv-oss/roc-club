@@ -979,13 +979,36 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   var joinTile = $('joinTile'), joinHead = $('joinHead'), formWrap = $('formWrap'), formOpenBtn = $('formOpenBtn');
   var formErr = $('formErr'), formFiles = $('formFiles'), FORM_MAX = 5, FORM_MAX_BYTES = 20 * 1024 * 1024;
   var FORM_TYPES = {'application/pdf': 1, 'image/jpeg': 1, 'image/png': 1, 'image/heic': 1, 'image/heif': 1, 'image/webp': 1};
-  function setJoin(open){
-    joinTile.classList.toggle('open', open); $('joinBody').hidden = !open;
-    joinHead.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (!open) setForm(false);
+  // open/close animations: a section slides to its height (padding, border and margins too); off for reduced motion
+  var EASE = {duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)'};
+  var calm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
+  function slide(el, open, then){
+    if (el._anim){ el._anim.onfinish = null; el._anim.cancel(); el._anim = null; el.style.overflow = ''; }
+    if (calm.matches || !el.animate){ el.hidden = !open; if (then) then(); return; }
+    el.hidden = false;
+    var cs = getComputedStyle(el), props = ['paddingTop', 'paddingBottom', 'borderTopWidth', 'marginTop', 'marginBottom'];
+    var full = {height: el.getBoundingClientRect().height + 'px', opacity: 1}, none = {height: '0px', opacity: 0};
+    props.forEach(function(k){ full[k] = cs[k]; none[k] = '0px'; });
+    el.style.overflow = 'hidden';
+    var a = el._anim = el.animate(open ? [none, full] : [full, none], EASE);
+    a.onfinish = function(){ el._anim = null; el.style.overflow = ''; if (!open) el.hidden = true; if (then) then(); };
   }
-  function setForm(open){
-    formWrap.hidden = !open; formOpenBtn.classList.toggle('on', open);
+  // the tile also widens to the whole row when it opens (desktop): animate that width change
+  function widthFrom(w0){
+    var w1 = joinTile.getBoundingClientRect().width;
+    if (Math.abs(w1 - w0) > 1 && !calm.matches && joinTile.animate) joinTile.animate([{width: w0 + 'px'}, {width: w1 + 'px'}], EASE);
+  }
+  function setJoin(open){
+    joinHead.setAttribute('aria-expanded', open ? 'true' : 'false');
+    var w0 = joinTile.getBoundingClientRect().width;
+    // opening: widen first (unanimated) so the steps are measured at their final width, then animate both
+    if (open){ joinTile.classList.add('open'); slide($('joinBody'), true); widthFrom(w0); }
+    else slide($('joinBody'), false, function(){ setForm(false, true); w0 = joinTile.getBoundingClientRect().width; joinTile.classList.remove('open'); widthFrom(w0); });
+  }
+  function setForm(open, now){
+    if (now){ if (formWrap._anim){ formWrap._anim.onfinish = null; formWrap._anim.cancel(); formWrap._anim = null; formWrap.style.overflow = ''; } formWrap.hidden = !open; }
+    else slide(formWrap, open);
+    formOpenBtn.classList.toggle('on', open);
     formOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open){ $('formForm').hidden = false; $('formDone').hidden = true; formErr.textContent = ''; formFiles.value = ''; $('formSubmit').disabled = false; }
   }
@@ -1013,14 +1036,14 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // from the Membership Required popup and the footer: open the tile straight to the upload form
   function openUpload(){
     if (memberDlg.open) memberDlg.close();
-    setJoin(true); setForm(true);
+    setForm(true, true); if (joinHead.getAttribute('aria-expanded') !== 'true') setJoin(true);
     joinTile.scrollIntoView({behavior: 'smooth', block: 'start'}); focusName();
   }
-  joinHead.addEventListener('click', function(){ if (!document.body.classList.contains('editing')) setJoin(!joinTile.classList.contains('open')); });
+  joinHead.addEventListener('click', function(){ if (!document.body.classList.contains('editing')) setJoin(joinHead.getAttribute('aria-expanded') !== 'true'); });
   joinHead.addEventListener('keydown', function(e){
     if ((e.key === 'Enter' || e.key === ' ') && !document.body.classList.contains('editing')){ e.preventDefault(); joinHead.click(); }
   });
-  formOpenBtn.addEventListener('click', function(){ setForm(formWrap.hidden); if (!formWrap.hidden) focusName(); });
+  formOpenBtn.addEventListener('click', function(){ var open = formOpenBtn.getAttribute('aria-expanded') !== 'true'; setForm(open); if (open) focusName(); });
   $('memUpload').addEventListener('click', openUpload);
   if ($('footForm')) $('footForm').addEventListener('click', function(e){ e.preventDefault(); openUpload(); });
   formFiles.addEventListener('change', function(){ formErr.textContent = ''; });
