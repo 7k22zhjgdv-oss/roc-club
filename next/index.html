@@ -151,6 +151,40 @@ a.card:focus-visible { outline: 3px solid var(--oak); outline-offset: 3px; }
 .card.off h2 { color: var(--paper-2); }
 .card.off .arrow { background: transparent; border: 1px dashed var(--glass-line); color: var(--paper-2); }
 .card-wrap{display:flex;flex-direction:column}
+/* Become a Member: the tile opens in place (1 download, 2 upload); open, it takes the whole row */
+.join{background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);border:1px solid var(--glass-line);border-radius:14px;transition:border-color .15s}
+.join.open{grid-column:1/-1;border-color:var(--oak)}
+.join>.card.join-head{background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none;cursor:pointer;border-radius:13px}
+.join>.card.join-head:hover{background:var(--glass-hover)}
+.join:hover{border-color:var(--oak)}
+.join-head:focus-visible{outline:3px solid var(--oak);outline-offset:3px}
+.join-head .arrow svg{transition:transform .2s}
+.join.open .join-head .arrow svg{transform:rotate(90deg)}
+.join-body{padding:4px 20px 18px;border-top:1px solid var(--glass-line)}
+.join-step{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 14px;padding:14px 0}
+.join-step+.join-step{border-top:1px solid var(--glass-line)}
+.join-num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--oak);color:var(--oak);font-weight:600;font-size:.9rem}
+.join-step h3{margin:0;font-size:1rem;font-weight:600}
+.join-step p{margin:2px 0 0;color:var(--paper-2);font-size:.9rem;line-height:1.35}
+.join-btn{min-width:120px;text-align:center;text-decoration:none;box-sizing:border-box}
+.join-btn.off{background:transparent;color:var(--paper-2);border:1px dashed var(--glass-line);cursor:default;filter:none}
+.join-btn.on{background:transparent;color:var(--oak)}
+.join-form{margin:0 0 4px 44px;padding:14px 16px;border-radius:12px;background:rgba(255,248,236,.05);border:1px solid var(--glass-line)}
+.join-form .mem-label{display:block;margin:10px 0 5px}
+.join-form .mem-label:first-child{margin-top:0}
+.join-form .mem-in{width:100%;box-sizing:border-box}
+.join-form input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:10px;padding:10px;color:var(--paper);font-size:16px}
+.join-form .mem-err{color:#e2836b;font-size:.85rem;min-height:18px;margin-top:8px}
+.join-form .mem-row{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.join-done h3{margin:0 0 4px;font-size:1rem}
+.join-done p{margin:0;color:var(--paper-2);font-size:.92rem}
+@media (max-width: 560px){
+  .join-body{padding:2px 14px 14px}
+  .join-step{grid-template-columns:auto 1fr}
+  .join-step .join-btn{grid-column:1/-1;margin-top:8px;padding-block:10px}
+  .join-form{margin-left:0}
+  .join-form .mem-row .mem-btn,.join-form .mem-row .mem-cancel{flex:1}
+}
 .res-links{margin-bottom:12px}
 .hero-board{display:block}
 @supports (height: 100svh){ .splash{ --mid: 50svh; } }
@@ -216,7 +250,7 @@ dialog.pwdlg h3{margin:0 0 6px;font-size:1.1rem}
 dialog.pwdlg p{margin:0 0 14px;color:var(--paper-2);font-size:.9rem}
 /* sign-in box: a masked TEXT field, not type=password, so phones don't offer to save it as a website login */
 .secret{-webkit-text-security:disc;text-security:disc}
-dialog.pwdlg input.secret,dialog.pwdlg input.fin,dialog.pwdlg input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:10px;color:var(--paper);font-size:16px}
+dialog.pwdlg input.secret,dialog.pwdlg input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:10px;color:var(--paper);font-size:16px}
 dialog.pwdlg .err{color:#e2836b;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .ok{color:#9fca8c;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .row{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
@@ -226,8 +260,6 @@ dialog.pwdlg .row button:disabled{opacity:.5;cursor:default}
 dialog.pwdlg .row a.primary{border-radius:10px;border:1px solid var(--oak);background:var(--oak);color:var(--bark);padding:10px 16px;font-size:.95rem;font-weight:600;text-decoration:none}
 dialog.pwdlg .memno{color:var(--paper);font-size:.95rem;line-height:1.5}
 dialog.pwdlg .memno a{color:var(--oak);font-weight:600}
-dialog.pwdlg .fl{display:block;font-size:.85rem;color:var(--paper-2);margin:12px 0 5px}
-.form-panel{margin-bottom:12px}
 dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
 
 /* Tall, narrow screens (phones): the photo is scaled so the beam inscription spans the screen width (minus 16px each side),
@@ -633,11 +665,44 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   <div class="more-inner">
     <h2 class="sec-eyebrow">Membership</h2>
   <nav class="links res-links" aria-label="Membership resources">
-      <a class="card" id="rulesCard" href="#" target="_blank" rel="noopener">
-        <h2 data-edit="rulesHead">Become a Member!</h2>
-        <p id="rulesCardP"><span data-edit="rulesText">Current-year Pool Rules and Regulations sign up form.</span><span id="rulesUpd"></span></p>
-        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-      </a>
+      <div class="join" id="joinTile">
+        <div class="card join-head" id="joinHead" role="button" tabindex="0" aria-expanded="false" aria-controls="joinBody">
+          <h2 data-edit="rulesHead">Become a Member!</h2>
+          <p id="rulesCardP"><span data-edit="rulesText">Current-year Pool Rules and Regulations sign up form.</span><span id="rulesUpd"></span></p>
+          <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+        </div>
+        <div class="join-body" id="joinBody" hidden>
+          <div class="join-step">
+            <span class="join-num" aria-hidden="true">1</span>
+            <div><h3>Download the form</h3><p>The membership form is in the current Rules &amp; Regulations. Print it and fill it out.</p></div>
+            <a class="mem-btn join-btn" id="rulesCard" href="#" target="_blank" rel="noopener">Download</a>
+          </div>
+          <div class="join-step">
+            <span class="join-num" aria-hidden="true">2</span>
+            <div><h3>Send it back</h3><p>Upload the filled-out form as a PDF or photos of each page.</p></div>
+            <button type="button" class="mem-btn join-btn" id="formOpenBtn" aria-expanded="false" aria-controls="formWrap">Upload</button>
+          </div>
+          <div class="join-form" id="formWrap" hidden>
+            <form id="formForm" autocomplete="on" novalidate>
+              <label class="mem-label" for="formName">Your name</label>
+              <input type="text" class="mem-in" id="formName" autocomplete="name" maxlength="80">
+              <label class="mem-label" for="formEmail">Your email, so we can reach you</label>
+              <input type="email" class="mem-in" id="formEmail" autocomplete="email" maxlength="120">
+              <label class="mem-label" for="formFiles">Filled-out form (PDF or photos, up to 5 files)</label>
+              <input type="file" id="formFiles" accept="application/pdf,image/*" multiple>
+              <div class="mem-err" id="formErr" role="alert"></div>
+              <div class="mem-row">
+                <button type="button" class="mem-cancel" id="formCancel">Cancel</button>
+                <button type="submit" class="mem-btn" id="formSubmit">Send</button>
+              </div>
+            </form>
+            <div class="join-done" id="formDone" hidden role="status">
+              <h3>Form sent. Thank you!</h3>
+              <p>Our membership coordinator has your form and will be in touch.</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <a class="card" id="signupCard" href="https://forms.gle/5uCfK53v96GDidWY9" target="_blank" rel="noopener">
         <h2>Clubhouse Sign-Up</h2>
@@ -645,13 +710,6 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
       </a>
     </nav>
-    <div class="mem-panel form-panel">
-      <div class="mem-text">
-        <h2 class="mem-h">Return Your Form</h2>
-        <p>Filled out the membership form? Upload it here as a PDF or photos.</p>
-      </div>
-      <button type="button" class="mem-btn" id="formOpenBtn">Upload form</button>
-    </div>
     <div class="mem-panel si-out" id="memPanel">
       <div class="mem-text">
         <h2 class="mem-h">Members &amp; Board</h2>
@@ -806,33 +864,6 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   </div>
 </dialog>
 
-<dialog id="formDlg" class="pwdlg">
-  <div id="formAsk">
-    <h3>Send Your Membership Form</h3>
-    <p>Upload your filled-out form as a PDF or as photos of each page. It goes straight to our membership coordinator.</p>
-    <form id="formForm" autocomplete="on" novalidate>
-      <label class="fl" for="formName">Your name</label>
-      <input type="text" class="fin" id="formName" autocomplete="name" maxlength="80">
-      <label class="fl" for="formEmail">Your email, so we can reach you</label>
-      <input type="email" class="fin" id="formEmail" autocomplete="email" maxlength="120">
-      <label class="fl" for="formFiles">Filled-out form (PDF or photos, up to 5 files)</label>
-      <input type="file" id="formFiles" accept="application/pdf,image/*" multiple>
-      <div class="err" id="formErr" role="alert"></div>
-      <div class="row">
-        <button type="button" id="formCancel">Cancel</button>
-        <button type="submit" class="primary" id="formSubmit">Send</button>
-      </div>
-    </form>
-  </div>
-  <div id="formDone" hidden>
-    <h3>Form Sent</h3>
-    <p class="memno">Thank you! Our membership coordinator has your form and will be in touch.</p>
-    <div class="row">
-      <button type="button" class="primary" id="formClose">Close</button>
-    </div>
-  </div>
-</dialog>
-
 <dialog id="importDlg" class="pwdlg">
   <h3>Update Rules &amp; Regulations PDF</h3>
   <p>Choose the new PDF. It replaces the current one immediately.</p>
@@ -936,14 +967,35 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     });
   });
   // Membership form upload: anyone can send their filled-out form (uploadMembershipForm in Code.gs saves it and emails it)
-  var formDlg = $('formDlg'), formErr = $('formErr'), formFiles = $('formFiles'), FORM_MAX = 5, FORM_MAX_BYTES = 20 * 1024 * 1024;
+  var joinTile = $('joinTile'), joinHead = $('joinHead'), formWrap = $('formWrap'), formOpenBtn = $('formOpenBtn');
+  var formErr = $('formErr'), formFiles = $('formFiles'), FORM_MAX = 5, FORM_MAX_BYTES = 20 * 1024 * 1024;
   var FORM_TYPES = {'application/pdf': 1, 'image/jpeg': 1, 'image/png': 1, 'image/heic': 1, 'image/heif': 1, 'image/webp': 1};
-  function openFormDlg(){
-    if (memberDlg.open) memberDlg.close();
-    $('formAsk').hidden = false; $('formDone').hidden = true;
-    formErr.textContent = ''; formFiles.value = ''; $('formSubmit').disabled = false;
-    formDlg.showModal();
+  function setJoin(open){
+    joinTile.classList.toggle('open', open); $('joinBody').hidden = !open;
+    joinHead.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!open) setForm(false);
   }
+  function setForm(open){
+    formWrap.hidden = !open; formOpenBtn.classList.toggle('on', open);
+    formOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open){ $('formForm').hidden = false; $('formDone').hidden = true; formErr.textContent = ''; formFiles.value = ''; $('formSubmit').disabled = false; }
+  }
+  function focusName(){ try { $('formName').focus({preventScroll: true}); } catch(x){ $('formName').focus(); } }
+  // from the Membership Required popup and the footer: open the tile straight to the upload form
+  function openUpload(){
+    if (memberDlg.open) memberDlg.close();
+    setJoin(true); setForm(true);
+    joinTile.scrollIntoView({behavior: 'smooth', block: 'start'}); focusName();
+  }
+  joinHead.addEventListener('click', function(){ if (!document.body.classList.contains('editing')) setJoin(!joinTile.classList.contains('open')); });
+  joinHead.addEventListener('keydown', function(e){
+    if ((e.key === 'Enter' || e.key === ' ') && !document.body.classList.contains('editing')){ e.preventDefault(); joinHead.click(); }
+  });
+  formOpenBtn.addEventListener('click', function(){ setForm(formWrap.hidden); if (!formWrap.hidden) focusName(); });
+  $('memUpload').addEventListener('click', openUpload);
+  if ($('footForm')) $('footForm').addEventListener('click', function(e){ e.preventDefault(); openUpload(); });
+  formFiles.addEventListener('change', function(){ formErr.textContent = ''; });
+  $('formCancel').addEventListener('click', function(){ setForm(false); formOpenBtn.focus(); });
   function fileType(f){
     var t = String(f.type || '').toLowerCase();
     if (!t && /\.hei[cf]$/i.test(f.name)) t = 'image/' + f.name.slice(-4).toLowerCase();
@@ -957,12 +1009,6 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       r.readAsDataURL(f);
     });
   }
-  $('formOpenBtn').addEventListener('click', openFormDlg);
-  $('memUpload').addEventListener('click', openFormDlg);
-  if ($('footForm')) $('footForm').addEventListener('click', function(e){ e.preventDefault(); openFormDlg(); });
-  formFiles.addEventListener('change', function(){ formErr.textContent = ''; });
-  $('formCancel').addEventListener('click', function(){ formDlg.close(); });
-  $('formClose').addEventListener('click', function(){ formDlg.close(); });
   $('formForm').addEventListener('submit', function(e){
     e.preventDefault();
     var name = $('formName').value.trim(), email = $('formEmail').value.trim();
@@ -981,7 +1027,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var fail = function(){ $('formSubmit').disabled = false; formErr.textContent = 'Could not send. Check your connection and try again.'; };
     Promise.all(files.map(readB64)).then(function(list){
       google.script.run.withSuccessHandler(function(r){
-        if (r && r.ok) { $('formAsk').hidden = true; $('formDone').hidden = false; $('formClose').focus(); }
+        if (r && r.ok) { $('formForm').hidden = true; $('formDone').hidden = false; formFiles.value = ''; }
         else { $('formSubmit').disabled = false; formErr.textContent = (r && r.message) || 'Could not send. Try again.'; }
       }).withFailureHandler(fail).uploadMembershipForm({ name: name, email: email }, list);
     }, fail);
@@ -994,10 +1040,10 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (!window.google || !google.script || !google.script.run) return;
     google.script.run.withSuccessHandler(function(r){
       if (r && r.ok && r.url) {
-        rulesCard.setAttribute('href', r.url);
+        rulesCard.setAttribute('href', r.url); rulesCard.classList.remove('off'); rulesCard.textContent = 'Download';
         $('rulesUpd').textContent = r.updated ? (' Updated ' + r.updated + '.') : '';
       } else {
-        rulesCard.setAttribute('href', '#');
+        rulesCard.setAttribute('href', '#'); rulesCard.classList.add('off'); rulesCard.textContent = 'Not available yet';
         $('rulesUpd').textContent = ' Not uploaded yet.';
       }
       if (importCur) importCur.textContent = (r && r.ok && r.name) ? ('Current file: ' + r.name + (r.updated ? (' (updated ' + r.updated + ')') : '')) : 'No file uploaded yet.';
