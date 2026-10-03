@@ -162,14 +162,18 @@ a.card:focus-visible { outline: 3px solid var(--oak); outline-offset: 3px; }
 .join.open .join-head .arrow svg{transform:rotate(90deg)}
 .join-body{padding:4px 20px 18px;border-top:1px solid var(--glass-line)}
 .join-step{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 14px;padding:14px 0}
-.join-step+.join-step{border-top:1px solid var(--glass-line)}
-.join-num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--oak);color:var(--oak);font-weight:600;font-size:.9rem}
+.join-step:not(:first-child){border-top:1px solid var(--glass-line)}
+.join-num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--oak);color:var(--oak);font-weight:600;font-size:.9rem;transition:background .2s,border-color .2s}
+.join-num .ck{display:none;width:16px;height:16px}
+.join-num.done{background:#5f9a4c;border-color:#5f9a4c;color:#fff}
+.join-num.done .n{display:none}
+.join-num.done .ck{display:block}
 .join-step h3{margin:0;font-size:1rem;font-weight:600}
 .join-step p{margin:2px 0 0;color:var(--paper-2);font-size:.9rem;line-height:1.35}
 .join-btn{min-width:120px;text-align:center;text-decoration:none;box-sizing:border-box}
 .join-btn.off{background:transparent;color:var(--paper-2);border:1px dashed var(--glass-line);cursor:default;filter:none}
 .join-btn.on{background:transparent;color:var(--oak)}
-.join-form{margin:0 0 4px 44px;padding:14px 16px;border-radius:12px;background:rgba(255,248,236,.05);border:1px solid var(--glass-line)}
+.join-form{margin:0 0 14px 44px;padding:14px 16px;border-radius:12px;background:rgba(255,248,236,.05);border:1px solid var(--glass-line)}
 .join-form .mem-label{display:block;margin:10px 0 5px}
 .join-form .mem-label:first-child{margin-top:0}
 .join-form .mem-in{width:100%;box-sizing:border-box}
@@ -673,13 +677,13 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         </div>
         <div class="join-body" id="joinBody" hidden>
           <div class="join-step">
-            <span class="join-num" aria-hidden="true">1</span>
-            <div><h3>Download the form</h3><p>The membership form is in the current Rules &amp; Regulations. Print it and fill it out.</p></div>
+            <span class="join-num" id="joinNum1"><span class="n" aria-hidden="true">1</span><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+            <div><h3 data-edit="joinDlHead">Download the form</h3><p data-edit="joinDlText">The membership form is in the current Rules &amp; Regulations. Print it and fill it out.</p></div>
             <a class="mem-btn join-btn" id="rulesCard" href="#" download>Download</a>
           </div>
           <div class="join-step">
-            <span class="join-num" aria-hidden="true">2</span>
-            <div><h3>Send it back</h3><p>Upload the filled-out form as a PDF or photos of each page.</p></div>
+            <span class="join-num" id="joinNum2"><span class="n" aria-hidden="true">2</span><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+            <div><h3 data-edit="joinUpHead">Send it back</h3><p data-edit="joinUpText">Upload the filled-out form as a PDF or photos of each page.</p></div>
             <button type="button" class="mem-btn join-btn" id="formOpenBtn" aria-expanded="false" aria-controls="formWrap">Upload</button>
           </div>
           <div class="join-form" id="formWrap" hidden>
@@ -700,6 +704,11 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
               <h3>Form sent. Thank you!</h3>
               <p>Our membership coordinator has your form and will be in touch.</p>
             </div>
+          </div>
+          <div class="join-step">
+            <span class="join-num"><span class="n" aria-hidden="true">3</span></span>
+            <div><h3 data-edit="joinPayHead">Pay the yearly dues</h3><p data-edit="joinPayText">The membership coordinator will contact you with payment instructions.</p></div>
+            <span class="mem-btn join-btn off" aria-disabled="true">Coming soon</span>
           </div>
         </div>
       </div>
@@ -980,6 +989,26 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     formOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open){ $('formForm').hidden = false; $('formDone').hidden = true; formErr.textContent = ''; formFiles.value = ''; $('formSubmit').disabled = false; }
   }
+  // green check on steps 1 and 2 once done (remembered on this device for the current year)
+  var JOIN_KEY = 'rocJoin' + new Date().getFullYear();
+  function joinDone(){ try { return JSON.parse(localStorage.getItem(JOIN_KEY) || '{}') || {}; } catch(x){ return {}; } }
+  function markDone(step){
+    var d = joinDone(); d[step] = 1;
+    try { localStorage.setItem(JOIN_KEY, JSON.stringify(d)); } catch(x){}
+    showDone();
+  }
+  function showDone(){
+    var d = joinDone();
+    [['dl', 'joinNum1', 'Step 1 done'], ['up', 'joinNum2', 'Step 2 done']].forEach(function(s){
+      var el = $(s[1]); el.classList.toggle('done', !!d[s[0]]);
+      if (d[s[0]]) el.setAttribute('aria-label', s[2]); else el.removeAttribute('aria-label');
+    });
+  }
+  showDone();
+  [rulesCard, $('footMember'), $('memFormLink')].forEach(function(a){
+    if (a) a.addEventListener('click', function(){ var h = a.getAttribute('href'); if (h && h !== '#') markDone('dl'); });
+  });
+  window.rocOpenJoin = function(){ setJoin(true); };
   function focusName(){ try { $('formName').focus({preventScroll: true}); } catch(x){ $('formName').focus(); } }
   // from the Membership Required popup and the footer: open the tile straight to the upload form
   function openUpload(){
@@ -1027,7 +1056,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var fail = function(){ $('formSubmit').disabled = false; formErr.textContent = 'Could not send. Check your connection and try again.'; };
     Promise.all(files.map(readB64)).then(function(list){
       google.script.run.withSuccessHandler(function(r){
-        if (r && r.ok) { $('formForm').hidden = true; $('formDone').hidden = false; formFiles.value = ''; }
+        if (r && r.ok) { $('formForm').hidden = true; $('formDone').hidden = false; formFiles.value = ''; markDone('up'); }
         else { $('formSubmit').disabled = false; formErr.textContent = (r && r.message) || 'Could not send. Try again.'; }
       }).withFailureHandler(fail).uploadMembershipForm({ name: name, email: email }, list);
     }, fail);
@@ -1101,7 +1130,8 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   $('chemRelockBtn').addEventListener('click', function(){ if (document.body.classList.contains('editing')) endEdit(true); signOut(); });
 
   // ---- Manager: Edit page text. Outlined text becomes typeable; Save sends it to saveSiteText (Code.gs checks Manager).
-  var MAX = { welcome: 400, rulesHead: 40, donateHead: 60, donateText: 220, boardTail: 160, rulesText: 160, signupText: 160, membersText: 160, calTitle: 40 };
+  var MAX = { welcome: 400, rulesHead: 40, donateHead: 60, donateText: 220, boardTail: 160, rulesText: 160, signupText: 160, membersText: 160, calTitle: 40,
+    joinDlHead: 40, joinDlText: 160, joinUpHead: 40, joinUpText: 160, joinPayHead: 40, joinPayText: 160 };
   var editBar = $('editBar'), ebMsg = $('ebMsg'), before = {}, current = null;
   function edits(){ return Array.prototype.slice.call(document.querySelectorAll('[data-edit]')); }
   function makeEditable(el){
@@ -1113,6 +1143,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   function msg(t, err){ ebMsg.textContent = t; ebMsg.classList.toggle('err', !!err); }
   function startEdit(){
     before = {};
+    if (window.rocOpenJoin) window.rocOpenJoin();
     edits().forEach(function(el){ before[el.getAttribute('data-edit')] = el.textContent; makeEditable(el); });
     document.body.classList.add('editing'); editBar.hidden = false; $('ebReset').disabled = true; current = null;
     msg('Tap any outlined text to change it. Visitors see your changes after you tap Save.');
