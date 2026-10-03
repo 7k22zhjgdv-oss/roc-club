@@ -9,7 +9,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText"];
+  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm"];
   function call(fn, args, ok, fail){
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
@@ -151,6 +151,45 @@ a.card:focus-visible { outline: 3px solid var(--oak); outline-offset: 3px; }
 .card.off h2 { color: var(--paper-2); }
 .card.off .arrow { background: transparent; border: 1px dashed var(--glass-line); color: var(--paper-2); }
 .card-wrap{display:flex;flex-direction:column}
+/* Become a Member: the tile opens in place (1 download, 2 upload); open, it takes the whole row */
+/* header keeps the frosted card look; the opened steps get the lighter dashboard-tile background (#pumping-card) */
+.join{border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;transition:border-color .15s}
+.join.open{grid-column:1/-1;border-color:var(--oak)}
+.join>.card.join-head{border:0;cursor:pointer;border-radius:0}
+.join>.card.join-head:hover{background:var(--glass-hover)}
+.join:hover{border-color:var(--oak)}
+.join-head:focus-visible{outline:3px solid var(--oak);outline-offset:-3px}
+.join-head .arrow svg{transition:transform .2s}
+.join.open .join-head .arrow svg{transform:rotate(90deg)}
+.join-body{padding:4px 20px 18px;border-top:1px solid var(--glass-line);background:rgba(6,12,16,.22)}
+.join-step{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 14px;padding:14px 0}
+.join-step:not(:first-child){border-top:1px solid var(--glass-line)}
+.join-num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--oak);color:var(--oak);font-weight:600;font-size:.9rem;transition:background .2s,border-color .2s}
+.join-num .ck{display:none;width:16px;height:16px}
+.join-num.done{background:#5f9a4c;border-color:#5f9a4c;color:#fff}
+.join-num.done .n{display:none}
+.join-num.done .ck{display:block}
+.join-step h3{margin:0;font-size:1rem;font-weight:600}
+.join-step p{margin:2px 0 0;color:var(--paper-2);font-size:.9rem;line-height:1.35}
+.join-btn{min-width:120px;text-align:center;text-decoration:none;box-sizing:border-box}
+.join-btn.off{background:transparent;color:var(--paper-2);border:1px dashed var(--glass-line);cursor:default;filter:none}
+.join-btn.on{background:transparent;color:var(--oak)}
+.join-form{margin:0 0 14px 44px;padding:14px 16px;border-radius:12px;background:rgba(255,248,236,.05);border:1px solid var(--glass-line)}
+.join-form .mem-label{display:block;margin:10px 0 5px}
+.join-form .mem-label:first-child{margin-top:0}
+.join-form .mem-in{width:100%;box-sizing:border-box}
+.join-form input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:10px;padding:10px;color:var(--paper);font-size:16px}
+.join-form .mem-err{color:#e2836b;font-size:.85rem;min-height:18px;margin-top:8px}
+.join-form .mem-row{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.join-done h3{margin:0 0 4px;font-size:1rem}
+.join-done p{margin:0;color:var(--paper-2);font-size:.92rem}
+@media (max-width: 560px){
+  .join-body{padding:2px 14px 14px}
+  .join-step{grid-template-columns:auto 1fr}
+  .join-step .join-btn{grid-column:1/-1;margin-top:8px;padding-block:10px}
+  .join-form{margin-left:0}
+  .join-form .mem-row .mem-btn,.join-form .mem-row .mem-cancel{flex:1}
+}
 .res-links{margin-bottom:12px}
 .hero-board{display:block}
 @supports (height: 100svh){ .splash{ --mid: 50svh; } }
@@ -631,11 +670,49 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   <div class="more-inner">
     <h2 class="sec-eyebrow">Membership</h2>
   <nav class="links res-links" aria-label="Membership resources">
-      <a class="card" id="rulesCard" href="#" target="_blank" rel="noopener">
-        <h2 data-edit="rulesHead">Become a Member!</h2>
-        <p id="rulesCardP"><span data-edit="rulesText">Current-year Pool Rules and Regulations sign up form.</span><span id="rulesUpd"></span></p>
-        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-      </a>
+      <div class="join" id="joinTile">
+        <div class="card join-head" id="joinHead" role="button" tabindex="0" aria-expanded="false" aria-controls="joinBody">
+          <h2 data-edit="rulesHead">Become a Member!</h2>
+          <p id="rulesCardP"><span data-edit="rulesText">Current-year Pool Rules and Regulations sign up form.</span><span id="rulesUpd"></span></p>
+          <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+        </div>
+        <div class="join-body" id="joinBody" hidden>
+          <div class="join-step">
+            <span class="join-num" id="joinNum1"><span class="n" aria-hidden="true">1</span><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+            <div><h3 data-edit="joinDlHead">Download the form</h3><p data-edit="joinDlText">The membership form is in the current Rules &amp; Regulations. Print it and fill it out.</p></div>
+            <a class="mem-btn join-btn" id="rulesCard" href="#" download>Download</a>
+          </div>
+          <div class="join-step">
+            <span class="join-num" id="joinNum2"><span class="n" aria-hidden="true">2</span><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+            <div><h3 data-edit="joinUpHead">Send it back</h3><p data-edit="joinUpText">Upload the filled-out form as a PDF or photos of each page.</p></div>
+            <button type="button" class="mem-btn join-btn" id="formOpenBtn" aria-expanded="false" aria-controls="formWrap">Upload</button>
+          </div>
+          <div class="join-form" id="formWrap" hidden>
+            <form id="formForm" autocomplete="on" novalidate>
+              <label class="mem-label" for="formName">Your name</label>
+              <input type="text" class="mem-in" id="formName" autocomplete="name" maxlength="80">
+              <label class="mem-label" for="formEmail">Your email, so we can reach you</label>
+              <input type="email" class="mem-in" id="formEmail" autocomplete="email" maxlength="120">
+              <label class="mem-label" for="formFiles">Filled-out form (PDF or photos, up to 5 files)</label>
+              <input type="file" id="formFiles" accept="application/pdf,image/*" multiple>
+              <div class="mem-err" id="formErr" role="alert"></div>
+              <div class="mem-row">
+                <button type="button" class="mem-cancel" id="formCancel">Cancel</button>
+                <button type="submit" class="mem-btn" id="formSubmit">Send</button>
+              </div>
+            </form>
+            <div class="join-done" id="formDone" hidden role="status">
+              <h3>Form sent. Thank you!</h3>
+              <p>Our membership coordinator has your form and will be in touch.</p>
+            </div>
+          </div>
+          <div class="join-step">
+            <span class="join-num"><span class="n" aria-hidden="true">3</span></span>
+            <div><h3 data-edit="joinPayHead">Pay the yearly dues</h3><p data-edit="joinPayText">The membership coordinator will contact you with payment instructions.</p></div>
+            <span class="mem-btn join-btn off" aria-disabled="true">Coming soon</span>
+          </div>
+        </div>
+      </div>
 
       <a class="card" id="signupCard" href="https://forms.gle/5uCfK53v96GDidWY9" target="_blank" rel="noopener">
         <h2>Clubhouse Sign-Up</h2>
@@ -706,7 +783,8 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     <nav class="foot-col" aria-label="Quick links">
       <h3>Quick links</h3>
       <a href="#" id="footSignup">Clubhouse Sign-Up</a>
-      <a href="#" id="footMember" target="_blank" rel="noopener">Membership Form</a>
+      <a href="#" id="footMember" download>Membership Form</a>
+      <a href="#" id="footForm">Upload Membership Form</a>
       <a href="https://www.zeffy.com/embed/donation-form/help-support-the-club-and-grounds" target="_blank" rel="noopener" data-donate>Donate</a>
     </nav>
   </div>
@@ -788,9 +866,10 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   </div>
   <div id="memNoMsg" hidden>
     <h3>Membership Required</h3>
-    <p class="memno">You must be a member to rent the clubhouse and pool. <span id="memFormLine">Download the form <a id="memFormLink" href="#" target="_blank" rel="noopener">here</a>,</span> fill it out, and return it to our membership coordinator. Thank you!</p>
+    <p class="memno">You must be a member to rent the clubhouse and pool. <span id="memFormLine">Download the form <a id="memFormLink" href="#" download>here</a>,</span> fill it out, and upload it here or return it to our membership coordinator. Thank you!</p>
     <div class="row">
-      <button type="button" class="primary" id="memClose">Close</button>
+      <button type="button" id="memClose">Close</button>
+      <button type="button" class="primary" id="memUpload">Upload form</button>
     </div>
   </div>
 </dialog>
@@ -897,6 +976,116 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       a.setAttribute('href', h);
     });
   });
+  // Membership form upload: anyone can send their filled-out form (uploadMembershipForm in Code.gs saves it and emails it)
+  var joinTile = $('joinTile'), joinHead = $('joinHead'), formWrap = $('formWrap'), formOpenBtn = $('formOpenBtn');
+  var formErr = $('formErr'), formFiles = $('formFiles'), FORM_MAX = 5, FORM_MAX_BYTES = 20 * 1024 * 1024;
+  var FORM_TYPES = {'application/pdf': 1, 'image/jpeg': 1, 'image/png': 1, 'image/heic': 1, 'image/heif': 1, 'image/webp': 1};
+  // open/close animations: a section slides to its height (padding, border and margins too); off for reduced motion
+  var EASE = {duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)'};
+  var calm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
+  function slide(el, open, then){
+    if (el._anim){ el._anim.onfinish = null; el._anim.cancel(); el._anim = null; el.style.overflow = ''; }
+    if (calm.matches || !el.animate){ el.hidden = !open; if (then) then(); return; }
+    el.hidden = false;
+    var cs = getComputedStyle(el), props = ['paddingTop', 'paddingBottom', 'borderTopWidth', 'marginTop', 'marginBottom'];
+    var full = {height: el.getBoundingClientRect().height + 'px', opacity: 1}, none = {height: '0px', opacity: 0};
+    props.forEach(function(k){ full[k] = cs[k]; none[k] = '0px'; });
+    el.style.overflow = 'hidden';
+    var a = el._anim = el.animate(open ? [none, full] : [full, none], EASE);
+    a.onfinish = function(){ el._anim = null; el.style.overflow = ''; if (!open) el.hidden = true; if (then) then(); };
+  }
+  // the tile also widens to the whole row when it opens (desktop): animate that width change
+  function widthFrom(w0){
+    var w1 = joinTile.getBoundingClientRect().width;
+    if (Math.abs(w1 - w0) > 1 && !calm.matches && joinTile.animate) joinTile.animate([{width: w0 + 'px'}, {width: w1 + 'px'}], EASE);
+  }
+  function setJoin(open){
+    joinHead.setAttribute('aria-expanded', open ? 'true' : 'false');
+    var w0 = joinTile.getBoundingClientRect().width;
+    // opening: widen first (unanimated) so the steps are measured at their final width, then animate both
+    if (open){ joinTile.classList.add('open'); slide($('joinBody'), true); widthFrom(w0); }
+    else slide($('joinBody'), false, function(){ setForm(false, true); w0 = joinTile.getBoundingClientRect().width; joinTile.classList.remove('open'); widthFrom(w0); });
+  }
+  function setForm(open, now){
+    if (now){ if (formWrap._anim){ formWrap._anim.onfinish = null; formWrap._anim.cancel(); formWrap._anim = null; formWrap.style.overflow = ''; } formWrap.hidden = !open; }
+    else slide(formWrap, open);
+    formOpenBtn.classList.toggle('on', open);
+    formOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open){ $('formForm').hidden = false; $('formDone').hidden = true; formErr.textContent = ''; formFiles.value = ''; $('formSubmit').disabled = false; }
+  }
+  // green check on steps 1 and 2 once done (remembered on this device for the current year)
+  var JOIN_KEY = 'rocJoin' + new Date().getFullYear();
+  function joinDone(){ try { return JSON.parse(localStorage.getItem(JOIN_KEY) || '{}') || {}; } catch(x){ return {}; } }
+  function markDone(step){
+    var d = joinDone(); d[step] = 1;
+    try { localStorage.setItem(JOIN_KEY, JSON.stringify(d)); } catch(x){}
+    showDone();
+  }
+  function showDone(){
+    var d = joinDone();
+    [['dl', 'joinNum1', 'Step 1 done'], ['up', 'joinNum2', 'Step 2 done']].forEach(function(s){
+      var el = $(s[1]); el.classList.toggle('done', !!d[s[0]]);
+      if (d[s[0]]) el.setAttribute('aria-label', s[2]); else el.removeAttribute('aria-label');
+    });
+  }
+  showDone();
+  [rulesCard, $('footMember'), $('memFormLink')].forEach(function(a){
+    if (a) a.addEventListener('click', function(){ var h = a.getAttribute('href'); if (h && h !== '#') markDone('dl'); });
+  });
+  window.rocOpenJoin = function(){ setJoin(true); };
+  function focusName(){ try { $('formName').focus({preventScroll: true}); } catch(x){ $('formName').focus(); } }
+  // from the Membership Required popup and the footer: open the tile straight to the upload form
+  function openUpload(){
+    if (memberDlg.open) memberDlg.close();
+    setForm(true, true); if (joinHead.getAttribute('aria-expanded') !== 'true') setJoin(true);
+    joinTile.scrollIntoView({behavior: 'smooth', block: 'start'}); focusName();
+  }
+  joinHead.addEventListener('click', function(){ if (!document.body.classList.contains('editing')) setJoin(joinHead.getAttribute('aria-expanded') !== 'true'); });
+  joinHead.addEventListener('keydown', function(e){
+    if ((e.key === 'Enter' || e.key === ' ') && !document.body.classList.contains('editing')){ e.preventDefault(); joinHead.click(); }
+  });
+  formOpenBtn.addEventListener('click', function(){ var open = formOpenBtn.getAttribute('aria-expanded') !== 'true'; setForm(open); if (open) focusName(); });
+  $('memUpload').addEventListener('click', openUpload);
+  if ($('footForm')) $('footForm').addEventListener('click', function(e){ e.preventDefault(); openUpload(); });
+  formFiles.addEventListener('change', function(){ formErr.textContent = ''; });
+  $('formCancel').addEventListener('click', function(){ setForm(false); formOpenBtn.focus(); });
+  function fileType(f){
+    var t = String(f.type || '').toLowerCase();
+    if (!t && /\.hei[cf]$/i.test(f.name)) t = 'image/' + f.name.slice(-4).toLowerCase();
+    return t;
+  }
+  function readB64(f){
+    return new Promise(function(ok, fail){
+      var r = new FileReader();
+      r.onload = function(){ ok({ data: String(r.result).split(',')[1], type: fileType(f), name: f.name }); };
+      r.onerror = function(){ fail(r.error); };
+      r.readAsDataURL(f);
+    });
+  }
+  $('formForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('formName').value.trim(), email = $('formEmail').value.trim();
+    var files = Array.prototype.slice.call(formFiles.files || []), total = 0;
+    formErr.textContent = '';
+    if (!name) { formErr.textContent = 'Enter your name.'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { formErr.textContent = 'Enter your email address.'; return; }
+    if (!files.length) { formErr.textContent = 'Choose your filled-out form.'; return; }
+    if (files.length > FORM_MAX) { formErr.textContent = 'Choose up to ' + FORM_MAX + ' files.'; return; }
+    for (var i = 0; i < files.length; i++){
+      if (!FORM_TYPES[fileType(files[i])]) { formErr.textContent = files[i].name + ' is not a PDF or photo.'; return; }
+      total += files[i].size;
+    }
+    if (total > FORM_MAX_BYTES) { formErr.textContent = 'Those files are too large (20 MB in all). Try fewer or smaller photos.'; return; }
+    $('formSubmit').disabled = true; formErr.textContent = '';
+    var fail = function(){ $('formSubmit').disabled = false; formErr.textContent = 'Could not send. Check your connection and try again.'; };
+    Promise.all(files.map(readB64)).then(function(list){
+      google.script.run.withSuccessHandler(function(r){
+        if (r && r.ok) { $('formForm').hidden = true; $('formDone').hidden = false; formFiles.value = ''; markDone('up'); }
+        else { $('formSubmit').disabled = false; formErr.textContent = (r && r.message) || 'Could not send. Try again.'; }
+      }).withFailureHandler(fail).uploadMembershipForm({ name: name, email: email }, list);
+    }, fail);
+  });
+
   if ($('footSignup')) $('footSignup').addEventListener('click', function(e){ e.preventDefault(); $('signupCard').click(); });
   if ($('footYear')) $('footYear').textContent = new Date().getFullYear();
 
@@ -904,10 +1093,12 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (!window.google || !google.script || !google.script.run) return;
     google.script.run.withSuccessHandler(function(r){
       if (r && r.ok && r.url) {
-        rulesCard.setAttribute('href', r.url);
+        // Drive's direct-download link (same file id), so the PDF saves instead of opening Drive's preview
+        var id = /\/d\/([\w-]+)/.exec(r.url);
+        rulesCard.setAttribute('href', id ? 'https://drive.google.com/uc?export=download&id=' + id[1] : r.url); rulesCard.classList.remove('off'); rulesCard.textContent = 'Download';
         $('rulesUpd').textContent = r.updated ? (' Updated ' + r.updated + '.') : '';
       } else {
-        rulesCard.setAttribute('href', '#');
+        rulesCard.setAttribute('href', '#'); rulesCard.classList.add('off'); rulesCard.textContent = 'Not available yet';
         $('rulesUpd').textContent = ' Not uploaded yet.';
       }
       if (importCur) importCur.textContent = (r && r.ok && r.name) ? ('Current file: ' + r.name + (r.updated ? (' (updated ' + r.updated + ')') : '')) : 'No file uploaded yet.';
@@ -963,7 +1154,8 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   $('chemRelockBtn').addEventListener('click', function(){ if (document.body.classList.contains('editing')) endEdit(true); signOut(); });
 
   // ---- Manager: Edit page text. Outlined text becomes typeable; Save sends it to saveSiteText (Code.gs checks Manager).
-  var MAX = { welcome: 400, rulesHead: 40, donateHead: 60, donateText: 220, boardTail: 160, rulesText: 160, signupText: 160, membersText: 160, calTitle: 40 };
+  var MAX = { welcome: 400, rulesHead: 40, donateHead: 60, donateText: 220, boardTail: 160, rulesText: 160, signupText: 160, membersText: 160, calTitle: 40,
+    joinDlHead: 40, joinDlText: 160, joinUpHead: 40, joinUpText: 160, joinPayHead: 40, joinPayText: 160 };
   var editBar = $('editBar'), ebMsg = $('ebMsg'), before = {}, current = null;
   function edits(){ return Array.prototype.slice.call(document.querySelectorAll('[data-edit]')); }
   function makeEditable(el){
@@ -975,6 +1167,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   function msg(t, err){ ebMsg.textContent = t; ebMsg.classList.toggle('err', !!err); }
   function startEdit(){
     before = {};
+    if (window.rocOpenJoin) window.rocOpenJoin();
     edits().forEach(function(el){ before[el.getAttribute('data-edit')] = el.textContent; makeEditable(el); });
     document.body.classList.add('editing'); editBar.hidden = false; $('ebReset').disabled = true; current = null;
     msg('Tap any outlined text to change it. Visitors see your changes after you tap Save.');
