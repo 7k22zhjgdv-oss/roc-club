@@ -563,7 +563,8 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 .chain.cl { left: 14%; } .chain.cr { right: 14%; }
 /* the hangers are picked at random on each visit (script "Sign hangers"): iron links, jute rope or black iron rods with
    S-hooks, each drawn as a 24x46 picture centred where the plain chain above would be (the plain chain stays if scripts fail) */
-.chain.pic { width: 24px; height: 46px; top: -42px; background: none; box-shadow: none; border-radius: 0; }
+.chain.pic { width: 24px; height: 46px; top: -42px; background: none; box-shadow: none; border-radius: 0;
+  clip-path: inset(7px -12px -12px -12px); }   /* the beam's lower edge is about 6px down: nothing above it, so it never sits in front of the beam */
 .chain.pic::after { display: none; }
 .chain.pic.cl { margin-left: -10px; } .chain.pic.cr { margin-right: -10px; }
 .chain.pic svg { display: block; overflow: visible; }
@@ -1762,7 +1763,8 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   ];
   var draw = STYLES[Math.floor(Math.random() * STYLES.length)];
   document.querySelectorAll('.chain').forEach(function(c, i){
-    c.innerHTML = '<svg width="24" height="46" viewBox="0 0 24 46" aria-hidden="true">' + draw('hang' + i) + '</svg>';
+    // drawn 0-46 tall, squeezed into 7-46 so it starts at the beam's lower edge (6px down this picture) and never shows over the beam
+    c.innerHTML = '<svg width="24" height="46" viewBox="0 0 24 46" aria-hidden="true"><g transform="translate(0 7) scale(1 .848)">' + draw('hang' + i) + '</g></svg>';
     c.classList.add('pic');
   });
 })();
