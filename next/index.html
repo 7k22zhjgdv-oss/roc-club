@@ -92,7 +92,7 @@ body {
 }
 
 .top, .links { position: relative; z-index: 1; width: 100%; max-width: 1040px; margin-inline: auto; }
-.top { z-index: 2; }   /* above the copy of the beams in front of the sign (.bgfront), so the title never goes behind them */
+.top { z-index: 2; }   /* above the beams, which are in front of the sign (.bgfront), so the title never goes behind them */
 
 .eyebrow {
   margin: 10px 0 0;
@@ -492,7 +492,8 @@ body.editing .hero-board #calBoard { cursor: auto; }
    once drifted they end exactly at it. */
 .scenery{bottom:var(--drift,0px)}
 /* The picture lives in .bgstack (behind everything, the full height of the page): .bg-move holds the sky/pool and the
-   pool-colour fade below it; .bg-beams and .bg-shade (darkening at the top and below the hero) sit still on top.
+   pool-colour fade below it; .bg-shade (darkening at the top and below the hero) sits still on top. The beams are drawn
+   once, in FRONT of the page's top section (.bgfront, below), not here.
    Depth: .bg-move and the ripples drift down a little while the top section scrolls (CSS scroll-driven animation, so the
    browser moves them in step with scrolling; no script runs on scroll). Placed by the script "Background". */
 body{position:relative;z-index:0;background-color:#16110B}
@@ -503,11 +504,11 @@ html{overflow-x:clip}
 .bgstack{position:absolute;left:0;top:0;bottom:0;width:100vw;z-index:-1;overflow:hidden;pointer-events:none}
 .bgstack div{position:absolute}
 .bg-move{left:0;top:0;width:100%;height:100%}
-.bg-sky,.bg-beams{background-repeat:no-repeat;background-size:100% 100%}
+.bg-sky{background-repeat:no-repeat;background-size:100% 100%}
 .bg-tint{left:0;right:0;bottom:-600px}
 .bg-shade{inset:0}
-/* a copy of the beams (with their share of the darkening) IN FRONT of the hanging sign, always shown (hidden only with the
-   flat-photo fallback): the tops of the hangers go up behind the beam, and when the sign is smacked the sign flies up behind the beam and its bottom peeks over the top, between the beam and the tree.
+/* the beams (with their share of the darkening), drawn IN FRONT of the hanging sign (the only copy; hidden with the
+   flat-photo fallback, whose photo has the beams in it): the tops of the hangers go up behind the beam, and when the sign is smacked the sign flies up behind the beam and its bottom peeks over the top, between the beam and the tree.
    Masked by the beams picture itself so only beam/tree pixels cover the sign; placed by the script "Background". */
 .bgfront{position:absolute;left:0;top:0;bottom:0;width:100vw;z-index:1;overflow:hidden;pointer-events:none}
 .bf-beams{position:absolute;background-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
@@ -590,7 +591,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 </style>
 </head>
 <body>
-<div class="bgstack" aria-hidden="true"><div class="bg-move"><div class="bg-sky"></div><div class="bg-tint"></div></div><div class="bg-beams"></div><div class="bg-shade"></div></div>
+<div class="bgstack" aria-hidden="true"><div class="bg-move"><div class="bg-sky"></div><div class="bg-tint"></div></div><div class="bg-shade"></div></div>
 
 <main class="splash">
   <div class="photo" role="img" aria-label="A metal oak tree silhouette under a timber pavilion roof, with the inscription: Designed and built by your neighbors for the love of community"></div>
@@ -1675,7 +1676,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var DEPTH = .09, DRIFT_FOR = 1.6, layered = true;
   var splash = document.querySelector('.splash'), lower = document.querySelector('.lower'), scen = document.querySelector('.scenery');
   var mq = window.matchMedia('(max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px)');
-  var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky'), beams = stack.querySelector('.bg-beams');
+  var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky');
   var tint = stack.querySelector('.bg-tint'), shade = stack.querySelector('.bg-shade'), root = document.documentElement;
   var heroH = 0, fbeams = document.querySelector('.bf-beams');
   // the darkening at the top of the page, for a box whose top is `top` px down the page
@@ -1699,14 +1700,13 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     heroH = splash.offsetHeight;
     sky.style.backgroundImage = 'url("' + (layered ? SKY : FLAT) + '")';
     px(sky, x, y, w, h);
-    beams.hidden = !layered; fbeams.parentNode.hidden = !layered;
-    if (layered){ beams.style.backgroundImage = 'url("' + BEAMS + '")'; px(beams, x, y, w, h * BEAMH); }
+    fbeams.parentNode.hidden = !layered;
     // past the picture's bottom the page fades into the pool's colour
     tint.style.top = Math.round(y + h - 380) + 'px';
     tint.style.background = 'linear-gradient(180deg, rgba(' + TINT + ',0) 0, rgba(' + TINT + ',1) 378px)';
     shade.style.background = shadeAt(0) + ',' +
       'linear-gradient(180deg, rgba(8,12,14,0) ' + Math.round(heroH - 60) + 'px, rgba(8,12,14,.32) ' + Math.round(heroH + 220) + 'px, rgba(8,12,14,.42) 100%)';
-    // the copy in front of the sign: same picture and place, with the top darkening shifted to match
+    // the beams, in front of the sign: same place as the sky picture, with the top darkening shifted to match
     if (layered){
       px(fbeams, x, y, w, h * BEAMH);
       fbeams.style.backgroundImage = shadeAt(Math.round(y)) + ', url("' + BEAMS + '")';
@@ -1789,7 +1789,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   });
 
   // Smack (replay button, or a tap anywhere on the sign): it flies up behind the beam (fast, slowing like it's thrown
-  // upward) until its bottom peeks over the top of the beam (the beams copy .bgfront is in front of it meanwhile), turns over smoothly at the top, then falls and rocks to rest - bigger and longer than the entrance (each swing about 3/4
+  // upward) until its bottom peeks over the top of the beam (the beams, .bgfront, are in front of it), turns over smoothly at the top, then falls and rocks to rest - bigger and longer than the entrance (each swing about 3/4
   // of the last). It starts from wherever the sign is at that moment, so smacking it again mid-swing carries on smoothly.
   // [time 0-1, angle (deg), easing to the next point]; 4.6s in all
   var SMACK = [[0, null, 'cubic-bezier(.2, .75, .45, 1)'], [.09, -140, 'cubic-bezier(.5, 0, .9, .55)'],
