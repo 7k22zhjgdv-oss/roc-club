@@ -984,7 +984,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // open/close animations: a section slides to its height (padding, border and margins too); off for reduced motion
   var EASE = {duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)'};
   var calm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
-  function slide(el, open, then){
+  function slide(el, open, then, opts){
     if (el._anim){ el._anim.onfinish = null; el._anim.cancel(); el._anim = null; el.style.overflow = ''; }
     if (calm.matches || !el.animate){ el.hidden = !open; if (then) then(); return; }
     el.hidden = false;
@@ -992,14 +992,15 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var full = {height: el.getBoundingClientRect().height + 'px', opacity: 1}, none = {height: '0px', opacity: 0};
     props.forEach(function(k){ full[k] = cs[k]; none[k] = '0px'; });
     el.style.overflow = 'hidden';
-    var a = el._anim = el.animate(open ? [none, full] : [full, none], EASE);
+    var a = el._anim = el.animate(open ? [none, full] : [full, none], opts || EASE);
     a.onfinish = function(){ el._anim = null; el.style.overflow = ''; if (!open) el.hidden = true; if (then) then(); };
   }
   // Opening, when the tile shares a row with Clubhouse Sign-Up (computers, upright iPads): Clubhouse drops down a row, then
   // both widen to the whole row together (Clubhouse to the left, the tile to the right), then the steps slide open.
   // Closing runs the same in reverse. On phones (one column) only the steps slide.
   var signupCard = $('signupCard'), joinNav = joinTile.parentNode;
-  var MOVE = {duration: 240, easing: 'cubic-bezier(.4,0,.2,1)'}, GROW = {duration: 340, easing: 'cubic-bezier(.4,0,.2,1)'};
+  // about 1.5 seconds in all
+  var MOVE = {duration: 400, easing: 'cubic-bezier(.4,0,.2,1)'}, GROW = {duration: 580, easing: 'cubic-bezier(.4,0,.2,1)'}, STEPS = {duration: 520, easing: 'cubic-bezier(.2,.7,.2,1)'};
   function sideBySide(){   // in the closed layout, do the tile and Clubhouse sit on one row?
     var was = joinTile.classList.contains('open');
     if (was) joinTile.classList.remove('open');
@@ -1034,7 +1035,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       joinTile.style.width = j0.width + 'px'; signupCard.style.width = c0.width + 'px'; signupCard.style.justifySelf = 'end';
       dropTo(c0.top, h0, function(){
         var full = joinNav.clientWidth;
-        grow(full, full, function(){ clearInline(); slide($('joinBody'), true, done); });
+        grow(full, full, function(){ clearInline(); slide($('joinBody'), true, done, STEPS); });
       });
     } else {
       slide($('joinBody'), false, function(){
@@ -1051,7 +1052,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
           joinTile.classList.remove('open'); clearInline();
           dropTo(top, h, done);
         });
-      });
+      }, moving ? STEPS : null);
     }
   }
   function setForm(open, now){
