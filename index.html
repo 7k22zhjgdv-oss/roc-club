@@ -156,6 +156,7 @@ a.card:focus-visible { outline: 3px solid var(--oak); outline-offset: 3px; }
 /* header keeps the frosted card look; the opened steps get the lighter dashboard-tile background (#pumping-card) */
 .join{border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;transition:border-color .15s}
 .join.open{grid-column:1/-1;border-color:var(--oak)}
+.join.open+.card{grid-column:1/-1}   /* Clubhouse Sign-Up then takes the whole next row */
 .join>.card.join-head{border:0;cursor:pointer;border-radius:0}
 .join>.card.join-head:hover{background:var(--glass-hover)}
 .join:hover{border-color:var(--oak)}
@@ -983,7 +984,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // open/close animations: a section slides to its height (padding, border and margins too); off for reduced motion
   var EASE = {duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)'};
   var calm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
-  function slide(el, open, then){
+  function slide(el, open, then, opts){
     if (el._anim){ el._anim.onfinish = null; el._anim.cancel(); el._anim = null; el.style.overflow = ''; }
     if (calm.matches || !el.animate){ el.hidden = !open; if (then) then(); return; }
     el.hidden = false;
@@ -991,20 +992,68 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var full = {height: el.getBoundingClientRect().height + 'px', opacity: 1}, none = {height: '0px', opacity: 0};
     props.forEach(function(k){ full[k] = cs[k]; none[k] = '0px'; });
     el.style.overflow = 'hidden';
-    var a = el._anim = el.animate(open ? [none, full] : [full, none], EASE);
+    var a = el._anim = el.animate(open ? [none, full] : [full, none], opts || EASE);
     a.onfinish = function(){ el._anim = null; el.style.overflow = ''; if (!open) el.hidden = true; if (then) then(); };
   }
-  // the tile also widens to the whole row when it opens (desktop): animate that width change
-  function widthFrom(w0){
-    var w1 = joinTile.getBoundingClientRect().width;
-    if (Math.abs(w1 - w0) > 1 && !calm.matches && joinTile.animate) joinTile.animate([{width: w0 + 'px'}, {width: w1 + 'px'}], EASE);
+  // Opening, when the tile shares a row with Clubhouse Sign-Up (computers, upright iPads): Clubhouse drops down a row, then
+  // both widen to the whole row together (Clubhouse to the left, the tile to the right), then the steps slide open.
+  // Closing runs the same in reverse. On phones (one column) only the steps slide.
+  var signupCard = $('signupCard'), joinNav = joinTile.parentNode;
+  // about 1.5 seconds in all
+  var MOVE = {duration: 400, easing: 'cubic-bezier(.4,0,.2,1)'}, GROW = {duration: 580, easing: 'cubic-bezier(.4,0,.2,1)'}, STEPS = {duration: 520, easing: 'cubic-bezier(.2,.7,.2,1)'};
+  function sideBySide(){   // in the closed layout, do the tile and Clubhouse sit on one row?
+    var was = joinTile.classList.contains('open');
+    if (was) joinTile.classList.remove('open');
+    var same = Math.abs(joinTile.getBoundingClientRect().top - signupCard.getBoundingClientRect().top) < 2;
+    if (was) joinTile.classList.add('open');
+    return same;
+  }
+  function clearInline(){ [joinTile, signupCard].forEach(function(el){ el.style.width = ''; el.style.justifySelf = ''; }); }
+  function navMargin(){ return parseFloat(getComputedStyle(joinNav).marginBottom) || 0; }
+  // Clubhouse moves from where it was drawn (fromTop) to where it now is; the content below follows (nav margin)
+  function dropTo(fromTop, fromNavH, then){
+    var dy = fromTop - signupCard.getBoundingClientRect().top, m = navMargin(), dh = fromNavH - joinNav.getBoundingClientRect().height;
+    signupCard.animate([{transform: 'translateY(' + dy + 'px)'}, {transform: 'none'}], MOVE);
+    joinNav.animate([{marginBottom: (m + dh) + 'px'}, {marginBottom: m + 'px'}], MOVE).onfinish = then;
+  }
+  function grow(toJoin, toCard, then){
+    var a = joinTile.animate([{width: joinTile.getBoundingClientRect().width + 'px'}, {width: toJoin + 'px'}], GROW);
+    signupCard.animate([{width: signupCard.getBoundingClientRect().width + 'px'}, {width: toCard + 'px'}], GROW);
+    a.onfinish = then;
   }
   function setJoin(open){
+    if (joinTile._busy || open === joinTile.classList.contains('open')) return;
     joinHead.setAttribute('aria-expanded', open ? 'true' : 'false');
-    var w0 = joinTile.getBoundingClientRect().width;
-    // opening: widen first (unanimated) so the steps are measured at their final width, then animate both
-    if (open){ joinTile.classList.add('open'); slide($('joinBody'), true); widthFrom(w0); }
-    else slide($('joinBody'), false, function(){ setForm(false, true); w0 = joinTile.getBoundingClientRect().width; joinTile.classList.remove('open'); widthFrom(w0); });
+    var moving = !calm.matches && !!joinTile.animate && sideBySide();
+    var done = function(){ joinTile._busy = false; };
+    joinTile._busy = true;
+    if (open){
+      if (!moving){ joinTile.classList.add('open'); slide($('joinBody'), true, done); return; }
+      var j0 = joinTile.getBoundingClientRect(), c0 = signupCard.getBoundingClientRect(), h0 = joinNav.getBoundingClientRect().height;
+      joinTile.classList.add('open');
+      // hold both at their old widths (Clubhouse kept to the right) while it drops
+      joinTile.style.width = j0.width + 'px'; signupCard.style.width = c0.width + 'px'; signupCard.style.justifySelf = 'end';
+      dropTo(c0.top, h0, function(){
+        var full = joinNav.clientWidth;
+        grow(full, full, function(){ clearInline(); slide($('joinBody'), true, done, STEPS); });
+      });
+    } else {
+      slide($('joinBody'), false, function(){
+        setForm(false, true);
+        if (!moving){ joinTile.classList.remove('open'); done(); return; }
+        // the widths they will have once closed
+        joinTile.classList.remove('open');
+        var jw = joinTile.getBoundingClientRect().width, cw = signupCard.getBoundingClientRect().width;
+        joinTile.classList.add('open');
+        signupCard.style.width = signupCard.getBoundingClientRect().width + 'px'; signupCard.style.justifySelf = 'end';   // (end alone would shrink it to its text)
+        grow(jw, cw, function(){
+          joinTile.style.width = jw + 'px'; signupCard.style.width = cw + 'px';
+          var top = signupCard.getBoundingClientRect().top, h = joinNav.getBoundingClientRect().height;
+          joinTile.classList.remove('open'); clearInline();
+          dropTo(top, h, done);
+        });
+      }, moving ? STEPS : null);
+    }
   }
   function setForm(open, now){
     if (now){ if (formWrap._anim){ formWrap._anim.onfinish = null; formWrap._anim.cancel(); formWrap._anim = null; formWrap.style.overflow = ''; } formWrap.hidden = !open; }
