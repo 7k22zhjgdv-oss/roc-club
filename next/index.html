@@ -92,7 +92,7 @@ body {
 }
 
 .top, .links { position: relative; z-index: 1; width: 100%; max-width: 1040px; margin-inline: auto; }
-.top { z-index: 2; }   /* above the copy of the beams shown in front of the sign during a smack (.bgfront), so the title never goes behind them */
+.top { z-index: 2; }   /* above the copy of the beams in front of the sign (.bgfront), so the title never goes behind them */
 
 .eyebrow {
   margin: 10px 0 0;
@@ -506,8 +506,8 @@ html{overflow-x:clip}
 .bg-sky,.bg-beams{background-repeat:no-repeat;background-size:100% 100%}
 .bg-tint{left:0;right:0;bottom:-600px}
 .bg-shade{inset:0}
-/* a copy of the beams (with their share of the darkening) IN FRONT of the hanging sign, shown only while the sign is
-   smacked: the sign flies up behind the beam and its bottom peeks over the top, between the beam and the tree.
+/* a copy of the beams (with their share of the darkening) IN FRONT of the hanging sign, always shown (hidden only with the
+   flat-photo fallback): the tops of the hangers go up behind the beam, and when the sign is smacked the sign flies up behind the beam and its bottom peeks over the top, between the beam and the tree.
    Masked by the beams picture itself so only beam/tree pixels cover the sign; placed by the script "Background". */
 .bgfront{position:absolute;left:0;top:0;bottom:0;width:100vw;z-index:1;overflow:hidden;pointer-events:none}
 .bf-beams{position:absolute;background-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
@@ -563,8 +563,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 .chain.cl { left: 14%; } .chain.cr { right: 14%; }
 /* the hangers are picked at random on each visit (script "Sign hangers"): iron links, jute rope or black iron rods with
    S-hooks, each drawn as a 24x46 picture centred where the plain chain above would be (the plain chain stays if scripts fail) */
-.chain.pic { width: 24px; height: 46px; top: -42px; background: none; box-shadow: none; border-radius: 0;
-  clip-path: inset(7px -12px -12px -12px); }   /* the beam's lower edge is about 6px down: nothing above it, so it never sits in front of the beam */
+.chain.pic { width: 24px; height: 46px; top: -42px; background: none; box-shadow: none; border-radius: 0; }
 .chain.pic::after { display: none; }
 .chain.pic.cl { margin-left: -10px; } .chain.pic.cr { margin-right: -10px; }
 .chain.pic svg { display: block; overflow: visible; }
@@ -609,7 +608,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   </div>
 
 </main>
-<div class="bgfront" aria-hidden="true" hidden><div class="bf-beams"></div></div>
+<div class="bgfront" aria-hidden="true"><div class="bf-beams"></div></div>
 
 <div class="lower">
 <div class="scenery" aria-hidden="true"><div class="ripples"><i class="rip r1"></i><i class="rip r2"></i></div></div>
@@ -1700,7 +1699,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     heroH = splash.offsetHeight;
     sky.style.backgroundImage = 'url("' + (layered ? SKY : FLAT) + '")';
     px(sky, x, y, w, h);
-    beams.hidden = !layered;
+    beams.hidden = !layered; fbeams.parentNode.hidden = !layered;
     if (layered){ beams.style.backgroundImage = 'url("' + BEAMS + '")'; px(beams, x, y, w, h * BEAMH); }
     // past the picture's bottom the page fades into the pool's colour
     tint.style.top = Math.round(y + h - 380) + 'px';
@@ -1763,8 +1762,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   ];
   var draw = STYLES[Math.floor(Math.random() * STYLES.length)];
   document.querySelectorAll('.chain').forEach(function(c, i){
-    // drawn 0-46 tall, squeezed into 7-46 so it starts at the beam's lower edge (6px down this picture) and never shows over the beam
-    c.innerHTML = '<svg width="24" height="46" viewBox="0 0 24 46" aria-hidden="true"><g transform="translate(0 7) scale(1 .848)">' + draw('hang' + i) + '</g></svg>';
+    c.innerHTML = '<svg width="24" height="46" viewBox="0 0 24 46" aria-hidden="true">' + draw('hang' + i) + '</svg>';
     c.classList.add('pic');
   });
 })();
@@ -1780,7 +1778,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var jos = hb.querySelector('.jostle'), front = document.querySelector('.bgfront'), smackAnim = null;
   function play(smack){
     if (smack) return doSmack();
-    if (smackAnim){ smackAnim.cancel(); smackAnim = null; if (front) front.hidden = true; }
+    if (smackAnim){ smackAnim.cancel(); smackAnim = null; }
     hb.classList.remove('pre', 'enter', 'in-swing');
     if (board.hidden) return;
     void hb.offsetWidth;
@@ -1809,11 +1807,11 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     if (smackAnim) smackAnim.cancel();
     hb.classList.remove('pre', 'in-swing', 'enter');
     // flat-photo fallback (no separate beams): cut off at the beam as in the entrance instead
-    if (front && window.rocBeamsFront !== false) front.hidden = false; else hb.classList.add('enter');
+    if (!front || window.rocBeamsFront === false) hb.classList.add('enter');
     var anim = smackAnim = jos.animate(SMACK.map(function(k){
       return { offset: k[0], transform: 'rotateX(' + (k[1] === null ? from : k[1]) + 'deg)', easing: k[2] };
     }), { duration: 4600 });
-    anim.onfinish = function(){ if (smackAnim === anim){ smackAnim = null; hb.classList.remove('enter'); if (front) front.hidden = true; } };
+    anim.onfinish = function(){ if (smackAnim === anim){ smackAnim = null; hb.classList.remove('enter'); } };
   }
 
   // a tap or click anywhere on the sign smacks it (there is no separate replay button) - except on or near (GAP px) its two links, while editing
