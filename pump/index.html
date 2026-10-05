@@ -669,6 +669,10 @@
   #signDlg label { display: block; font-size: 13px; margin-bottom: 4px; }
   /* sign-in box: a masked TEXT field, not type=password, so phones don't offer to save it as a website login */
   .secret { -webkit-text-security: disc; text-security: disc; }
+  .secret.shown { -webkit-text-security: none; text-security: none; }
+  .pw-wrap { position: relative; display: block; }
+  #signDlg .pw-wrap input { padding-right: 64px; }
+  #signDlg .pw-show { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 6px 10px; min-height: 36px; color: var(--accent); font-size: 14px; font-weight: 600; }
   #signDlg input { width: 100%; box-sizing: border-box; font-size: 16px; padding: 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--page); color: var(--ink-1); }
   #signDlg .err { min-height: 18px; margin-top: 6px; font-size: 13px; color: var(--bad); }
   #signDlg .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
@@ -688,7 +692,7 @@
   <p class="hint">Members: your pool key number (letter and number).<br>Board and manager: your password.<br>This device stays signed in until you tap Sign out.</p>
   <form id="signForm" autocomplete="off">
     <label for="signIn">Key number or password</label>
-    <input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="signIn">
+    <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="signIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="signIn">Show</button></span>
     <div class="err" id="signErr" role="alert"></div>
     <div class="row"><button type="button" id="signCancel">Cancel</button><button type="submit" class="primary" id="signGo">Sign in</button></div>
   </form>
@@ -2202,10 +2206,20 @@ window.rocStartPump = function (DATA) {
     denied: function(res){ if (res && (res.why === 'wrong' || res.why === 'unset')) signOut(); }
   };
 
+  // Show / Hide on the password box, so people can check what they typed; hidden again each time the box opens
+  function pwShow(inp, on){
+    var b = inp.parentNode.querySelector('.pw-show');
+    inp.classList.toggle('shown', on); b.textContent = on ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  document.querySelectorAll('.pw-show').forEach(function(b){
+    var inp = b.parentNode.querySelector('input');
+    b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
+    b.addEventListener('click', function(){ pwShow(inp, !inp.classList.contains('shown')); inp.focus(); });
+  });
   var dlg = $('signDlg'), menu = $('menuDlg');
   $('gateSignIn').addEventListener('click', function(){ $('mnSignIn').click(); });
   $('mnSignIn').addEventListener('click', function(){
-    menu.close(); $('signIn').value = ''; $('signErr').textContent = '';
+    menu.close(); $('signIn').value = ''; $('signErr').textContent = ''; pwShow($('signIn'), false);
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
     setTimeout(function(){ try { $('signIn').focus(); } catch(e){} }, 50);
   });
