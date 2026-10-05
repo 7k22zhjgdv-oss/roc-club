@@ -248,7 +248,9 @@ a.give-btn{text-decoration:none;display:inline-block}
 .mem-err:empty{min-height:0}
 .mem-note{margin:0!important;color:var(--paper-2);font-size:.8rem!important}
 .mem-row .mem-btn{white-space:nowrap}
-@media (max-width: 560px){ .mem-in{flex-basis:100%} .mem-row .mem-btn{flex:1} }
+.mem-row .pw-wrap{flex:1 1 220px;min-width:0}
+.pw-wrap .mem-in{width:100%;box-sizing:border-box;padding-right:64px}
+@media (max-width: 560px){ .mem-in,.mem-row .pw-wrap{flex-basis:100%} .mem-row .mem-btn{flex:1} }
 @media (max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px){ .more .links{padding-inline:0} }
 .lockbtn{background:none;border:none;color:var(--paper-2);font-size:.8rem;text-decoration:underline;cursor:pointer;padding:0}
 dialog.pwdlg{border:none;border-radius:16px;padding:22px;background:var(--bark);color:var(--paper);max-width:360px;width:calc(100% - 32px)}
@@ -257,6 +259,9 @@ dialog.pwdlg h3{margin:0 0 6px;font-size:1.1rem}
 dialog.pwdlg p{margin:0 0 14px;color:var(--paper-2);font-size:.9rem}
 /* sign-in box: a masked TEXT field, not type=password, so phones don't offer to save it as a website login */
 .secret{-webkit-text-security:disc;text-security:disc}
+.secret.shown{-webkit-text-security:none;text-security:none}
+.pw-wrap{position:relative;display:block}
+.pw-show{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:0;padding:6px 10px;min-height:36px;color:var(--oak);font:600 .9rem var(--font);cursor:pointer}
 dialog.pwdlg input.secret,dialog.pwdlg input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:10px;color:var(--paper);font-size:16px}
 dialog.pwdlg .err{color:#e2836b;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .ok{color:#9fca8c;font-size:.85rem;min-height:18px;margin-top:8px}
@@ -730,7 +735,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       <form id="pwForm" class="mem-form" autocomplete="off" hidden>
         <label class="mem-label" for="pwIn">Members: your pool key number (letter and number). Board and manager: your password.</label>
         <div class="mem-row">
-          <input type="text" class="secret mem-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other" id="pwIn" placeholder="Key number or password">
+          <span class="pw-wrap"><input type="text" class="secret mem-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other" id="pwIn" placeholder="Key number or password"><button type="button" class="pw-show" aria-pressed="false" aria-controls="pwIn">Show</button></span>
           <button type="submit" class="mem-btn" id="pwSubmit">Sign in</button>
           <button type="button" class="mem-cancel" id="pwCancel">Cancel</button>
         </div>
@@ -1168,12 +1173,23 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   })();
   loadRulesInfo();
 
+  // Show / Hide on the password box, so people can check what they typed; hidden again each time the box opens
+  function pwShow(inp, on){
+    var b = inp.parentNode.querySelector('.pw-show');
+    inp.classList.toggle('shown', on); b.textContent = on ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  document.querySelectorAll('.pw-show').forEach(function(b){
+    var inp = b.parentNode.querySelector('input');
+    b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
+    b.addEventListener('click', function(){ pwShow(inp, !inp.classList.contains('shown')); inp.focus(); });
+  });
+
   // Sign in opens a field right in the Members & Board panel (no popup)
   function openSignIn(open){
     memPanel.classList.toggle('open', open);
     pwForm.hidden = !open;
     $('signInBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
-    pwErr.textContent = ''; pwIn.value = '';
+    pwErr.textContent = ''; pwIn.value = ''; pwShow(pwIn, false);
     if (open){
       try { pwIn.focus({preventScroll: true}); } catch(x){ pwIn.focus(); }
       // put the top of the panel near the top of the screen, so the whole panel stays above the phone keyboard
