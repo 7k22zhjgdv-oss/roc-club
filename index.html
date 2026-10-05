@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <script>(function(){ var m = /[?&]p=(chem|pump|log)\b/.exec(location.search); if (m) location.replace(m[1] + '/'); else if (/[?&]p=/.test(location.search)) history.replaceState(null, '', location.pathname); })();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
-<link rel="apple-touch-icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
+<link rel="icon" href="https://www.rollingoaksclub.org/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="https://www.rollingoaksclub.org/apple-touch-icon.png">
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
@@ -27,15 +27,15 @@
 <title>Rolling Oaks Club</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="image" type="image/webp" href="https://7k22zhjgdv-oss.github.io/roc-club/pool-sky.webp">
-<link rel="preload" as="image" type="image/webp" href="https://7k22zhjgdv-oss.github.io/roc-club/pool-beams.webp">
+<link rel="preload" as="image" type="image/webp" href="https://www.rollingoaksclub.org/pool-sky.webp">
+<link rel="preload" as="image" type="image/webp" href="https://www.rollingoaksclub.org/pool-beams.webp">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
 // Listen from the very start for the Hosting Wrapper's reply to hello: {donate: true} means it can show the donation popup.
 // (Registered here, before anything sends hello, so the reply can't arrive before anyone is listening.)
 window.ROC_CAN_DONATE = false;
 window.addEventListener('message', function(e){
-  if (e.origin === 'https://7k22zhjgdv-oss.github.io' && e.source === window.top && e.data && e.data.roc === 'code' && e.data.donate) window.ROC_CAN_DONATE = true;
+  if (e.origin === 'https://www.rollingoaksclub.org' && e.source === window.top && e.data && e.data.roc === 'code' && e.data.donate) window.ROC_CAN_DONATE = true;
 });
 </script>
 <style>
@@ -900,7 +900,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // ROC sign-in (2026-09-29): the shared key number / password (whoAmI in Code.gs). Board and Manager get Update Rules PDF.
   // Sign in once: the Hosting Wrapper (WRAP_ORIGIN) keeps it and hands it over when this page loads - same messages as the
   // dashboards ({roc:'hello'|'save'|'forget'} up, {roc:'code'} down).
-  var WRAP_ORIGIN = 'https://7k22zhjgdv-oss.github.io';
+  var WRAP_ORIGIN = 'https://www.rollingoaksclub.org';
   var NAMES = {member: 'Member', board: 'Board', manager: 'Manager'};
   var CODE = '', tried = {};
   function wrapSend(msg){ try { if (window.top !== window) window.top.postMessage(msg, WRAP_ORIGIN); } catch(e){} }
@@ -1692,7 +1692,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
 // instead of reloading everything. If the wrapper doesn't answer (an older copy), the link opens the normal way.
 (function(){
   if (window.top === window) return;
-  var WRAP = 'https://7k22zhjgdv-oss.github.io', RE = /^https:\/\/7k22zhjgdv-oss\.github\.io\/roc-club\/\?p=(home|pump|chem)$/;
+  var WRAP = 'https://www.rollingoaksclub.org', RE = /^https:\/\/www\.rollingoaksclub\.org\/\?p=(home|pump|chem)$/;
   document.addEventListener('click', function(e){
     if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
     var a = e.target.closest ? e.target.closest('a[href]') : null, m = a && RE.exec(a.href);
@@ -1718,7 +1718,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
    water starts 49.1%. Depth: while the top section scrolls, the sky and pool drift a little slower than the beams
    (CSS bgDrift; --drift and --drift-end are set here). */
 (function(){
-  var BASE = 'https://7k22zhjgdv-oss.github.io/roc-club/';
+  var BASE = 'https://www.rollingoaksclub.org/';
   var SKY = BASE + 'pool-sky.webp', BEAMS = BASE + 'pool-beams.webp', FLAT = BASE + 'pool-flat.jpg';
   var RATIO = 4615 / 2000, BEAMH = 953 / 4615, PHONE = .75, UP = 56, GAP = 36, TREETOP = .114, BEAM = .205, INS = .315, INSX = .4975, WATER = .491, TINT = '129,166,165';
   // background moves DEPTH slower than the page, for the first DRIFT_FOR x the top section's height of scrolling
