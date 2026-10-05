@@ -147,6 +147,15 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chem .cat{color:var(--muted);font-size:13px}
 .chem{padding:7px 14px}
 .chem .head{margin-bottom:1px}
+/* notes (Pool Math notes, maintenance logs, dashboard notes): their own card, round icon on the left */
+.card.note{display:flex;gap:10px;align-items:flex-start}
+.note .nic{flex:0 0 32px;height:32px;border-radius:50%;background:var(--soft);color:var(--ink2);display:grid;place-items:center}
+.note .nic svg{width:17px;height:17px}
+.note .nb{flex:1;min-width:0}
+.note .head{margin-bottom:2px;justify-content:flex-start}
+.note .cat{color:var(--muted);font-size:13px}
+.note .ndone{font-size:14px;color:var(--ink2)}
+.note .ntext{font-size:15px;white-space:pre-line;overflow-wrap:anywhere}
 .chem .lhs{display:inline-flex;gap:8px;align-items:baseline;flex-wrap:nowrap}
 .chem .lhs .tag{margin-left:0}
 .chem .eff{font-size:11px;font-weight:400;color:var(--muted);white-space:nowrap;opacity:.85}
@@ -1163,6 +1172,14 @@ function mkBtn(kind, id){
 }
 /** An addition row's right end: its ⋯, or (Manager) an empty slot the same width so the prices stay in one column. */
 function rowMk(c){ return c.canSlow ? mkBtn('slow', c.id) : (isMgr() ? '<span class="mkph" aria-hidden="true"></span>' : ''); }
+var NOTE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>';
+var MAINT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>';
+function noteCard(n){
+  return '<div class="card note' + (n.maint ? ' maint' : '') + '"><span class="nic" aria-hidden="true">' + (n.maint ? MAINT_ICON : NOTE_ICON) + '</span>' +
+    '<div class="nb"><div class="head"><span class="time">' + esc(n.time) + '</span>' + (n.maint ? '<span class="cat">Maintenance</span>' : '') + '</div>' +
+    (n.maint && n.maint !== 'Maintenance' ? '<div class="ndone">' + esc(n.maint) + '</div>' : '') +
+    (n.text ? '<div class="ntext">' + esc(n.text) + '</div>' : '') + '</div></div>';
+}
 function testCard(t){
   var mk = mkBtn('store', t.id);
   return '<div class="card' + (t.store ? ' store' : '') + (t.hidden ? ' thid' : '') + '"><div class="head"><span><span class="time">' + esc(t.time) + '</span>' +
@@ -1931,9 +1948,10 @@ function fitWeather(){
     if (wx.offsetTop > tm.offsetTop + 4) wx.classList.add('short');
   }
 }
-function selectedItems(from, to, withChems, withTests){
+function selectedItems(from, to, withChems, withTests, withNotes){
   var items = [];
   if (withTests !== false) (DATA.tests || []).forEach(function(t){ if (hasReading(t) && inRange(t.day, from, to)) items.push({type:'t', ms:t.ms, day:t.day, d:t}); });
+  if (withNotes) (DATA.notes || []).forEach(function(n){ if (inRange(n.day, from, to)) items.push({type:'n', ms:n.ms, day:n.day, d:n}); });
   if (withChems) (DATA.chems || []).forEach(function(c){ if (inRange(c.day, from, to)) items.push({type:'c', ms:c.ms, day:c.day, d:c}); });
   items.sort(function(a,b){ return b.ms - a.ms; });
   // consecutive additions of one group become a single 'g' item (newest first, like everything else)
@@ -1947,12 +1965,14 @@ function selectedItems(from, to, withChems, withTests){
   return out;
 }
 function renderList(){
-  var items = selectedItems(state.from, state.to, showChems(), showReads());
+  var items = selectedItems(state.from, state.to, showChems(), showReads(), showReads());
   var tests = items.filter(function(i){ return i.type === 't'; }).length;
+  var notes = items.filter(function(i){ return i.type === 'n'; }).length;
   var chems = items.reduce(function(n, i){ return n + (i.type === 'g' ? i.list.length : 0); }, 0);
   var bits = [];
   if (showReads()) bits.push(tests + ' reading' + (tests === 1 ? '' : 's'));
   if (showChems()) bits.push(chems + ' chemical addition' + (chems === 1 ? '' : 's'));
+  if (notes) bits.push(notes + ' note' + (notes === 1 ? '' : 's'));
   $('count').textContent = bits.join(', ') +
     (LEVEL === 'member' ? '' : state.from || state.to ? ' · ' + (state.from ? fmtDayRel(state.from) : 'start') + ' – ' + (state.to ? fmtDayRel(state.to) : 'now') : ' · all time');   // members: the note above already says "last 7 days"
   var sp = DATA.hasPrices ? spendFor(state.from, state.to) : null;
@@ -1965,6 +1985,7 @@ function renderList(){
   items.forEach(function(it){
     if (it.day !== day){ day = it.day; html += '<div class="day">' + esc(dayWord(day) || fmtDayLong(day)) + '</div>'; }
     if (it.type === 't') html += testCard(it.d);
+    else if (it.type === 'n') html += noteCard(it.d);
     else {
       var pred = state.pred && DATA.preds && DATA.preds[it.gid];
       var tile = it.list.length > 1 ? groupCard(it.list) : chemCard(it.list[0]);
