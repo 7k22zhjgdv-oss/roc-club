@@ -734,6 +734,16 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
 #menuDlg .mninfo{padding:10px 0 6px;font-size:13px;color:var(--muted);line-height:1.5}
 #mnAsof{display:block}
 @media print{ .bar,.impbox{display:none !important} body{padding-top:0 !important} }
+/* slim bar while scrolling down the page (like Safari's address bar); full again when scrolling up, at the top, or tapped */
+:root{--barMini:34px}
+.bar,.bar-in{transition:height .25s cubic-bezier(.2,.8,.2,1)}
+.bar .brand{transform-origin:left center;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.bar .btns{max-width:420px;transition:opacity .18s,transform .25s cubic-bezier(.2,.8,.2,1),max-width .25s cubic-bezier(.2,.8,.2,1);transform-origin:right center}
+.bar.mini{height:calc(var(--barMini) + var(--barTop));cursor:pointer}
+.bar.mini .bar-in{height:var(--barMini)}
+.bar.mini .brand{transform:scale(.78)}
+.bar.mini .btns{opacity:0;transform:scale(.7);max-width:0;overflow:hidden;pointer-events:none}
+@media (prefers-reduced-motion: reduce){.bar,.bar-in,.bar .brand,.bar .btns{transition:none}}
 
 /* ---------------------------------------------------------------- v6: page switcher + short title */
 .navbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:0;padding:4px 6px;margin:0 -2px 0 -6px;border-radius:10px;cursor:pointer;color:var(--ink);flex:none;min-height:44px}
@@ -3332,6 +3342,21 @@ document.addEventListener('DOMContentLoaded', function(){
     try { window.top.postMessage({roc: 'go', p: m[1]}, WRAP); } catch(x){}
     setTimeout(function(){ if (!done){ window.removeEventListener('message', ack); window.open(href, '_top'); } }, 900);
   }, true);
+})();
+</script>
+<script>
+// Slim tool bar: shrinks after ~24 px of scrolling down the page, comes back after ~24 px up, near the top, or on a tap.
+(function(){
+  var bar = document.querySelector('.bar'), lastY = window.scrollY, run = 0;
+  function mini(on){ if (bar.classList.contains('mini') !== on) bar.classList.toggle('mini', on); }
+  window.addEventListener('scroll', function(){
+    var y = Math.max(0, window.scrollY), d = y - lastY; lastY = y;
+    if (y < 60 || document.querySelector('dialog[open]')) { mini(false); run = 0; return; }
+    if ((d > 0) !== (run > 0)) run = 0;
+    run += d;
+    if (run > 24) mini(true); else if (run < -24) mini(false);
+  }, {passive: true});
+  bar.addEventListener('click', function(e){ if (bar.classList.contains('mini')) { e.preventDefault(); e.stopPropagation(); mini(false); run = 0; } }, true);
 })();
 </script>
 <!-- + button: log a test / add a note (named people + Manager). Styles: "+ button" block; script below. -->
