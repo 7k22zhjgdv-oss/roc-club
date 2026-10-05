@@ -789,8 +789,9 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
   --glass:rgba(36,36,35,.50);--glassEdge:rgba(255,255,255,.18);--glassHi:rgba(255,255,255,.10);--glassFill:rgba(255,255,255,.07)}}
 #entryUi{display:none}
 body.can-enter #entryUi{display:block}
-.escrim{position:fixed;inset:0;background:var(--escrim);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}
-#entryUi.open .escrim{opacity:1;pointer-events:auto}
+/* closed: clear AND not visible - Safari tints its toolbar from full-screen layers even at opacity 0, which left the bar grey */
+.escrim{position:fixed;inset:0;background:transparent;visibility:hidden;pointer-events:none;transition:background-color .18s,visibility 0s .18s;z-index:60}
+#entryUi.open .escrim{background:var(--escrim);visibility:visible;pointer-events:auto;transition:background-color .18s}
 .efab-zone{position:fixed;right:max(16px,calc(50vw - 434px));bottom:max(12px,calc(env(safe-area-inset-bottom,0px) - 6px));display:flex;flex-direction:column;align-items:flex-end;gap:12px;z-index:61;pointer-events:none}
 .efab{pointer-events:auto}   /* the zone itself lets taps through: only the + button and the showing pills catch them */
 .efab{width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:var(--accentInk);box-shadow:var(--eshadow);cursor:pointer;display:grid;place-items:center}
