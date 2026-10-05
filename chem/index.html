@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
-<link rel="apple-touch-icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
+<link rel="icon" href="https://www.rollingoaksclub.org/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="https://www.rollingoaksclub.org/apple-touch-icon.png">
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
@@ -2283,7 +2283,7 @@ function serverCall(fn, args, ok, fail){
 // Sign in once for every ROC tool: the Hosting Wrapper (WRAP_ORIGIN, the page these tools are framed in) keeps the key
 // number / password in its own storage and hands it to each tool when it loads. Messages go ONLY to / from that origin,
 // and only between this page and the window at the very top. If the wrapper's address changes (custom domain), change it here.
-var WRAP_ORIGIN = 'https://7k22zhjgdv-oss.github.io';
+var WRAP_ORIGIN = 'https://www.rollingoaksclub.org';
 function wrapSend(msg){ try { if (window.top !== window) window.top.postMessage(msg, WRAP_ORIGIN); } catch(e){} }
 function saveCode(c, res){ try { localStorage.setItem('rocPass', c); } catch(e){} wrapSend({roc: 'save', code: c, level: res && res.level, who: res && res.who}); }
 function loadCode(){ try { return localStorage.getItem('rocPass') || ''; } catch(e){ return ''; } }
@@ -3180,7 +3180,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // instead of reloading everything. If the wrapper doesn't answer (an older copy), the link opens the normal way.
 (function(){
   if (window.top === window) return;
-  var WRAP = 'https://7k22zhjgdv-oss.github.io', RE = /^https:\/\/7k22zhjgdv-oss\.github\.io\/roc-club\/\?p=(home|pump|chem)$/;
+  var WRAP = 'https://www.rollingoaksclub.org', RE = /^https:\/\/www\.rollingoaksclub\.org\/\?p=(home|pump|chem)$/;
   document.addEventListener('click', function(e){
     if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
     var a = e.target.closest ? e.target.closest('a[href]') : null, m = a && RE.exec(a.href);
