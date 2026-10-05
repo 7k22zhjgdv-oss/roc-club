@@ -792,7 +792,7 @@ body.can-enter #entryUi{display:block}
 /* closed: clear AND not visible - Safari tints its toolbar from full-screen layers even at opacity 0, which left the bar grey */
 .escrim{position:fixed;inset:0;background:transparent;visibility:hidden;pointer-events:none;transition:background-color .18s,visibility 0s .18s;z-index:60}
 #entryUi.open .escrim{background:var(--escrim);visibility:visible;pointer-events:auto;transition:background-color .18s}
-.efab-zone{position:fixed;right:max(16px,calc(50vw - 434px));bottom:max(12px,calc(env(safe-area-inset-bottom,0px) - 6px));display:flex;flex-direction:column;align-items:flex-end;gap:12px;z-index:61;pointer-events:none}
+.efab-zone{position:fixed;right:max(16px,calc(50vw - 434px));bottom:max(12px,calc(env(safe-area-inset-bottom,0px) - 6px));transition:bottom .25s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;align-items:flex-end;gap:12px;z-index:61;pointer-events:none}
 .efab{pointer-events:auto}   /* the zone itself lets taps through: only the + button and the showing pills catch them */
 .efab{width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:var(--accentInk);box-shadow:var(--eshadow);cursor:pointer;display:grid;place-items:center}
 .efab svg{width:26px;height:26px;transition:transform .2s}
@@ -802,6 +802,8 @@ body.can-enter #entryUi{display:block}
     box-shadow:0 4px 14px rgba(0,0,0,.12);transition:background .18s,box-shadow .18s}
   #entryUi.open .efab{background:var(--accent);box-shadow:var(--eshadow)}
 }
+/* iPhone Safari with its address bar shrunk to the small pill: drop into the corner beside the pill (script below sets .low) */
+.efab-zone.low{bottom:-30px}
 /* wide screens: just outside the right edge of the 900 px column, where there is spare room */
 @media (min-width:1100px){ .efab-zone{right:calc(50vw - 526px);bottom:24px} }
 #entryUi.open .efab svg{transform:rotate(45deg)}
@@ -3833,6 +3835,22 @@ document.addEventListener('DOMContentLoaded', function(){
       }, function(){ menu(kind, id, false, 'Could not reach the server. Try again.'); });
     }
   });
+  // iPhone Safari: the page's bottom edge stops above Safari's bar, even when the bar has shrunk to the small address pill,
+  // so the button can't get lower with CSS alone. The page gets taller when the bar shrinks: once both heights have been
+  // seen, the taller one means "shrunk" and the button drops into the corner next to the pill (.low). iPhone only:
+  // Android's address bar is at the top, where dropping lower would push the button off the screen.
+  if (/iPhone|iPod/.test(navigator.userAgent) && !navigator.standalone && window.visualViewport) {
+    var zone = document.querySelector('.efab-zone'), vv = window.visualViewport, hi = 0, lo = 1e9, vw = 0;
+    var fit = function(){
+      if (vv.scale > 1.01) { zone.classList.remove('low'); return; }              // zoomed in: leave it
+      if (window.innerWidth !== vw) { vw = window.innerWidth; hi = 0; lo = 1e9; }  // turned sideways: start again
+      var h = vv.height; hi = Math.max(hi, h);
+      if (hi - h < 120) lo = Math.min(lo, h);                                       // a keyboard (much shorter) doesn't count
+      var typing = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+      zone.classList.toggle('low', !typing && hi - lo > 25 && hi - lo < 120 && h > hi - 8);
+    };
+    vv.addEventListener('resize', fit); window.addEventListener('scroll', fit, {passive: true}); fit();
+  }
   window.renderEntry();
 })();
 </script>
