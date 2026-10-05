@@ -781,7 +781,8 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
 body.can-enter #entryUi{display:block}
 .escrim{position:fixed;inset:0;background:var(--escrim);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}
 #entryUi.open .escrim{opacity:1;pointer-events:auto}
-.efab-zone{position:fixed;right:max(16px,calc(50vw - 434px));bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px;z-index:61}
+.efab-zone{position:fixed;right:max(16px,calc(50vw - 434px));bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px;z-index:61;pointer-events:none}
+.efab{pointer-events:auto}   /* the zone itself lets taps through: only the + button and the showing pills catch them */
 .efab{width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:var(--accentInk);box-shadow:var(--eshadow);cursor:pointer;display:grid;place-items:center}
 .efab svg{width:26px;height:26px;transition:transform .2s}
 #entryUi.open .efab svg{transform:rotate(45deg)}
