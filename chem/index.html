@@ -306,6 +306,10 @@ dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 #codeIn{font-size:16px}
 /* sign-in box: a masked TEXT field, not type=password, so phones don't offer to save it as a website login */
 .secret{-webkit-text-security:disc;text-security:disc}
+.secret.shown{-webkit-text-security:none;text-security:none}
+.pw-wrap{position:relative;display:block}
+.pw-wrap input.secret{padding-right:64px}
+.pw-show{position:absolute;right:2px;top:50%;transform:translateY(-50%);background:none;border:0;padding:6px 10px;min-height:36px;color:var(--accent);font:600 14px inherit;font-family:inherit;cursor:pointer}
 
 .priv,.pub{display:inline-block}
 body:not(.unlocked) .priv{display:none !important}
@@ -897,7 +901,7 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
   <p class="hint" style="margin:0 0 10px">Members: your pool key number (letter and number).<br>Board and manager: your password.<br>This device stays signed in until you tap Sign out.</p>
   <form id="unlockForm" autocomplete="off">
     <label for="codeIn">Key number or password</label>
-    <input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="codeIn">
+    <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="codeIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="codeIn">Show</button></span>
     <div class="err" id="unlockErr" role="alert"></div>
     <div class="row">
       <button class="btn" type="button" id="unlockCancel">Cancel</button>
@@ -2331,8 +2335,13 @@ function handleDenied(res){
   }
   return false;
 }
+// Show / Hide on the password box, so people can check what they typed; hidden again each time the box opens
+function pwShow(inp, on){
+  var b = inp.parentNode.querySelector('.pw-show');
+  inp.classList.toggle('shown', on); b.textContent = on ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
 function openUnlock(){
-  $('codeIn').value = ''; $('unlockErr').textContent = '';
+  $('codeIn').value = ''; $('unlockErr').textContent = ''; pwShow($('codeIn'), false);
   openDlg('unlockDlg');
   setTimeout(function(){ try { $('codeIn').focus(); } catch(e){} }, 50);
 }
@@ -3064,6 +3073,11 @@ document.addEventListener('DOMContentLoaded', function(){
   $('unlockBtn').addEventListener('click', openUnlock);
   $('gateBtn').addEventListener('click', openUnlock);
   $('unlockForm').addEventListener('submit', submitUnlock);
+  document.querySelectorAll('.pw-show').forEach(function(b){
+    var inp = b.parentNode.querySelector('input');
+    b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
+    b.addEventListener('click', function(){ pwShow(inp, !inp.classList.contains('shown')); inp.focus(); });
+  });
   $('unlockCancel').addEventListener('click', function(){ closeDlg('unlockDlg'); });
   // iPhone: when the keyboard closes inside the frame (e.g. right after signing in), Safari can leave every tap landing
   // off from the buttons until the page moves. Close the keyboard first, then nudge the scroll so taps line up again.
