@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry"];
   function call(fn, args, ok, fail){
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
@@ -772,6 +772,83 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
 
 #menuDlg{width:max-content;min-width:210px;max-width:calc(100vw - 28px)}
 #menuDlg .mninfo div{white-space:nowrap}
+/* ---- + button: log a test / add a note (named people + Manager), 2026-10-05 ---- */
+:root{--water:#a8541f;--escrim:rgba(20,20,18,.38);--eshadow:0 6px 22px rgba(0,0,0,.16)}
+@media (prefers-color-scheme: dark){:root{--water:#c9803a;--escrim:rgba(0,0,0,.55);--eshadow:0 6px 22px rgba(0,0,0,.5)}}
+#entryUi{display:none}
+body.can-enter #entryUi{display:block}
+.escrim{position:fixed;inset:0;background:var(--escrim);opacity:0;pointer-events:none;transition:opacity .18s;z-index:60}
+#entryUi.open .escrim{opacity:1;pointer-events:auto}
+.efab-zone{position:fixed;right:max(16px,calc(50vw - 434px));bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px;z-index:61}
+.efab{width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:var(--accentInk);box-shadow:var(--eshadow);cursor:pointer;display:grid;place-items:center}
+.efab svg{width:26px;height:26px;transition:transform .2s}
+#entryUi.open .efab svg{transform:rotate(45deg)}
+.efab:focus-visible,.eact:focus-visible,.gx:focus-visible,.esave:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.eacts{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.eact{height:60px;display:flex;align-items:center;gap:12px;padding:0 20px 0 8px;border-radius:30px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;font-weight:500;box-shadow:var(--eshadow);cursor:pointer;text-decoration:none;
+  opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .16s,transform .18s}
+#entryUi.open .eact{opacity:1;transform:none;pointer-events:auto}
+#entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s}
+.eact.hold{opacity:0!important;transition:none}
+.eact.off{color:var(--muted);cursor:default;box-shadow:none;background:var(--soft)}
+.eact .soon{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.ei44{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,var(--card));color:var(--c)}
+.ei44 svg{width:22px;height:22px}
+.egrow{position:fixed;z-index:62;background:var(--card);border:1px solid var(--line);box-shadow:var(--eshadow);overflow:hidden;display:flex;flex-direction:column;
+  transition:top .32s cubic-bezier(.2,.8,.2,1),left .32s cubic-bezier(.2,.8,.2,1),width .32s cubic-bezier(.2,.8,.2,1),height .32s cubic-bezier(.2,.8,.2,1),border-radius .32s}
+.egrow[hidden]{display:none}
+.ghead{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:7px 8px;min-height:58px}
+.ghead h2{flex:1;margin:0;font-size:17px;font-weight:500;transition:font-size .25s}
+.egrow.big .ghead h2{font-size:19px;font-weight:600}
+.gx{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--soft);color:var(--ink);display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .2s}
+.gx svg{width:20px;height:20px}
+.egrow.big .gx{opacity:1}
+.gbody{flex:1;overflow-y:auto;padding:0 12px 12px;opacity:0;transition:opacity .2s}
+.egrow.big .gbody{opacity:1;transition-delay:.14s}
+.gfoot{flex:0 0 auto;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);opacity:0;transition:opacity .2s}
+.egrow.big .gfoot{opacity:1;transition-delay:.14s}
+.gfrow{display:flex;align-items:center;gap:10px}
+.esave{flex:1;height:52px;border:0;border-radius:26px;background:var(--accent);color:var(--accentInk);font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+.esave:disabled{background:var(--soft);color:var(--muted);cursor:default}
+.ewho{font-size:12px;color:var(--muted);line-height:1.25;max-width:42%}
+.emsg{font-size:13.5px;margin:0 2px 8px;color:var(--ink)}
+.emsg:empty{display:none}
+.emsg.err{color:var(--red)}
+.emsg.warn{background:color-mix(in srgb,var(--yellow) 22%,var(--card));border-radius:8px;padding:6px 9px}
+.ewhen{display:flex;gap:8px;margin:2px 0 4px}
+.ewhen label{flex:1;display:flex;flex-direction:column;background:var(--soft);border-radius:12px;padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);min-width:0}
+.ewhen input{border:0;background:none;font:inherit;font-size:16px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);padding:1px 0 0;width:100%;min-width:0}
+.egrp{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:14px 2px 6px}
+.egrp b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.egrp span{font-size:12px;color:var(--muted);text-align:right}
+.etiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.etile{display:block;border-radius:12px;background:color-mix(in srgb,var(--c) 10%,var(--card));border:1.5px solid transparent;padding:7px 9px;cursor:text;min-width:0}
+.etile:focus-within{border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--card))}
+.etile .nm{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--c)}
+.etile .nm i{font-style:normal;font-weight:500;color:var(--muted)}
+.etile input{display:block;width:100%;border:0;background:none;font:inherit;font-size:24px;font-weight:600;color:var(--ink);padding:1px 0 0;font-variant-numeric:tabular-nums;outline:none}
+.etile input::placeholder{color:color-mix(in srgb,var(--c) 30%,var(--muted));font-weight:500}
+.etile .ls{display:block;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.etile.odd{border-color:var(--yellow);background:color-mix(in srgb,var(--yellow) 18%,var(--card))}
+.etile.odd .ls{color:var(--ink)}
+.ecsi{margin-top:6px;border-radius:12px;border:1px dashed var(--line);padding:8px 12px;font-size:13px;color:var(--muted)}
+.ecsi .top{display:flex;justify-content:space-between;align-items:center}
+.ecsi b{font-size:18px;color:var(--k-csi);font-variant-numeric:tabular-nums}
+.ecsi .from{font-size:12px;margin-top:2px}
+.etext{width:100%;min-height:70px;background:var(--soft);border:1.5px solid transparent;border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;color:var(--ink);resize:vertical;outline:none}
+.etext:focus{border-color:var(--muted)}
+.echk{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:15px;color:var(--ink2)}
+.echk input{width:20px;height:20px;accent-color:var(--accent)}
+/* who entered it, on the card */
+.eby{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:12px;color:var(--muted)}
+.eby svg{width:13px;height:13px;flex:0 0 13px}
+.emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
+.emk:hover{color:var(--ink);background:var(--soft)}
+#entryMenu .row{display:flex;gap:8px;margin-top:12px}
+#entryMenu .row button{flex:1}
+#entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+@media (prefers-reduced-motion: reduce){.eact,.escrim,.efab svg,.egrow,.gbody,.gfoot,.gx{transition:none!important}}
+@media print{#entryUi,.emk{display:none!important}}
 </style>
 </head>
 <body>
@@ -1178,7 +1255,7 @@ function noteCard(n){
   return '<div class="card note' + (n.maint ? ' maint' : '') + '"><span class="nic" aria-hidden="true">' + (n.maint ? MAINT_ICON : NOTE_ICON) + '</span>' +
     '<div class="nb"><div class="head"><span class="time">' + esc(n.time) + '</span>' + (n.maint ? '<span class="cat">Maintenance</span>' : '') + '</div>' +
     (n.maint && n.maint !== 'Maintenance' ? '<div class="ndone">' + esc(n.maint) + '</div>' : '') +
-    (n.text ? '<div class="ntext">' + esc(n.text) + '</div>' : '') + '</div></div>';
+    (n.text ? '<div class="ntext">' + esc(n.text) + '</div>' : '') + (window.entryByHtml ? entryByHtml(n, 'note') : '') + '</div></div>';
 }
 function testCard(t){
   var mk = mkBtn('store', t.id);
@@ -1186,7 +1263,8 @@ function testCard(t){
     (t.store ? '<span class="store-tag" title="Leslie\'s (pool store) test">Leslie\'s</span>' : '') +
     (t.hidden ? '<span class="thid-tag" title="Members do not see this test">Hidden from members</span>' : '') + '</span>' +
     (mk ? '<span class="rhs">' + wxHtml(t.w) + mk + '</span>' : wxHtml(t.w)) + '</div>' +
-    '<div class="chips">' + COLS.map(function(c){ return chipHtml(c, t); }).join('') + '</div></div>';
+    '<div class="chips">' + COLS.map(function(c){ return chipHtml(c, t); }).join('') + '</div>' +
+    (window.entryByHtml ? entryByHtml(t, 'test') : '') + '</div>';
 }
 var AFFECT_LABEL = {fc:'FC', cc:'CC', ph:'pH', ta:'TA', ch:'CH', cya:'CYA', salt:'SALT', bor:'BOR'};
 function money(n){ if (n == null || !isFinite(n)) return "–"; return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
@@ -2044,6 +2122,7 @@ function renderHeader(){
 }
 function renderAll(){
   renderHeader(); renderTrackers(); renderPresets(); renderList(); renderLegend();
+  if (window.renderEntry) renderEntry();
 }
 function showStatus(msg, isErr){
   var s = $('status');
@@ -3231,6 +3310,328 @@ document.addEventListener('DOMContentLoaded', function(){
     try { window.top.postMessage({roc: 'go', p: m[1]}, WRAP); } catch(x){}
     setTimeout(function(){ if (!done){ window.removeEventListener('message', ack); window.open(href, '_top'); } }, 900);
   }, true);
+})();
+</script>
+<!-- + button: log a test / add a note (named people + Manager). Styles: "+ button" block; script below. -->
+<div id="entryUi">
+  <div class="escrim" id="eScrim"></div>
+  <div class="efab-zone">
+    <div class="eacts">
+      <button type="button" class="eact off" aria-disabled="true" tabindex="-1">
+        <span class="ei44" style="--c:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span>
+        Add chemical <span class="soon">Soon</span></button>
+      <a class="eact" id="ePump" href="https://www.rollingoaksclub.org/log/">
+        <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span>
+        Log pump reading</a>
+      <button type="button" class="eact" id="eNoteBtn">
+        <span class="ei44" style="--c:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg></span>
+        Add a note</button>
+      <button type="button" class="eact" id="eTestBtn">
+        <span class="ei44" style="--c:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg></span>
+        Log test</button>
+    </div>
+    <button type="button" class="efab" id="eFab" aria-label="Add a test or note" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <div class="egrow" id="eGrow" role="dialog" aria-modal="true" aria-labelledby="eTitle" hidden>
+    <div class="ghead">
+      <span class="ei44" id="eIcon"></span>
+      <h2 id="eTitle">Log test</h2>
+      <button type="button" class="gx" id="eX" aria-label="Close without saving"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="gbody" id="eBody"></div>
+    <div class="gfoot">
+      <div class="emsg" id="eMsg" role="status"></div>
+      <div class="gfrow"><span class="ewho" id="eWho"></span><button type="button" class="esave" id="eSave" disabled>Save test</button></div>
+    </div>
+  </div>
+</div>
+<dialog id="entryMenu" aria-labelledby="emTitle">
+  <div id="emBody"></div>
+</dialog>
+<script>
+/* ------------------------------------------------------------ + button: log a test / add a note (2026-10-05)
+   Shown when the server says this sign-in may enter readings (DATA.canEnter: named people on the Volunteers tab,
+   and the Manager). The tapped pill grows into a panel 6 px from the screen edges; × shrinks it back. Saves go to
+   saveTest / saveNote (Code.gs), which hand back fresh data. CSI here is only a preview: the server works out the real one. */
+(function(){
+  var ICON = {
+    test: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg>',
+    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>'
+  };
+  // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
+  var GROUPS = [
+    ['Daily', 'tested every day', [['fc','FC','ppm',0,20], ['cc','CC','ppm',0,5], ['ph','pH','',6.4,8.6]]],
+    ['Every week or so', 'TA, CH every 10 days · CYA 7', [['ta','TA','ppm',0,400], ['ch','CH','ppm',0,2000], ['cya','CYA','ppm',0,200]]],
+    ['Other', '', [['tempF','Temp','°F',32,110], ['salt','Salt','ppm',0,8000], ['bor','Borates','ppm',0,100]]]
+  ];
+  var FIELDS = []; GROUPS.forEach(function(g){ g[2].forEach(function(f){ FIELDS.push(f); }); });
+  var BORROW = {tempF: 7, ta: 30, ch: 30, cya: 30, salt: 90, bor: 90};      // same as CSI_BORROW_DAYS in Code.gs
+  var BLABEL = {tempF: 'Temp', ta: 'TA', ch: 'CH', cya: 'CYA', salt: 'Salt', bor: 'Borates'};
+  var DUP_MS = 30 * 60000;
+
+  var ui = $('entryUi'), fab = $('eFab'), grow = $('eGrow'), body = $('eBody'), save = $('eSave'), msg = $('eMsg');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mode = '', editing = null, fromEl = null, busy = false, dupOk = false;
+
+  function setOpen(o){ ui.classList.toggle('open', o); fab.setAttribute('aria-expanded', o ? 'true' : 'false'); }
+  fab.addEventListener('click', function(){ setOpen(!ui.classList.contains('open')); });
+  $('eScrim').addEventListener('click', function(){ if (grow.hidden) setOpen(false); });
+  $('eTestBtn').addEventListener('click', function(){ openPanel('test', null, $('eTestBtn')); });
+  $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
+  $('ePump').addEventListener('click', function(){ setOpen(false); });
+  $('eX').addEventListener('click', function(){ closePanel(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    if (!grow.hidden && !busy) closePanel(); else if (ui.classList.contains('open')) setOpen(false);
+  });
+
+  /** Called from renderAll: show the button only for those who may enter. */
+  window.renderEntry = function(){
+    var can = !!(unlocked && DATA && DATA.canEnter);
+    document.body.classList.toggle('can-enter', can);
+    $('ePump').style.display = isBrd() ? '' : 'none';               // the Pump Log needs Board or Manager
+    if (!can){ setOpen(false); if (!grow.hidden) shut(); }
+  };
+
+  // ---- time helpers (pool time = America/Chicago)
+  function nowLocal(){
+    var s = new Date().toLocaleString('sv-SE', {timeZone: 'America/Chicago'});   // "2026-10-05 13:34:12"
+    return {day: s.slice(0, 10), time: s.slice(11, 16)};
+  }
+  function to24(t){   // "1:34 PM" -> "13:34"
+    var m = /^(\d+):(\d+)\s*([AP])M$/i.exec(String(t || '').trim());
+    if (!m) return '';
+    var h = (+m[1]) % 12 + (/p/i.test(m[3]) ? 12 : 0);
+    return (h < 10 ? '0' : '') + h + ':' + m[2];
+  }
+  /** ms for a pool-time day + "HH:MM" (offset taken from that moment in Chicago). */
+  function localMs(day, hm){
+    var guess = Date.parse(day + 'T' + hm + ':00Z');
+    var off = new Date(guess).toLocaleString('sv-SE', {timeZone: 'America/Chicago'});
+    var asUtc = Date.parse(off.replace(' ', 'T') + 'Z');
+    return guess + (guess - asUtc);
+  }
+  function ago(ms){
+    var d = Math.floor((Date.now() - ms) / 86400000);
+    return d <= 0 ? 'today' : d + 'd ago';
+  }
+  function agoShort(ms){
+    var d = Math.floor((Date.now() - ms) / 86400000);
+    return d <= 0 ? 'today' : d + 'd';
+  }
+
+  // ---- last readings and CSI preview
+  function lastOf(k, beforeMs, skipId){
+    var best = null;
+    (DATA.tests || []).forEach(function(t){
+      if (t.id === skipId || !isNum(t[k]) || (beforeMs && t.ms > beforeMs)) return;
+      if (!best || t.ms > best.ms) best = t;
+    });
+    return best;
+  }
+  function csiCalc(ph, ta, ch, cya, salt, bor, tempF){
+    var carb = ta - 0.38772 * cya / (1 + Math.pow(10, 6.83 - ph)) - 4.63 * bor / (1 + Math.pow(10, 9.11 - ph));
+    if (!(carb > 0) || !(ch > 0)) return null;
+    var ionic = (1.5 * ch + ta) / 50045 + (salt - 1.1678 * ch) / 58443;
+    if (!(ionic > 0)) return null;
+    var tc = (tempF - 32) * 5 / 9;
+    return ph - 11.677 + Math.log(ch) / Math.LN10 + Math.log(carb) / Math.LN10 - 2.56 * Math.sqrt(ionic) / (1 + 1.65 * Math.sqrt(ionic)) - 1412.5 / (tc + 273.15) + 4.7375;
+  }
+  function csiPreview(vals, ms, skipId){
+    if (!isNum(vals.ph)) return {text: 'Enter pH to work out CSI.'};
+    var v = {}, from = [], missing = [];
+    Object.keys(BORROW).forEach(function(k){
+      if (isNum(vals[k])) { v[k] = vals[k]; return; }
+      var t = lastOf(k, ms, skipId);
+      if (t && ms - t.ms <= BORROW[k] * 86400000) { v[k] = t[k]; from.push(BLABEL[k] + ' ' + fmtNum(t[k]) + ' (' + ago(t.ms) + ')'); }
+      else if (k !== 'salt' && k !== 'bor') missing.push(BLABEL[k]);
+    });
+    if (missing.length) return {text: LEVEL === 'member' ? 'Worked out when you save.' :
+      'Needs ' + missing.join(', ') + ' (temp from the last 7 days, TA / CH / CYA from the last 30).'};
+    var salt = isNum(v.salt) && v.salt >= 500 ? v.salt : 1000;
+    var c = csiCalc(vals.ph, v.ta, v.ch, v.cya, salt, isNum(v.bor) ? v.bor : 0, v.tempF);
+    if (c === null) return {text: 'Can\'t work out CSI from these numbers.'};
+    return {csi: Math.round(c * 100) / 100, text: from.length ? 'Using ' + from.join(', ') : 'From this test\'s readings.'};
+  }
+
+  // ---- the panel
+  function whoText(){ var me = DATA.me || WHO; return me === 'Manager' ? 'Saved as<br>Manager' : 'Saved as<br>volunteer: ' + esc(me); }
+  function testBody(t){
+    var n = t ? {day: t.day, time: to24(t.time)} : nowLocal();
+    var h = '<div class="ewhen"><label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
+      '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>';
+    GROUPS.forEach(function(g){
+      h += '<div class="egrp"><b>' + g[0] + '</b><span>' + g[1] + '</span></div><div class="etiles">';
+      g[2].forEach(function(f){
+        h += '<label class="etile" id="ew_' + f[0] + '" style="--c:var(--k-' + f[0] + ')"><span class="nm">' + f[1] + '<i>' + f[2] + '</i></span>' +
+          '<input id="ei_' + f[0] + '" inputmode="decimal" enterkeyhint="next" placeholder="–" autocomplete="off" value="' + (t && isNum(t[f[0]]) ? fmtNum(t[f[0]]) : '') + '">' +
+          '<span class="ls" id="el_' + f[0] + '"></span></label>';
+      });
+      h += '</div>';
+    });
+    h += '<div class="ecsi"><div class="top"><span>CSI, worked out from your numbers</span><b id="eCsi">–</b></div><div class="from" id="eCsiFrom"></div></div>';
+    if (!t) h += '<div class="egrp"><b>Note</b><span>optional</span></div><textarea class="etext" id="eNote" maxlength="1000" placeholder="Anything you noticed"></textarea>' +
+      '<label class="echk"><input type="checkbox" id="eStore"> Tested at Leslie\'s / pool store</label>';
+    return h;
+  }
+  function noteBody(n){
+    var w = n ? {day: n.day, time: to24(n.time)} : nowLocal();
+    return '<div class="ewhen"><label for="eDate">Date<input id="eDate" type="date" value="' + w.day + '" max="' + nowLocal().day + '"></label>' +
+      '<label for="eTime">Time<input id="eTime" type="time" value="' + w.time + '"></label></div>' +
+      '<div class="egrp"><b>Note</b></div><textarea class="etext" id="eNote" maxlength="1000" style="min-height:140px" placeholder="What happened? e.g. Water a little cloudy near the deep end">' + (n ? esc(n.text) : '') + '</textarea>';
+  }
+  function when(){ var d = $('eDate').value, t = $('eTime').value; return d && t ? {s: d + 'T' + t, ms: localMs(d, t)} : null; }
+  function vals(){
+    var v = {}, bad = [];
+    FIELDS.forEach(function(f){
+      var raw = $('ei_' + f[0]).value.trim().replace(',', '.');
+      if (raw === '') return;
+      var n = Number(raw);
+      if (!isFinite(n)) { bad.push(f[0]); return; }
+      v[f[0]] = n;
+    });
+    return {v: v, bad: bad};
+  }
+  function refresh(){
+    msg.textContent = ''; msg.className = 'emsg'; dupOk = false;
+    if (!busy) save.textContent = editing ? 'Save changes' : mode === 'test' ? 'Save test' : 'Save note';
+    if (mode === 'note') { save.disabled = busy || !$('eNote').value.trim(); return; }
+    var w = when(), r = vals(), skip = editing ? editing.id : '', anyOdd = false;
+    FIELDS.forEach(function(f){
+      var el = $('ei_' + f[0]), tile = $('ew_' + f[0]), v = r.v[f[0]], has = el.value.trim() !== '';
+      var odd = has && (r.bad.indexOf(f[0]) >= 0 || v < f[3] || v > f[4]);
+      tile.classList.toggle('odd', odd);
+      var last = lastOf(f[0], 0, skip);
+      if (odd) anyOdd = true;
+      $('el_' + f[0]).textContent = odd ? 'Check this' : last ? 'Last ' + fmtNum(last[f[0]]) + ' · ' + agoShort(last.ms) : 'No reading yet';
+    });
+    var p = anyOdd ? {text: 'Check the yellow box first.'} : csiPreview(r.v, w ? w.ms : Date.now(), skip);
+    $('eCsi').textContent = p.csi === undefined ? '–' : fmtNum(p.csi);
+    $('eCsiFrom').textContent = p.text;
+    save.disabled = busy || !Object.keys(r.v).length;
+  }
+  function place(r, rad){ grow.style.top = r.top + 'px'; grow.style.left = r.left + 'px'; grow.style.width = r.width + 'px'; grow.style.height = r.height + 'px'; grow.style.borderRadius = rad + 'px'; }
+  function full(){
+    var top = 6 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('padding-top')) || 0);
+    var r = {top: top, left: 6, width: window.innerWidth - 12, height: window.innerHeight - top - 6};
+    if (window.innerWidth > 720) { r.width = 640; r.left = (window.innerWidth - 640) / 2; }             // computers: a column, not the whole screen
+    if (mode === 'note') { var h = Math.min(r.height, 430); r.top = window.innerHeight - 6 - h; r.height = h; }
+    return r;
+  }
+  function originRect(){
+    if (fromEl && fromEl.getBoundingClientRect && fromEl.offsetParent !== null) return fromEl.getBoundingClientRect();
+    return fab.getBoundingClientRect();
+  }
+  function openPanel(kind, item, from){
+    if (busy) return;
+    mode = kind; editing = item; fromEl = from || fab;
+    $('eIcon').style.setProperty('--c', kind === 'test' ? 'var(--accent)' : 'var(--ink2)');
+    $('eIcon').innerHTML = ICON[kind];
+    $('eTitle').textContent = (item ? 'Edit ' : kind === 'test' ? 'Log ' : 'Add a ') + (kind === 'test' ? 'test' : 'note');
+    save.textContent = item ? 'Save changes' : kind === 'test' ? 'Save test' : 'Save note';
+    $('eWho').innerHTML = item ? (item.by === 'Manager' ? 'Entered by<br>Manager' : 'Entered by<br>volunteer: ' + esc(item.by)) : whoText();
+    body.innerHTML = kind === 'test' ? testBody(item) : noteBody(item);
+    body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
+    FIELDS.forEach(function(f, i){
+      var el = $('ei_' + f[0]); if (!el) return;
+      el.addEventListener('keydown', function(e){
+        if (e.key !== 'Enter') return;
+        e.preventDefault(); var nx = FIELDS[i + 1]; var to = nx ? $('ei_' + nx[0]) : $('eNote'); if (to) to.focus(); else el.blur();
+      });
+    });
+    refresh();
+    var r = originRect();
+    grow.classList.remove('big'); grow.style.transition = 'none'; place(r, Math.min(30, r.height / 2)); grow.hidden = false;
+    if (fromEl && fromEl.classList.contains('eact')) fromEl.classList.add('hold');
+    void grow.offsetWidth; grow.style.transition = '';
+    requestAnimationFrame(function(){ place(full(), 22); grow.classList.add('big'); body.scrollTop = 0; });
+    setTimeout(function(){ try { $('eX').focus({preventScroll: true}); } catch(e){} }, reduce ? 0 : 340);
+  }
+  function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); }
+  function closePanel(){
+    grow.classList.remove('big');
+    var r = originRect(); place(r, Math.min(30, r.height / 2));
+    setTimeout(shut, reduce ? 0 : 320);
+  }
+  window.addEventListener('resize', function(){ if (!grow.hidden && grow.classList.contains('big')) place(full(), 22); });
+
+  function say(text, cls){ msg.textContent = text; msg.className = 'emsg' + (cls ? ' ' + cls : ''); }
+  save.addEventListener('click', function(){
+    if (busy) return;
+    var w = when();
+    if (!w) { say('Fill in the date and time.', 'err'); return; }
+    if (w.ms > Date.now() + 5 * 60000) { say('The date and time can\'t be in the future.', 'err'); return; }
+    var fn, payload, label;
+    if (mode === 'test') {
+      var r = vals();
+      if (r.bad.length) { say('One of the numbers isn\'t a number. Check the yellow box.', 'err'); return; }
+      if (!editing && !dupOk) {
+        var near = (DATA.tests || []).filter(function(t){ return Math.abs(t.ms - w.ms) <= DUP_MS && hasReading(t); })[0];
+        if (near) { dupOk = true; save.textContent = 'Save anyway'; say('There\'s already a test at ' + near.time + (near.day !== w.s.slice(0, 10) ? ' on ' + fmtDayRel(near.day) : '') + '. Is this a different test?', 'warn'); return; }
+      }
+      payload = {id: editing ? editing.id : '', when: w.s};
+      FIELDS.forEach(function(f){ payload[f[0]] = isNum(r.v[f[0]]) ? r.v[f[0]] : ''; });
+      if (!editing) { payload.note = $('eNote').value; payload.store = $('eStore').checked; }
+      fn = 'saveTest'; label = 'Test';
+    } else {
+      payload = {id: editing ? editing.id : '', when: w.s, text: $('eNote').value};
+      fn = 'saveNote'; label = 'Note';
+    }
+    busy = true; save.disabled = true; save.textContent = 'Saving…'; say('');
+    serverCall(fn, [CODE, payload], function(res){
+      busy = false;
+      if (res && res.ok === false && res.why && res.why !== 'level') { shut(); handleDenied(res); return; }
+      if (!res || !res.ok) { save.disabled = false; save.textContent = editing ? 'Save changes' : 'Save ' + label.toLowerCase(); say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
+      DATA = res.data; renderAll();
+      closePanel();
+      bgSet(label + ' saved.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
+    }, function(err){
+      busy = false; save.disabled = false; save.textContent = editing ? 'Save changes' : 'Save ' + label.toLowerCase();
+      say('Not saved: could not reach the server. Check the connection and tap Save again.', 'err');
+    });
+  });
+
+  // ---- "Entered by" line and the ⋯ menu (edit / delete) on dashboard entries
+  var PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+  window.entryByHtml = function(x, kind){
+    if (!x || x.src !== 'Dashboard' || !x.by) return '';
+    var mine = DATA.canEnter && (isMgr() || x.by === DATA.me);
+    return '<div class="eby">' + PERSON + '<span>Entered by ' + (x.by === 'Manager' ? 'Manager' : 'volunteer: ' + esc(x.by)) + '</span>' +
+      (mine ? '<button type="button" class="emk" data-ek="' + kind + '" data-eid="' + esc(x.id) + '" aria-label="Edit or delete">⋯</button>' : '') + '</div>';
+  };
+  function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
+  var menuFor = null;
+  function menu(kind, id, confirmDel, err){
+    var it = findEntry(kind, id); if (!it) return;
+    menuFor = {kind: kind, id: id};
+    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
+      (confirmDel ? '<p>Delete this ' + kind + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
+        : '<div class="row"><button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button></div>' +
+          '<div class="row"><button type="button" class="btn" data-em="cancel">Close</button></div>') +
+      (err ? '<p style="color:var(--red)">' + esc(err) + '</p>' : '');
+    if (!$('entryMenu').open) openDlg('entryMenu');
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.emk');
+    if (b) { e.preventDefault(); menu(b.getAttribute('data-ek'), b.getAttribute('data-eid')); return; }
+    var m = e.target.closest && e.target.closest('#entryMenu [data-em]');
+    if (!m || !menuFor) return;
+    var act = m.getAttribute('data-em'), kind = menuFor.kind, id = menuFor.id;
+    if (act === 'cancel') { closeDlg('entryMenu'); return; }
+    if (act === 'del') { menu(kind, id, true); return; }
+    if (act === 'edit') { closeDlg('entryMenu'); openPanel(kind, findEntry(kind, id), fab); return; }
+    if (act === 'del2') {
+      m.disabled = true; m.textContent = 'Deleting…';
+      serverCall('deleteEntry', [CODE, kind, id], function(res){
+        if (res && res.ok === false && res.why && res.why !== 'level') { closeDlg('entryMenu'); handleDenied(res); return; }
+        if (!res || !res.ok) { menu(kind, id, false, (res && res.message) || 'Not deleted. Try again.'); return; }
+        closeDlg('entryMenu'); DATA = res.data; renderAll();
+        bgSet((kind === 'test' ? 'Test' : 'Note') + ' deleted.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
+      }, function(){ menu(kind, id, false, 'Could not reach the server. Try again.'); });
+    }
+  });
+  window.renderEntry();
 })();
 </script>
 </body>
