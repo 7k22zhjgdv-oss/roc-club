@@ -845,6 +845,22 @@ body.can-enter #entryUi{display:block}
 .etext:focus{border-color:var(--muted)}
 .echk{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:15px;color:var(--ink2)}
 .echk input{width:20px;height:20px;accent-color:var(--accent)}
+/* pump reading panel: Well / Pool switch, meter + tank tiles, last readings */
+.eseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:18px;background:var(--glassFill);margin:2px 0 8px}
+.eseg button{height:52px;border:0;border-radius:14px;background:none;font:inherit;font-size:16px;font-weight:600;color:var(--ink2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.eseg button small{font-size:11.5px;font-weight:500;color:var(--muted)}
+.eseg button[aria-pressed="true"]{background:var(--card);color:var(--c);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.etiles.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.etiles.two .wide{grid-column:1/-1}
+.ecsi.ep{color:var(--ink2);line-height:1.45}
+.ecsi.ep:empty{display:none}
+.erec{display:flex;flex-direction:column;gap:2px}
+.erec .r{padding:8px 4px;border-bottom:1px solid var(--glassEdge);font-size:13px;color:var(--muted)}
+.erec .r:last-child{border-bottom:0}
+.erec .r div{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.erec .r b{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.erec .r .g{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.erec .none{padding:8px 4px;font-size:13px;color:var(--muted)}
 /* who entered it, on the card */
 .eby{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:12px;color:var(--muted)}
 .eby svg{width:13px;height:13px;flex:0 0 13px}
@@ -3326,9 +3342,9 @@ document.addEventListener('DOMContentLoaded', function(){
       <button type="button" class="eact off" aria-disabled="true" tabindex="-1">
         <span class="ei44" style="--c:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span>
         Add chemical <span class="soon">Soon</span></button>
-      <a class="eact" id="ePump" href="https://www.rollingoaksclub.org/log/">
+      <button type="button" class="eact" id="ePump">
         <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span>
-        Log pump reading</a>
+        Log pump reading</button>
       <button type="button" class="eact" id="eNoteBtn">
         <span class="ei44" style="--c:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg></span>
         Add a note</button>
@@ -3363,8 +3379,10 @@ document.addEventListener('DOMContentLoaded', function(){
 (function(){
   var ICON = {
     test: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg>',
-    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>'
+    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>',
+    pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>'
   };
+  var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading']};
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
     ['Daily', 'tested every day', [['fc','FC','ppm',0,20], ['cc','CC','ppm',0,5], ['ph','pH','',6.4,8.6]]],
@@ -3385,7 +3403,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eScrim').addEventListener('click', function(){ if (grow.hidden) setOpen(false); });
   $('eTestBtn').addEventListener('click', function(){ openPanel('test', null, $('eTestBtn')); });
   $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
-  $('ePump').addEventListener('click', function(){ setOpen(false); });
+  $('ePump').addEventListener('click', function(){ openPanel('pump', null, $('ePump')); });
   $('eX').addEventListener('click', function(){ closePanel(); });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
@@ -3461,6 +3479,114 @@ document.addEventListener('DOMContentLoaded', function(){
     return {csi: Math.round(c * 100) / 100, text: from.length ? 'Using ' + from.join(', ') : 'From this test\'s readings.'};
   }
 
+  // ---- pump reading: saved by the Pump Log's own server (Well Log Tool/Code.gs doPost), into the PUMPING LOG sheet,
+  // with "Logged by" = the person's name. Same sign-in (the pass works in every ROC tool); Board and up.
+  var PUMP_API = 'https://script.google.com/macros/s/AKfycbxuGpuW9uzpKp97sc9vTkFS5o_1WoonL7_q9fH0SH-HJJAZ3Dy29LtqreUofuBLp238/exec';
+  var TANK_GAL = 2400, TANK_RESERVE = 600;                  // same as TANK_CAPACITY_GAL / TANK_RESERVE_GAL in the Pump Log
+  var pump = {type: 'well', readings: null, rates: {well: null, pool: null}, err: ''};
+  try { if (localStorage.getItem('ePumpType') === 'pool') pump.type = 'pool'; } catch(e){}
+  function pumpCall(fn, args, ok, fail){
+    fetch(PUMP_API, {method: 'POST', body: JSON.stringify({fn: fn, args: args}), headers: {'Content-Type': 'text/plain;charset=utf-8'}})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (j && 'value' in j) ok(j.value); else throw new Error((j && j.error) || 'No reply'); })
+      .catch(fail);
+  }
+  function pumpLoad(){
+    pump.err = '';
+    pumpCall('getRecentReadings', [CODE, 30], function(res){
+      if (res && res.ok) pump.readings = res.readings;
+      else pump.err = (res && res.message) || 'Couldn\'t load the last readings.';
+      if (mode === 'pump') pumpFill(true);
+    }, function(){ pump.err = 'Couldn\'t reach the Pump Log. Check the connection.'; if (mode === 'pump') pumpFill(false); });
+    pumpCall('getLastRates', [CODE], function(r){ if (r && r.ok !== false) { pump.rates = r; if (mode === 'pump') refresh(); } }, function(){});
+  }
+  function pumpLast(type, field){
+    var rs = pump.readings || [];
+    for (var i = 0; i < rs.length; i++) if (rs[i].type === type && (!field || (rs[i][field] !== '' && rs[i][field] != null))) return rs[i];
+    return null;
+  }
+  function gal(n){ return Math.round(Number(n)).toLocaleString('en-US'); }
+  function meter(n){ return Number(n).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}); }
+  function hrsAgo(iso){
+    var m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+    if (m < 60) return Math.max(m, 0) + 'm ago';
+    var h = Math.round(m / 60); return h < 48 ? h + 'h ago' : Math.round(h / 24) + 'd ago';
+  }
+  function stamp(iso){ return new Date(iso).toLocaleString('en-US', {timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'}); }
+  function pumpBody(){
+    var n = nowLocal();
+    return '<div class="eseg" role="group" aria-label="Which meter">' +
+        '<button type="button" data-pt="well" style="--c:var(--water)">Well<small>Groundwater meter</small></button>' +
+        '<button type="button" data-pt="pool" style="--c:var(--k-ch)">Pool<small>Pool-fill meter</small></button></div>' +
+      '<div class="etiles two">' +
+        '<label class="etile" id="epReadT" style="--c:var(--water)"><span class="nm">Meter reading<i>gal</i></span>' +
+          '<input id="epRead" inputmode="decimal" enterkeyhint="next" placeholder="–" autocomplete="off"><span class="ls" id="epReadLs">Loading…</span></label>' +
+        '<label class="etile" id="epTankT" style="--c:var(--k-ch)"><span class="nm">Tank level<i>gal</i></span>' +
+          '<input id="epTank" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off"><span class="ls" id="epTankLs">optional</span></label>' +
+      '</div>' +
+      '<div class="ecsi ep" id="epInfo"></div>' +
+      '<div class="ewhen" style="margin-top:10px"><label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + n.day + '"></label>' +
+        '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
+      '<div class="egrp"><b>Note</b><span id="epNoteHd"></span></div>' +
+      '<input class="etext" id="epNote" maxlength="500" style="min-height:0" placeholder="Anything worth flagging" autocomplete="off">' +
+      '<div class="egrp"><b>Last readings</b><span id="epRecHd"></span></div><div class="erec" id="epRec"><div class="none">Loading…</div></div>';
+  }
+  /** Well / Pool switch and the parts that depend on it. prefill: put the last reading in the box (like the Pump Log app). */
+  function pumpFill(prefill){
+    var t = pump.type, last = pumpLast(t);
+    body.querySelectorAll('[data-pt]').forEach(function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-pt') === t ? 'true' : 'false'); });
+    $('epReadT').style.setProperty('--c', t === 'well' ? 'var(--water)' : 'var(--k-ch)');
+    $('epTankT').style.display = t === 'well' ? '' : 'none';
+    $('epReadT').classList.toggle('wide', t !== 'well');
+    $('epNoteHd').textContent = t === 'well' ? 'optional · "Tank full" turns the row green' : 'optional';
+    if (prefill) $('epRead').value = last ? String(last.reading) : '';
+    $('epReadLs').textContent = pump.readings ? (last ? 'Last ' + meter(last.reading) + ' · ' + hrsAgo(last.timestamp) : 'No reading yet') : (pump.err ? 'Not loaded' : 'Loading…');
+    var tk = pumpLast('well', 'tankLevel');
+    $('epTank').placeholder = tk ? gal(tk.tankLevel) : '–';
+    $('epTankLs').textContent = tk ? 'Last ' + gal(tk.tankLevel) + ' · ' + hrsAgo(tk.timestamp) : 'optional';
+    var rs = (pump.readings || []).filter(function(r){ return r.type === t; }).slice(0, 4);
+    $('epRecHd').textContent = t === 'well' ? 'Well' : 'Pool';
+    $('epRec').innerHTML = pump.err ? '<div class="none" style="color:var(--red)">' + esc(pump.err) + '</div>' : !pump.readings ? '<div class="none">Loading…</div>' :
+      !rs.length ? '<div class="none">No readings yet.</div>' : rs.map(function(r){
+        var gpd = r.gpd !== '' && isFinite(Number(r.gpd)) ? gal(r.gpd) + ' GPD' : '';
+        var tank = r.type === 'well' && r.tankLevel !== '' && r.tankLevel != null ? 'Tank ' + gal(r.tankLevel) : '';
+        return '<div class="r"><div><b>' + meter(r.reading) + '</b><span class="g">' + gpd + '</span></div>' +
+          '<div><span>' + esc(stamp(r.timestamp)) + (r.by ? ' · ' + esc(r.by) : '') + (r.notes ? ' · ' + esc(r.notes) : '') + '</span><span class="g">' + tank + '</span></div></div>';
+      }).join('');
+    refresh();
+  }
+  /** The line under the tiles: water since the last reading, and (Well) how full the tank is. */
+  function pumpInfo(w){
+    var t = pump.type, last = pumpLast(t), lines = [];
+    var raw = $('epRead').value.trim().replace(/,/g, ''), v = raw === '' ? NaN : Number(raw);
+    if (last && isFinite(v) && w) {
+      var g = v - Number(last.reading), h = (w.ms - Date.parse(last.timestamp)) / 3600000;
+      if (h > 0) lines.push(g === 0 ? 'Same as the last reading.' : '<b>' + (g > 0 ? '+' : '') + gal(g) + ' gal</b> in ' + (h < 48 ? h.toFixed(1) + ' h' : (h / 24).toFixed(1) + ' days') +
+        ' · <b>' + gal(g / h * 24) + '</b> GPD' + (g < 0 ? ' · lower than last time, check the number' : ''));
+    }
+    if (t === 'well') {
+      var tr = $('epTank').value.trim().replace(/,/g, ''), typed = tr !== '' && isFinite(Number(tr)), tk = pumpLast('well', 'tankLevel');
+      var lv = typed ? Number(tr) : tk ? Number(tk.tankLevel) : null;
+      if (lv !== null) {
+        var left = TANK_GAL - lv, s = '<b>' + Math.round(lv / TANK_GAL * 100) + '%</b> full' + (typed ? '' : ' (last known)');
+        var wg = pump.rates.well, pg = pump.rates.pool || 0;
+        if (left <= 0) s += ' · tank is at capacity';
+        else if (isNum(wg)) {
+          var net = wg - pg;
+          if (net > 0) s += ' · about <b>' + (left / net).toFixed(1) + '</b> days to full';
+          else if (lv > TANK_RESERVE) s += ' · draining, about <b>' + ((lv - TANK_RESERVE) / -net).toFixed(1) + '</b> days to the ' + gal(TANK_RESERVE) + ' gal reserve';
+          else s += ' · at or below the ' + gal(TANK_RESERVE) + ' gal reserve';
+        }
+        lines.push(s);
+      }
+    }
+    return lines.join('<br>');
+  }
+  function pumpVals(){
+    var raw = $('epRead').value.trim().replace(/,/g, ''), tr = pump.type === 'well' ? $('epTank').value.trim().replace(/,/g, '') : '';
+    return {reading: raw === '' ? NaN : Number(raw), readRaw: raw, tank: tr === '' ? '' : Number(tr)};
+  }
+
   // ---- the panel
   function whoText(){ var me = DATA.me || WHO; return me === 'Manager' ? 'Saved as<br>Manager' : 'Saved as<br>volunteer: ' + esc(me); }
   function testBody(t){
@@ -3501,8 +3627,15 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function refresh(){
     msg.textContent = ''; msg.className = 'emsg'; dupOk = false;
-    if (!busy) save.textContent = editing ? 'Save changes' : mode === 'test' ? 'Save test' : 'Save note';
+    if (!busy) save.textContent = editing ? 'Save changes' : KIND[mode][2];
     if (mode === 'note') { save.disabled = busy || !$('eNote').value.trim(); return; }
+    if (mode === 'pump') {
+      var pv = pumpVals(), rOdd = pv.readRaw !== '' && !isFinite(pv.reading), tOdd = pv.tank !== '' && !(pv.tank >= 0 && pv.tank <= TANK_GAL * 1.1);
+      $('epReadT').classList.toggle('odd', rOdd); $('epTankT').classList.toggle('odd', tOdd);
+      $('epInfo').innerHTML = rOdd ? '' : pumpInfo(when());
+      save.disabled = busy || !isFinite(pv.reading) || rOdd || tOdd;
+      return;
+    }
     var w = when(), r = vals(), skip = editing ? editing.id : '', anyOdd = false;
     FIELDS.forEach(function(f){
       var el = $('ei_' + f[0]), tile = $('ew_' + f[0]), v = r.v[f[0]], has = el.value.trim() !== '';
@@ -3532,13 +3665,22 @@ document.addEventListener('DOMContentLoaded', function(){
   function openPanel(kind, item, from){
     if (busy) return;
     mode = kind; editing = item; fromEl = from || fab;
-    $('eIcon').style.setProperty('--c', kind === 'test' ? 'var(--accent)' : 'var(--ink2)');
+    $('eIcon').style.setProperty('--c', KIND[kind][1]);
     $('eIcon').innerHTML = ICON[kind];
-    $('eTitle').textContent = (item ? 'Edit ' : kind === 'test' ? 'Log ' : 'Add a ') + (kind === 'test' ? 'test' : 'note');
-    save.textContent = item ? 'Save changes' : kind === 'test' ? 'Save test' : 'Save note';
+    $('eTitle').textContent = (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
+    save.textContent = item ? 'Save changes' : KIND[kind][2];
     $('eWho').innerHTML = item ? (item.by === 'Manager' ? 'Entered by<br>Manager' : 'Entered by<br>volunteer: ' + esc(item.by)) : whoText();
-    body.innerHTML = kind === 'test' ? testBody(item) : noteBody(item);
+    body.innerHTML = kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : noteBody(item);
     body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
+    if (kind === 'pump') {
+      body.querySelectorAll('[data-pt]').forEach(function(b){ b.addEventListener('click', function(){
+        pump.type = b.getAttribute('data-pt'); try { localStorage.setItem('ePumpType', pump.type); } catch(e){}
+        pumpFill(true);
+      }); });
+      $('epRead').addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); if (pump.type === 'well') $('epTank').focus(); else $('epRead').blur(); } });
+      $('epTank').addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); $('epTank').blur(); } });
+      pumpFill(true); pumpLoad();
+    }
     FIELDS.forEach(function(f, i){
       var el = $('ei_' + f[0]); if (!el) return;
       el.addEventListener('keydown', function(e){
@@ -3569,6 +3711,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!w) { say('Fill in the date and time.', 'err'); return; }
     if (w.ms > Date.now() + 5 * 60000) { say('The date and time can\'t be in the future.', 'err'); return; }
     var fn, payload, label;
+    if (mode === 'pump') { savePump(w); return; }
     if (mode === 'test') {
       var r = vals();
       if (r.bad.length) { say('One of the numbers isn\'t a number. Check the yellow box.', 'err'); return; }
@@ -3597,6 +3740,25 @@ document.addEventListener('DOMContentLoaded', function(){
       say('Not saved: could not reach the server. Check the connection and tap Save again.', 'err');
     });
   });
+
+  function savePump(w){
+    var pv = pumpVals();
+    if (!isFinite(pv.reading)) { say('Enter the meter reading.', 'err'); return; }
+    var payload = {type: pump.type, reading: pv.reading, localDateTime: w.s, notes: $('epNote').value, name: ''};
+    if (pump.type === 'well' && pv.tank !== '') payload.tankLevel = pv.tank;
+    busy = true; save.disabled = true; save.textContent = 'Saving…'; say('');
+    pumpCall('addReading', [CODE, payload], function(res){
+      busy = false;
+      if (res && res.ok === false && res.why && res.why !== 'level') { shut(); handleDenied(res); return; }
+      if (!res || !res.ok) { save.disabled = false; save.textContent = 'Save reading'; say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
+      if (pump.readings && res.entry) pump.readings.unshift(res.entry);
+      closePanel();
+      bgSet((pump.type === 'well' ? 'Well' : 'Pool') + ' reading saved.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
+    }, function(){
+      busy = false; save.disabled = false; save.textContent = 'Save reading';
+      say('Not saved: could not reach the Pump Log. Check the connection and tap Save again.', 'err');
+    });
+  }
 
   // ---- "Entered by" line and the ⋯ menu (edit / delete) on dashboard entries
   var PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
