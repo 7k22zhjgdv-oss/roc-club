@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <script>if (/[?&]r=/.test(location.search)) history.replaceState(null, '', location.pathname);</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
-<link rel="apple-touch-icon" href="https://7k22zhjgdv-oss.github.io/roc-club/apple-touch-icon.png">
+<link rel="icon" href="https://www.rollingoaksclub.org/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="https://www.rollingoaksclub.org/apple-touch-icon.png">
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
@@ -2133,7 +2133,7 @@ window.rocStartPump = function (DATA) {
 // Sign in once: the Hosting Wrapper (WRAP_ORIGIN) keeps the key number / password and hands it over when this page loads;
 // same messages as the Pool Chemistry page ({roc:'hello'|'save'|'forget'} up, {roc:'code'} down).
 (function(){
-  var WRAP_ORIGIN = 'https://7k22zhjgdv-oss.github.io';
+  var WRAP_ORIGIN = 'https://www.rollingoaksclub.org';
   var KEY = 'rocPass';
   var NAMES = { member: 'Member', board: 'Board', manager: 'Manager' };
   var CODE = '', LEVEL = 'public', tried = {};
@@ -2238,7 +2238,7 @@ window.rocStartPump = function (DATA) {
 // instead of reloading everything. If the wrapper doesn't answer (an older copy), the link opens the normal way.
 (function(){
   if (window.top === window) return;
-  var WRAP = 'https://7k22zhjgdv-oss.github.io', RE = /^https:\/\/7k22zhjgdv-oss\.github\.io\/roc-club\/\?p=(home|pump|chem)$/;
+  var WRAP = 'https://www.rollingoaksclub.org', RE = /^https:\/\/www\.rollingoaksclub\.org\/\?p=(home|pump|chem)$/;
   document.addEventListener('click', function(e){
     if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
     var a = e.target.closest ? e.target.closest('a[href]') : null, m = a && RE.exec(a.href);
