@@ -946,6 +946,8 @@ html.app .mrow.appOnly{display:flex}
 .chip{min-height:52px;padding:7px 9px;border-radius:11px}
 .chip .v{font-size:19px}
 .chip.green{background:var(--okT)} .chip.green .l{color:var(--okInk)} .chip.green .g{display:none}
+/* the warning badge sits on the tile's corner, half outside, like an app badge on an iPhone icon */
+.chip .g{top:-5px;right:-5px;width:16px;height:16px;line-height:16px;font-size:10px;z-index:1}
 .chip.yellow{background:var(--dueBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--yellow) 70%,transparent)}
 .chip.red{background:var(--lateBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--red) 70%,transparent)}
 .chip.purple{background:var(--purBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--purple) 60%,transparent)}
@@ -1030,6 +1032,13 @@ html.app .mrow.appOnly{display:flex}
 .ljtbl>div:nth-child(-n+2){border-top:0}
 .ljtbl .n{font-weight:600;color:var(--ink)}
 @media print{ .day{position:static} }
+/* Ranges legend: one line per reading, colors only (no icons) */
+.legend .lrow{flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none}
+.legend .lrow::-webkit-scrollbar{display:none}
+.legend .lrow b{min-width:34px;flex:none}
+.legend .sw{flex:none;padding:3px 7px;font-size:12px;white-space:nowrap;border-radius:7px}
+.legend .sw .lc{display:none} .legend.tight .sw .lf{display:none} .legend.tight .sw .lc{display:inline}
+.legend .lnote{margin-top:8px}
 /* Details (2026-10-06): Jobs card + Stock card */
 .updet{display:grid;gap:4px 14px;margin:2px 0 0;padding-top:0;border-top:0;font-size:14px;color:var(--ink2)}
 @media (min-width:561px){ .updet{grid-template-columns:1fr 1fr} }
@@ -2486,13 +2495,22 @@ function renderPresets(){
   $('histRange').textContent = histRangeText();
   $('viewChipTxt').textContent = state.mode === 'both' ? 'Readings + chemicals' : (state.mode === 'chem' ? 'Chemicals' : 'Readings');
 }
+/** Ranges legend (2026-10-06): one line per reading. If any row doesn't fit, every row uses "45–<60" instead of "45 to <60". */
+function fitLegend(){
+  var lg = $('legend'); if (!lg) return;
+  lg.classList.remove('tight');
+  var over = [].some.call(lg.querySelectorAll('.lrow'), function(r){ return r.scrollWidth > r.clientWidth + 1; });
+  lg.classList.toggle('tight', over);
+}
 function renderLegend(){
   var rows = legendHtml();
   $('legend').innerHTML = '<h2>Ranges</h2>' + rows.map(function(r){
     return '<div class="lrow"><b>' + esc(r.label) + '</b>' + r.runs.map(function(x){
-      return '<span class="sw ' + x.color + '"><i aria-hidden="true">' + GLYPH[x.color] + '</i>' + esc(x.text) + '</span>';
+      var c = String(x.text).replace(/ to /g, '–');
+      return '<span class="sw ' + x.color + '" title="' + esc(x.text + ' – ' + COLNAMES[x.color]) + '"><span class="lf">' + esc(x.text) + '</span><span class="lc">' + esc(c) + '</span></span>';
     }).join('') + '</div>';
-  }).join('') + '<div class="lrow" style="margin-top:8px">Salt, borates and temperature are shown without colors.</div>';
+  }).join('') + '<div class="lnote">Salt, borates and temperature are shown without colors.</div>';
+  fitLegend();
 }
 function renderHeader(){
   $('mnAsof').textContent = DATA.dataAsOf ? 'Data as of ' + relStamp(DATA.dataAsOf) : 'No data yet';
@@ -3567,7 +3585,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('oPred').addEventListener('click', function(){ state.pred = !state.pred; renderPresets(); renderList(); });
   $('oCustom').addEventListener('click', function(){ var d = $('oDates'); d.hidden = !d.hidden; this.setAttribute('aria-expanded', d.hidden ? 'false' : 'true'); });
   var rt = null;
-  window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ fitWeather(); fitTests(); }, 120); });
+  window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ fitWeather(); fitTests(); fitLegend(); }, 120); });
 
   $('unlockBtn').addEventListener('click', openUnlock);
   $('gateBtn').addEventListener('click', openUnlock);
