@@ -53,6 +53,7 @@
   --green:#0ca30c; --yellow:#fab219; --red:#d03b3b; --purple:#7a4fd0;
   --gTint:rgba(12,163,12,.14); --yTint:rgba(250,178,25,.22); --rTint:rgba(208,59,59,.14); --pTint:rgba(122,79,208,.14);
   --chemTint:rgba(31,111,235,.07); --panel:#f3f4ef;
+  --okT:#dcefd8; --okInk:#2d7a28; --sum:#eef3fb; --dueBg:#fdecc0; --lateBg:#f9dada; --purBg:#ece4fa;
   --k-orenda:#1f6feb; --k-odd:#6f6f68;
   --k-fc:#ab23d8; --k-cc:#ab23d8; --k-ph:#c72c45; --k-ta:#517729; --k-ch:#367590; --k-cya:#98581d; --k-salt:#656565; --k-bor:#a04e4b; --k-tempF:#a95b21; --k-csi:#637c43;
 }
@@ -62,6 +63,7 @@
     --line:#3a3a37; --accent:#5b9bff; --accentInk:#0d0d0c; --soft:#2d2d2b;
     --gTint:rgba(12,163,12,.26); --yTint:rgba(250,178,25,.26); --rTint:rgba(208,59,59,.30); --pTint:rgba(150,110,235,.30);
     --chemTint:rgba(91,155,255,.10); --panel:#232522;
+    --okT:#21381e; --okInk:#86c97f; --sum:#1f2633; --dueBg:#4d3e14; --lateBg:#4f2222; --purBg:#33284d;
     --k-orenda:#5b9bff; --k-odd:#9a9a92;
     --k-fc:#d48cf2; --k-cc:#d48cf2; --k-ph:#f0788d; --k-ta:#9cc46a; --k-ch:#6db5d4; --k-cya:#d99a5a; --k-salt:#b0b0b0; --k-bor:#d99590; --k-tempF:#e0955a; --k-csi:#a7c47f;
   }
@@ -609,6 +611,7 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 #printView th{background:#e6e6e6}
 #printView th.pbor{width:1%}
 #printView td.dt{text-align:left;white-space:nowrap}
+#printView td.dt .pby{float:right;margin-left:6px;font-size:7.5pt;font-weight:700;color:#1f6feb}
 #printView td.dt .pd{display:inline-block;width:.78in;font-weight:700}
 #printView.yr td.dt .pd{width:.98in}
 #printView tbody tr td.dt{color:#000;font-style:normal}
@@ -915,9 +918,8 @@ html.app .mrow.appOnly{display:flex}
 .erec .r b{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
 .erec .r .g{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink2)}
 .erec .none{padding:8px 4px;font-size:13px;color:var(--muted)}
-/* who entered it, on the card */
-.eby{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:12px;color:var(--muted)}
-.eby svg{width:13px;height:13px;flex:0 0 13px}
+/* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
+#entryMenu .emsub{margin:-6px 0 8px;color:var(--muted);font-size:13px}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
 .emk:hover{color:var(--ink);background:var(--soft)}
 /* Remove test (test ⋯) and Review removed tests (top ⋯), Manager */
@@ -936,6 +938,156 @@ html.app .mrow.appOnly{display:flex}
 #entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
 @media (prefers-reduced-motion: reduce){.eact,.escrim,.efab svg,.egrow,.gbody,.gfoot,.gx{transition:none!important}}
 @media print{#entryUi,.emk{display:none!important}}
+/* ================================================================ calmer look (2026-10-06, mockup "Calmer Chemistry Dashboard")
+   Color only where it means something: good readings a soft green, problems a solid tint with an outline.
+   Coming up = tinted summary panel (jobs due + a fixed row of six tests); History = plain list, cards without borders,
+   chemical additions as open rows with a round icon, quiet sticky day labels. */
+/* reading tiles */
+.chip{min-height:52px;padding:7px 9px;border-radius:11px}
+.chip .v{font-size:19px}
+.chip.green{background:var(--okT)} .chip.green .l{color:var(--okInk)} .chip.green .g{display:none}
+.chip.yellow{background:var(--dueBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--yellow) 70%,transparent)}
+.chip.red{background:var(--lateBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--red) 70%,transparent)}
+.chip.purple{background:var(--purBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--purple) 60%,transparent)}
+.chip.popopen{box-shadow:0 0 0 2px var(--accent) inset}
+.lz{display:none}
+/* cards: no borders (a faint lift in light mode), one line on top: time + who | weather + ⋯ */
+.card{border-color:transparent;border-radius:16px;padding:10px 12px;margin-bottom:6px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.card.store{border-color:var(--accent)}
+.card.thid{border-color:var(--line)}
+.head{flex-wrap:nowrap;align-items:baseline;margin-bottom:7px}
+.head .lhs{display:inline-flex;align-items:baseline;gap:7px;min-width:0;flex:0 1 auto;overflow:hidden}
+.head .rhs{margin-left:auto;flex:0 0 auto}
+.time{font-size:16.5px}
+.who{display:inline-flex;align-items:center;gap:3px;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.who svg{width:12px;height:12px;flex:0 0 12px}
+.wx{font-size:12.5px}
+.wx .ds{display:none} .wx.s1 .d{display:none} .wx.s1 .ds{display:inline} .wx.s2 .d,.wx.s2 .ds{display:none}
+.head .emk{margin:-2px -6px -2px 2px;font-size:16px}
+/* chemical additions: open rows, round icon in the color of what they change */
+.card.chem{display:flex;align-items:center;gap:10px;background:transparent;border:0;border-left:0;box-shadow:none;border-radius:0;padding:5px 4px 9px}
+.chem .cic{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--rc,var(--accent)) 16%,transparent);color:var(--rc,var(--accent))}
+.chem .cic svg{width:18px;height:18px}
+.chem .cb{flex:1;min-width:0}
+.chem .row{align-items:baseline}
+.chem .what{font-size:15px}
+.chem .head{margin:1px 0 0;flex-wrap:wrap}
+.chem .head .lhs{flex-wrap:wrap;gap:2px 7px}
+.chem .time{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.chem .cat,.chem .tag{font-size:12.5px}
+.chem .eff.slowf{background:none;color:var(--accent);padding:0;font-size:12px}
+.chem.chemg{display:block;padding:0}
+.chemg .blk,.chemg .blk:first-child,.chemg .blk:last-child,.chemg .blk:only-child{display:flex;align-items:center;gap:10px;background:transparent;border:0;border-radius:0;padding:5px 4px 9px}
+.chemg .blk .cb .row+.row{margin-top:2px}
+.pwrap .pfront{background:var(--bg)}
+/* notes: the same plain card, icon on the left */
+.card.note .head{justify-content:flex-start}
+/* day labels: small, grey, pinned while you scroll through that day */
+.day{position:sticky;top:calc(var(--barH) + var(--barTop));z-index:3;background:var(--bg);text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;color:var(--muted);margin:8px -4px 2px;padding:6px 6px 4px}
+/* section headings: plain words, larger */
+.seclbl{font-size:21px;font-weight:700;letter-spacing:-.02em;text-transform:none}
+.uprow .hln,.histrow .hln{visibility:hidden}
+.histrow{margin:22px 2px 2px}
+.hrng{font-size:13px}
+/* Coming up: heading above a tinted panel */
+.up{background:transparent;border:0;padding:0;margin:0}
+.up .uprow{margin:0 2px 8px 2px}
+.upbox{background:var(--sum);border-radius:20px;padding:10px}
+.jobs{background:var(--card);border-radius:14px;overflow:hidden}
+.jobs[hidden]{display:none}
+.jrow{display:flex;align-items:center;gap:10px;width:100%;font:inherit;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;cursor:pointer}
+.jrow:last-child{border-bottom:0}
+.jrow .dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex:0 0 10px}
+.jrow.lv-red .dot{background:var(--red)}
+.jrow b{font-size:15.5px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jrow .st{margin-left:auto;font-size:13px;color:var(--ink2);white-space:nowrap}
+.jrow.lv-red .st{color:var(--red);font-weight:600}
+.jrow.more{justify-content:center;color:var(--accent);font-size:14px;padding:8px}
+.jrow.popopen{box-shadow:inset 0 0 0 2px var(--accent)}
+.jline{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;color:var(--ink2);margin:9px 4px 0;line-height:1.35}
+.jline:first-child{margin-top:2px}
+.jline .ok{color:var(--green);font-weight:700}
+.jline b{color:var(--ink);font-weight:600}
+.up .trk{display:none !important}
+/* the six tests: always in the same order, each box as wide as its words */
+.tdue.priv{display:flex}
+.up .tdue{display:flex;gap:4px;margin:10px 0 0;overflow-x:auto;scrollbar-width:none}
+.up .tdue::-webkit-scrollbar{display:none}
+.tdc{flex:1 0 auto;display:flex;flex-direction:column;align-items:center;background:var(--card);border:0;border-radius:10px;padding:6px 5px 5px;color:var(--muted);font-size:10.5px;overflow:visible}
+.tdc b{display:block;margin:0;font-size:13.5px}
+.tdc .s{font-size:10.5px;font-weight:600;letter-spacing:0;text-transform:none;white-space:nowrap}
+.tdc.lv-green{background:var(--card)} .tdc.lv-green .s{color:var(--muted)}
+.tdc.done .s{color:var(--green)}
+.tdc.lv-yellow{background:var(--dueBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--yellow) 70%,transparent)} .tdc.lv-yellow .s{color:var(--ink)}
+.tdc.lv-red{background:var(--lateBg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--red) 70%,transparent)} .tdc.lv-red .s{color:var(--red);font-weight:700}
+.tdc.popopen{box-shadow:0 0 0 2px var(--accent) inset}
+.tbrk{display:none !important}
+.tdc .ss{display:none} .tdue.tight .tdc .sl{display:none} .tdue.tight .tdc .ss{display:inline}
+@media (max-width:560px){ .tdue{grid-template-columns:none} .tdc{padding-left:5px;padding-right:5px;font-size:10.5px} .tdc .s{font-size:10.5px} .tdc b{margin:0} }
+.updet{margin:10px 3px 2px}
+.ljtbl{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;font-size:13.5px}
+.ljtbl>div{padding:4px 0;border-top:1px solid var(--line);color:var(--ink2)}
+.ljtbl>div:nth-child(-n+2){border-top:0}
+.ljtbl .n{font-weight:600;color:var(--ink)}
+@media print{ .day{position:static} }
+/* Details (2026-10-06): Jobs card + Stock card */
+.updet{display:grid;gap:4px 14px;margin:2px 0 0;padding-top:0;border-top:0;font-size:14px;color:var(--ink2)}
+@media (min-width:561px){ .updet{grid-template-columns:1fr 1fr} }
+.dsec{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 6px 6px}
+.dcard{background:var(--card);border-radius:14px;overflow:hidden}
+.dj{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 10px;width:100%;font:inherit;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;cursor:pointer}
+.dj:last-child{border-bottom:0}
+.dj b{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dj .n{font-size:13px;color:var(--ink2);text-align:right;white-space:nowrap}
+.dj .n.due{color:color-mix(in srgb,var(--yellow) 55%,var(--ink));font-weight:600}
+.dj .n.late{color:var(--red);font-weight:600}
+.dj .l{grid-column:1 / -1;font-size:12.5px;color:var(--muted)}
+.dj.popopen{box-shadow:inset 0 0 0 2px var(--accent)}
+.ds{display:grid;grid-template-columns:minmax(0,1fr) auto 38px;gap:0 10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}
+.ds b{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds .a{font-size:13.5px;color:var(--ink);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ds .a span{color:var(--muted)}
+.ds.none{display:block;color:var(--muted)}
+.ds .tag{justify-self:end;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 6px}
+.ds .tag.lv-low{background:var(--dueBg);color:color-mix(in srgb,var(--yellow) 55%,var(--ink))}
+.ds .tag.lv-out{background:var(--lateBg);color:var(--red)}
+.upfulllist[hidden]{display:none}
+.dmore{display:block;width:100%;font:inherit;font-size:14px;font-weight:600;color:var(--accent);background:none;border:0;padding:10px;cursor:pointer}
+.dcard>.ds:last-child,.dcard>.upfulllist:last-child .ds:last-child{border-bottom:0}
+.dmore .b{display:none} .dmore[aria-expanded="true"] .a{display:none} .dmore[aria-expanded="true"] .b{display:inline}
+/* Options (2026-10-06): one tinted box - Period, Custom dates, Show, Predictions, cost */
+.obox{display:block;background:var(--sum);border-radius:20px;padding:10px;margin:8px 0 6px}
+.obox .olab{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 6px 6px}
+.obox .olab:first-child{margin-top:2px}
+.obox .presets{display:flex;flex-wrap:nowrap;gap:2px;background:var(--card);border-radius:12px;padding:3px}
+.obox .presets .pill{flex:1;min-width:0;border:0;background:none;border-radius:9px;padding:8px 2px;font-size:13.5px;color:var(--ink2);min-height:0;white-space:nowrap}
+.obox .presets .pill.on{background:var(--accent);color:var(--accentInk);font-weight:600}
+.obox .ocustom{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:8px 6px 0;font-size:13.5px;color:var(--muted)}
+.obox .ocustom .lnk{font-size:13.5px;font-weight:600;min-height:0;padding:4px 0}
+.obox .dates{margin:8px 4px 0;gap:8px 12px}
+.obox .dates[hidden]{display:none}
+.obox .dates{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.obox .dates label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+.obox .dates input{width:100%;min-width:0;font-size:16px;background:var(--card);border:0;border-radius:10px;padding:8px 10px}
+.mchips{display:none !important}   /* the old date / view buttons (their pop-ups are no longer used) */
+.obox .seg,.obox .seg.priv{display:flex;align-self:auto;width:100%;border:0;border-radius:12px;padding:3px;gap:2px;background:var(--card)}
+.obox .seg button{flex:1;border:0;border-radius:9px;min-height:0;padding:8px 2px;font-size:13.5px;color:var(--ink2)}
+.obox .seg button+button{border-left:0}
+.obox .seg button.on{background:var(--accent);color:var(--accentInk)}
+.osw{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border-radius:12px;padding:10px 12px;margin-top:10px}
+.osw.priv{display:flex}
+.osw b{font-weight:600;font-size:15px;color:var(--ink)} .osw small{display:block;color:var(--muted);font-size:12px}
+.osw .tgl{flex:0 0 auto}
+#mPred{display:none !important}
+.obox .summary{background:var(--card);border-radius:12px;margin:10px 0 0;padding:0 12px}
+.obox .summary:not(.hascost){background:none;padding:0 6px}
+.obox .sumbtn{padding:0;color:var(--ink)}
+.obox .summary .count{margin:6px 0 8px;font-size:12.5px}
+.obox .summary .spend{font-size:13.5px}
+/* room at the bottom so the floating ⋯ / + never cover the last line */
+body.can-enter #legend{margin-bottom:84px}
+html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
+
 </style>
 </head>
 <body>
@@ -968,9 +1120,13 @@ html.app .mrow.appOnly{display:flex}
   <div class="up priv" id="up" hidden>
     <div class="uprow"><span class="seclbl">Coming up</span><span class="hln" aria-hidden="true"></span>
       <button type="button" class="optbtn" id="upBtn" aria-expanded="false" aria-controls="upDet">Details<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
-    <div class="trk priv" id="trk" aria-label="Last added" hidden></div>
-    <div class="tdue priv brd" id="tdue" aria-label="Tests due" hidden></div>
-    <div class="updet" id="upDet"></div>
+    <div class="upbox">
+      <div class="jobs" id="jobs" aria-label="Jobs due now"></div>
+      <div id="jlines"></div>
+      <div class="trk priv" id="trk" aria-label="Last added" hidden></div>
+      <div class="tdue priv brd" id="tdue" aria-label="Tests" hidden></div>
+      <div class="updet" id="upDet"></div>
+    </div>
   </div>
   <div class="histrow priv" id="histRow">
     <span class="seclbl">History</span><span class="hrng" id="histRange"></span><span class="hln" aria-hidden="true"></span>
@@ -978,31 +1134,35 @@ html.app .mrow.appOnly{display:flex}
   </div>
   <div class="opts" id="opts">
 
-  <div class="mchips">
+  <div class="mchips" hidden>
     <button type="button" class="cbtn" id="dateChip"><span id="dateChipTxt"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
     <button type="button" class="cbtn priv" id="viewChip"><span id="viewChipTxt"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
   </div>
 
-  <div class="controls">
-    <div class="presets desk" id="presets"></div>
-    <div class="dates desk">
+  <!-- Options (2026-10-06): one tinted box, everything set right here (no pop-ups) -->
+  <div class="obox controls">
+    <div class="olab">Period</div>
+    <div class="presets" id="presets"></div>
+    <div class="ocustom"><button type="button" class="lnk" id="oCustom" aria-expanded="false" aria-controls="oDates">Custom dates…</button><span id="oRange"></span></div>
+    <div class="dates" id="oDates" hidden>
       <label>From <input type="date" id="from"></label>
       <label>To <input type="date" id="to"></label>
     </div>
-    <div class="seg priv desk" role="group" aria-label="What to show">
+    <div class="olab priv">Show</div>
+    <div class="seg priv" role="group" aria-label="What to show">
       <button type="button" id="mRead" class="on">Readings</button>
       <button type="button" id="mChem">Chemicals</button>
       <button type="button" id="mBoth">Both</button>
     </div>
-    <button type="button" class="pill priv desk" id="mPred" aria-pressed="false" title="Show or hide the dashed Predicted water chemistry tiles">Predictions: off</button>
-  </div>
-
+    <div class="osw priv" id="oPredRow"><div><b>Predictions</b><small>Estimated water right after each group of additions</small></div><button type="button" class="tgl" id="oPred" role="switch" aria-checked="false" aria-label="Predictions"></button></div>
+    <button type="button" class="pill priv" id="mPred" aria-pressed="false" hidden>Predictions: off</button>
   <div class="summary" id="summary">
     <button type="button" class="sumbtn" id="sumBtn" aria-expanded="false"><span id="sumTotal"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
     <div class="sumdet">
       <p class="count" id="count"></p>
       <p class="spend" id="spend"></p>
     </div>
+  </div>
   </div>
   </div>
   <div id="list"></div>
@@ -1312,18 +1472,44 @@ function inRange(day, from, to){ return (!from || day >= from) && (!to || day <=
 function hasReading(t){
   return COLS.some(function(c){ return isNum(t[c[0]]); });
 }
+/** Card weather (2026-10-06): "80° Sunny". When the line is tight a short word is used (Thunderstorm -> Storm), then none
+ *  (fitWeather). The full weather with wind is in the ⋯ heading (wxFull). */
+var WX_SHORT = [[/thunder/i, 'Storm'], [/^mostly cloudy/i, 'Cloudy'], [/^mostly sunny/i, 'Sunny'], [/^partly cloudy/i, 'Pt. cloudy'],
+  [/^light rain/i, 'Lt. rain'], [/^heavy rain/i, 'Hvy. rain'], [/^a shower/i, 'Shower'], [/^overcast/i, 'Cloudy'], [/drizzle/i, 'Drizzle']];
+function wxShort(d){ for (var i = 0; i < WX_SHORT.length; i++) if (WX_SHORT[i][0].test(d)) return WX_SHORT[i][1]; return String(d).split(/[\s,\/]+/)[0]; }
 function wxHtml(w){
   if (!w) return '';
-  var t = isNum(w.tempF) ? Math.round(w.tempF) + '°F' : '';
-  var d = w.desc ? esc(w.desc) : '';
-  var wind = isNum(w.windMph) ? 'wind ' + Math.round(w.windMph) + ' mph' + (w.windDir ? ' ' + esc(w.windDir) : '') : '';
-  // each part carries its own " · " lead-in, so hiding the middle part (.d) leaves a clean line
-  var out = '', first = true;
-  function add(cls, txt){ out += '<span class="' + cls + '">' + (first ? '' : ' · ') + txt + '</span>'; first = false; }
-  if (t) add('t', t);
-  if (d) add('d', d);
-  if (wind) add('w', wind);
-  return out ? '<span class="wx">' + out + '</span>' : '';
+  var t = isNum(w.tempF) ? Math.round(w.tempF) + '°' : '', d = w.desc ? String(w.desc) : '';
+  if (!t && !d) return '';
+  var sd = d ? wxShort(d) : '';
+  return '<span class="wx"><span class="t">' + t + '</span>' + (d ? '<span class="d"> ' + esc(d) + '</span>' + '<span class="ds"> ' + esc(sd) + '</span>' : '') + '</span>';
+}
+function wxFull(w){
+  if (!w) return '';
+  return [isNum(w.tempF) ? Math.round(w.tempF) + '°F' : '', w.desc || '', isNum(w.windMph) ? 'wind ' + Math.round(w.windMph) + ' mph' + (w.windDir ? ' ' + w.windDir : '') : '']
+    .filter(Boolean).join(' · ');
+}
+/* who entered a dashboard test or note (2026-10-06): first name on the card, the full name in the ⋯ heading and on print.
+   Entries saved before full names were on the Volunteers tab say just "Annette": they count as the person whose full name
+   starts with it (sameName / fullName). */
+var PERSON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+function firstName(n){ n = String(n || '').trim(); return n === 'Manager' ? n : n.split(/\s+/)[0]; }
+function knownNames(){
+  var seen = {}, out = [];
+  [DATA.me].concat((DATA.tests || []).map(function(t){ return t.by; }), (DATA.notes || []).map(function(n){ return n.by; }))
+    .forEach(function(n){ n = String(n || '').trim(); if (n && n.indexOf(' ') > 0 && !seen[n]){ seen[n] = 1; out.push(n); } });
+  return out;
+}
+function fullName(n){
+  n = String(n || '').trim();
+  if (!n || n.indexOf(' ') > 0 || n === 'Manager') return n;
+  var m = knownNames().filter(function(k){ return k.split(/\s+/)[0].toLowerCase() === n.toLowerCase(); });
+  return m.length === 1 ? m[0] : n;
+}
+function sameName(a, b){ a = String(a || '').trim(); b = String(b || '').trim(); return !!a && !!b && (a === b || fullName(a) === fullName(b)); }
+function whoHtml(x){
+  if (!x || x.src !== 'Dashboard' || !x.by) return '';
+  return '<span class="who" title="Entered by ' + esc(fullName(x.by)) + '">' + PERSON_SVG + esc(firstName(x.by)) + '</span>';
 }
 /** CSI is always between -1 and 1: wrap its leading zero so phones can drop it ("-0.29" -> "-.29"). */
 function numHtml(key, v){
@@ -1351,18 +1537,19 @@ var NOTE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 var MAINT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>';
 function noteCard(n){
   return '<div class="card note' + (n.maint ? ' maint' : '') + '"><span class="nic" aria-hidden="true">' + (n.maint ? MAINT_ICON : NOTE_ICON) + '</span>' +
-    '<div class="nb"><div class="head"><span class="time">' + esc(n.time) + '</span>' + (n.maint ? '<span class="cat">Maintenance</span>' : '') + '</div>' +
+    '<div class="nb"><div class="head"><span class="lhs"><span class="time">' + esc(n.time) + '</span>' + whoHtml(n) + (n.maint ? '<span class="cat">Maintenance</span>' : '') + '</span>' +
+    (window.entryMk ? '<span class="rhs">' + entryMk(n, 'note') + '</span>' : '') + '</div>' +
     (n.maint && n.maint !== 'Maintenance' ? '<div class="ndone">' + esc(n.maint) + '</div>' : '') +
-    (n.text ? '<div class="ntext">' + esc(n.text) + '</div>' : '') + (window.entryByHtml ? entryByHtml(n, 'note') : '') + '</div></div>';
+    (n.text ? '<div class="ntext">' + esc(n.text) + '</div>' : '') + '</div></div>';
 }
 function testCard(t){
-  var mk = mkBtn('store', t.id);
-  return '<div class="card' + (t.store ? ' store' : '') + (t.hidden ? ' thid' : '') + '"><div class="head"><span><span class="time">' + esc(t.time) + '</span>' +
+  var mk = mkBtn('store', t.id) || (window.entryMk ? entryMk(t, 'test') : '');
+  return '<div class="card test' + (t.store ? ' store' : '') + (t.hidden ? ' thid' : '') + '"><div class="head"><span class="lhs"><span class="time">' + esc(t.time) + '</span>' +
+    whoHtml(t) +
     (t.store ? '<span class="store-tag" title="Leslie\'s (pool store) test">Leslie\'s</span>' : '') +
     (t.hidden ? '<span class="thid-tag" title="Members do not see this test">Hidden from members</span>' : '') + '</span>' +
-    (mk ? '<span class="rhs">' + wxHtml(t.w) + mk + '</span>' : wxHtml(t.w)) + '</div>' +
-    '<div class="chips">' + COLS.map(function(c){ return chipHtml(c, t); }).join('') + '</div>' +
-    (window.entryByHtml ? entryByHtml(t, 'test') : '') + '</div>';
+    '<span class="rhs">' + wxHtml(t.w) + mk + '</span></div>' +
+    '<div class="chips">' + COLS.map(function(c){ return chipHtml(c, t); }).join('') + '</div></div>';
 }
 var AFFECT_LABEL = {fc:'FC', cc:'CC', ph:'pH', ta:'TA', ch:'CH', cya:'CYA', salt:'SALT', bor:'BOR'};
 function money(n){ if (n == null || !isFinite(n)) return "–"; return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
@@ -1426,10 +1613,18 @@ function addedHtml(c){
   if (short === full) return '<div class="what">Added ' + esc(full) + '</div>';
   return '<div class="what"><span class="wl">Added ' + esc(full) + '</span><span class="ws">Added ' + esc(short) + '</span></div>';
 }
+/** The round icon on an addition row (2026-10-06): a drop for pH / alkalinity, a bottle for Orenda and other products,
+ *  a flask for the rest; colored by the reading it changes (--rc). */
+var CHEM_ICON = {
+  drop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4.5 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.5-6.5 6-11z"/></svg>',
+  bottle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4v3l2 3v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9l2-3z"/><path d="M8 13h8"/></svg>',
+  flask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 14h9"/></svg>'
+};
+function chemIcon(tone){ return '<span class="cic" aria-hidden="true">' + CHEM_ICON[tone === 'ph' || tone === 'ta' ? 'drop' : tone === 'orenda' || tone === 'odd' ? 'bottle' : 'flask'] + '</span>'; }
 function chemCard(c){
-  return '<div class="card chem r-' + toneOf(c) + '"><div class="head"><span class="lhs"><span class="time">' + esc(groupInfo(c).time) + '</span>' +
-    catHtml(c.category) + tagHtml(c) + '</span></div>' +
-    '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div></div>';
+  return '<div class="card chem r-' + toneOf(c) + '">' + chemIcon(toneOf(c)) + '<div class="cb">' +
+    '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>' +
+    '<div class="head"><span class="lhs"><span class="time">' + esc(groupInfo(c).time) + '</span>' + catHtml(c.category) + tagHtml(c) + '</span></div></div></div>';
 }
 /** Sums the calculations of several additions that change the same reading (one set of numbers for the block). */
 function blockCalc(items){
@@ -1459,10 +1654,10 @@ function groupCard(items){
   var html = blocks.map(function(b, i){
     var calc = blockCalc(b.items), pseudo = {affects: b.aff, dir: b.dir, slow: b.slow, what: calc.what, eff: calc.eff, also: calc.also};
     var cur = colorVar(b);
-    return '<div class="blk r-' + b.tone + '" style="--c:' + cur + '">' +
+    return '<div class="blk r-' + b.tone + '" style="--c:' + cur + '">' + chemIcon(b.tone) + '<div class="cb">' +
+      b.items.map(function(c){ return '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>'; }).join('') +
       '<div class="head"><span class="lhs"><span class="time">' + esc(gi.time) + '</span>' +
-      catHtml(b.category) + tagHtml(pseudo) + '</span></div>' +
-      b.items.map(function(c){ return '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>'; }).join('') + '</div>';
+      catHtml(b.category) + tagHtml(pseudo) + '</span></div></div></div>';
   }).join('');
   return '<div class="card chem chemg">' + html + '</div>';
 }
@@ -1517,6 +1712,12 @@ function popNode(){
       e.stopPropagation();
       if (e.target.closest && e.target.closest('[data-mktoggle]') && popCurChip && popCurChip.hasAttribute('data-mkid')){ mkToggle(popCurChip, e.target.closest('[data-mktoggle]').getAttribute('data-mktoggle')); return; }
       if (e.target.closest && e.target.closest('[data-mkrm]') && popCurChip && popCurChip.hasAttribute('data-mkid')){ mkRemove(popCurChip, e.target.closest('[data-mkrm]').getAttribute('data-mkrm')); return; }
+      var ed = e.target.closest && e.target.closest('[data-mked]');
+      if (ed && popCurChip && popCurChip.hasAttribute('data-mkid')){
+        var eid = popCurChip.getAttribute('data-mkid'); closePop();
+        if (ed.getAttribute('data-mked') === 'edit') { if (window.entryEdit) entryEdit('test', eid); } else if (window.entryDel) entryDel('test', eid);
+        return;
+      }
       var te =e.target && e.target.closest && e.target.closest('[data-trkedit], [data-trkcancel]');
       if (te && popCurChip){
         trkEdit = te.hasAttribute('data-trkedit') ? +te.getAttribute('data-trkedit') : -1;
@@ -1696,7 +1897,7 @@ function popContentPred(rk, readingName, label, from, to, gid){
     '<div class="poptrend">Estimate: ' + fmtNum(from) + ' → ' + fmtNum(to) + ', based on the ' + esc(baseTxt) + ' test</div>' +
     (rampHtml || '<div class="poptrend">No slow-feed chemicals still arriving for this reading.</div>');
 }
-function chipFromEvent(e){ return e.target && e.target.closest ? e.target.closest('.chip[data-rk], .trk-c[data-ti], .tdc[data-ti], .mk[data-mkid]') : null; }
+function chipFromEvent(e){ return e.target && e.target.closest ? e.target.closest('.chip[data-rk], .jrow[data-ti], .dj[data-ti], .trk-c[data-ti], .tdc[data-ti], .mk[data-mkid]') : null; }
 
 // ------------------------------------------------------------------ ⋯ marks: slow feed (additions) and Leslie's (tests)
 // Saved on the sheet's Manual marks tab; Yes or No there wins over the Pool Math note rules.
@@ -1716,11 +1917,15 @@ function mkPopHtml(btn){
     : (on ? 'Shown with a blue outline and the Leslie\'s label.' : 'Counted as your own test.');
   return '<div class="poph"><b>' + esc(title) + '</b></div>' +
     '<div style="color:var(--muted)">' + esc(fmtDayRel(it.day) + ', ' + (kind === 'slow' ? groupInfo(it).time : it.time)) + '</div>' +
+    (kind === 'store' && it.w && wxFull(it.w) ? '<div style="color:var(--muted)">' + esc(wxFull(it.w)) + '</div>' : '') +
+    (kind === 'store' && it.src === 'Dashboard' && it.by ? '<div style="color:var(--muted)">Entered by ' + esc(fullName(it.by)) + '</div>' : '') +
     '<div class="mksw"><span>' + label + '</span><button type="button" class="tgl' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(label) + '" data-mktoggle="' + kind + '"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
     '<div class="trkhint">' + (mkBusy ? 'Saving…' : esc(hint)) + '</div>' +
     (kind === 'store' ? '<div class="mksw"><span>Hide from members</span><button type="button" class="tgl' + (it.hidden ? ' on' : '') + '" role="switch" aria-checked="' + !!it.hidden + '" aria-label="Hide from members" data-mktoggle="hide"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
       '<div class="trkhint">' + esc(it.hidden ? 'Members do not see this test. Board and manager still do.' : 'Members see tests from the last ' + (DATA.memberDays || 7) + ' days.') + '</div>' +
-      (mkConfirm === id
+      (it.src === 'Dashboard'
+        ? '<div class="mkrm"><button type="button" class="btn" data-mked="edit">Edit test</button><button type="button" class="btn danger" data-mked="del">Delete test</button></div>'
+        : mkConfirm === id
         ? '<div class="trkhint" style="color:var(--ink)">Remove this test? It disappears for everyone and stops counting for due dates, predictions and CSI. You can bring it back from ⋯ &gt; Review removed tests.</div>' +
           '<div class="mkrm"><button type="button" class="btn" data-mkrm="no">Keep it</button><button type="button" class="btn danger" data-mkrm="yes"' + (mkBusy ? ' disabled' : '') + '>Remove</button></div>'
         : '<div class="mkrm"><button type="button" class="btn danger" data-mkrm="ask"' + (mkBusy ? ' disabled' : '') + '>Remove test…</button></div>') : '') +
@@ -1922,100 +2127,139 @@ function renderTrackers(){
   el.classList.toggle('open', trkShowMore && extra.length > 0);
   el.hidden = !(main.length + extra.length);
   renderTestsDue(ts);
-  $('up').hidden = el.hidden && $('tdue').hidden;
+  var hasJobs = renderJobs(ts);
+  $('up').hidden = !hasJobs && $('tdue').hidden;
+  fitTests();                                     // measured once the panel is showing
   renderUpDetails(ts);
 }
-/** Coming up "Details": Next 7 days, Stock alerts (Low stock / Out of stock only) and Full stock;
- *  "about N more fillings / doses / shocks" comes from t.stock (server) and shows on both lists. */
+/** Coming up "Details" (2026-10-06): two white cards.
+ *  Jobs - every job once: name, when it was last done (under it), when it is next due (right; "Due now" / "N days late" in color).
+ *  Stock - only what is low or out ("4.5 gal · ~1 fill" + LOW / OUT), then "Show all stock" for the rest in the same card.
+ *  "~N fills / doses / shocks" comes from t.stock (server). Tests are not repeated here: the six boxes above show them. */
 function renderUpDetails(ts){
-  var st = DATA.stock || {};
+  var st = DATA.stock || {}, today = todayCentral();
   function chemName(key){   // short: no strength, no "(20 Mule)", "TriChlor Pucks"
     var c = (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === key; })[0];
     var n = shortProduct(c ? stockPrintName(c.name) : key).replace(/\s*\([^)]*\)/g, '').replace(/\s+-\s+/g, ' ').trim();
     return n || key;
   }
   function level(x){
-    if (x.pct <= 0 || x.left <= 0) return ['red', 'Out'];
-    if (x.pct < STOCK_RED_PCT) return ['red', 'Low'];
-    if (x.pct < STOCK_YELLOW_PCT) return ['yellow', 'Low'];
-    return ['green', ''];
+    if (x.pct <= 0 || x.left <= 0) return ['out', 'Out'];
+    if (x.pct < STOCK_RED_PCT) return ['out', 'Low'];
+    if (x.pct < STOCK_YELLOW_PCT) return ['low', 'Low'];
+    return ['', ''];
   }
-  // how many more fillings / doses / shocks each chemical covers, from the dosing cards (t.stock, server)
-  var lasts = {}, ord = trkOrder(ts), cardKeys = [];
-  ord.main.concat(ord.extra).forEach(function(i){
-    var t = ts[i], x = t.stock;
-    if (!x || lasts[x.key] || !st[x.key]) return;
-    var w = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['fill', 'fills'];
-    lasts[x.key] = x.n == null ? {n: '', w: ''} : {n: '~' + x.n, w: w[x.n === 1 ? 0 : 1]};
-    cardKeys.push(x.key);
+  // jobs
+  var ord = trkOrder(ts), jobs = ord.main.concat(ord.extra).map(function(i){ return ts[i]; }), lasts = {}, cardKeys = [];
+  var jobRows = jobs.map(function(t){
+    var ev = t.events && t.events[0], s = trkState(t), span = t.warn != null ? t.warn : t.over, next = '—', cls = '';
+    if (t.err) { next = 'Check setting'; cls = 'late'; }
+    else if (ev && span != null) {
+      var due = addDays(ev.day, span), late = s.d - span;
+      if (s.lv === 'red') { next = late >= 1 ? late + (late === 1 ? ' day late' : ' days late') : 'Late'; cls = 'late'; }
+      else if (s.lv === 'yellow') { next = 'Due now'; cls = 'due'; }
+      else { var k = daysBetween(today, due); next = k === 1 ? 'Tomorrow' : k <= 6 ? fmtDayLong(due).replace(/, \d{4}$/, '') : fmtDay(due, false); }
+    }
+    var x = t.stock;
+    if (x && !lasts[x.key] && st[x.key]) {
+      var w = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['fill', 'fills'];
+      lasts[x.key] = x.n == null ? '' : '~' + x.n + ' ' + w[x.n === 1 ? 0 : 1];
+      cardKeys.push(x.key);
+    }
+    var last = ev ? trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase() : 'No record';
+    return '<button type="button" class="dj" data-ti="' + ts.indexOf(t) + '"><b>' + esc(trkJob(t)) + '</b><span class="n ' + cls + '">' + esc(next) + '</span><span class="l">' + esc(last) + '</span></button>';
   });
-  // one row = six fixed columns (name, tag, amount, unit, lasts number, lasts word), the same in both tables so the numbers line up
-  function row(key){
-    var x = st[key], lv = level(x), l = (x.left > 0 && lasts[key]) || {n: '', w: ''};
-    return '<div class="nm">' + esc(chemName(key)) + '</div><div>' + (lv[1] ? '<span class="tag lv-' + lv[0] + '">' + lv[1] + '</span>' : '') + '</div>' +
-      '<div class="n">' + esc(fmtNum(Math.max(0, x.left))) + '</div><div class="u">' + esc(x.unit) + '</div><div class="n">' + esc(l.n) + '</div><div class="u">' + esc(l.w) + '</div>';
+  var jobsHtml = jobRows.length ? '<div><div class="dsec">Jobs</div><div class="dcard">' + jobRows.join('') + '</div></div>' : '';
+  // stock
+  function srow(key){
+    var x = st[key], lv = level(x), l = x.left > 0 ? (lasts[key] || '') : '';
+    return '<div class="ds"><b>' + esc(chemName(key)) + '</b><span class="a">' + esc(fmtNum(Math.max(0, x.left)) + ' ' + x.unit) + (l ? ' <span>· ' + esc(l) + '</span>' : '') + '</span>' +
+      (lv[1] ? '<span class="tag lv-' + lv[0] + '">' + lv[1] + '</span>' : '<span></span>') + '</div>';
   }
-  var head = '<div class="hd"></div><div class="hd"></div><div class="hd hc">Left</div><div class="hd hc">Lasts</div>';
-  function table(keys){ return '<div class="stbl">' + head + keys.map(row).join('') + '</div>'; }
   var active = Object.keys(st).filter(function(k){ return !isInactive({name: k}); });
-  // Stock alerts: Low / Out only - the dosing cards' chemicals first, then any other
-  var alerts = cardKeys.concat(active.sort()).filter(function(k, i, a){ return a.indexOf(k) === i && active.indexOf(k) >= 0 && level(st[k])[1]; });
-  var stockHtml = '<div><h3>Stock alerts</h3>' + (alerts.length ? table(alerts) : '<p class="none" style="margin:0">Nothing running low.</p>') + '</div>';
-  // Next 7 days: every card and test with a due day up to a week out (daily tests left out); past due days count as "Now"
-  var today = todayCentral(), end = addDays(today, 7), byDay = {};
-  ts.forEach(function(t){
-    var ev = t.events && t.events[0], due = '';
-    if (!ev || t.err) return;
-    if (t.type === 'test'){ if (t.warn == null || t.warn <= 1) return; due = trkState(t).due; }
-    else { var span = t.warn != null ? t.warn : t.over; if (span == null) return; due = addDays(ev.day, span); }
-    if (!due || due > end) return;
-    var d = due < today ? today : due;
-    (byDay[d] = byDay[d] || []).push(t.type === 'test' ? t.name + ' test' : trkJob(t));
-  });
-  var days = Object.keys(byDay).sort();
-  var weekHtml = '<div><h3>Next 7 days</h3>' + (days.length ? '<div class="wtbl">' + days.map(function(d){
-    var lab = d === today ? 'Now' : d === addDays(today, 1) ? 'Tomorrow' : fmtDayLong(d).replace(/, \d{4}$/, '');
-    return '<div class="d">' + esc(lab) + '</div><div>' + esc(byDay[d].join(', ')) + '</div>';
-  }).join('') + '</div>' : '<p class="none" style="margin:0">Nothing due in the next 7 days.</p>') + '</div>';
-  // "Full stock" (lower right): everything not already in the alerts, Chlorine / Orenda / Acid / Other order
+  var rank = function(k){ return level(st[k])[0] === 'out' ? 0 : 1; };
+  var alerts = cardKeys.concat(active.sort()).filter(function(k, i, a){ return a.indexOf(k) === i && active.indexOf(k) >= 0 && level(st[k])[1]; })
+    .sort(function(a, b){ return rank(a) - rank(b); });
   var FULL_ORDER = ['Chlorine', 'Orenda', 'Acid', 'Other'];
   var rest = (DATA.chemicals || []).filter(function(c){ var k = c.name.toLowerCase(); return st[k] && !isInactive(c) && alerts.indexOf(k) < 0; })
     .sort(function(a, b){ return FULL_ORDER.indexOf(priceGroup(a)) - FULL_ORDER.indexOf(priceGroup(b)); })
     .map(function(c){ return c.name.toLowerCase(); })
     .filter(function(k, i, a){ return a.indexOf(k) === i; });
-  var full = rest.length ? '<div class="upfull"><button type="button" class="optbtn" id="upFullBtn" aria-expanded="' + upFullOpen + '">Full stock' +
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>' +
-      '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '><div><h3>Everything else</h3>' + table(rest) + '</div></div>' : '';
-  $('upDet').innerHTML = weekHtml + stockHtml + full;   // Next 7 days first (left on computers, top on phones)
+  var stockHtml = (alerts.length || rest.length) ? '<div><div class="dsec">Stock</div><div class="dcard">' +
+    (alerts.length ? alerts.map(srow).join('') : '<div class="ds none">Nothing running low.</div>') +
+    (rest.length ? '<div class="upfulllist"' + (upFullOpen ? '' : ' hidden') + '>' + rest.map(srow).join('') + '</div>' +
+      '<button type="button" class="dmore" id="upFullBtn" aria-expanded="' + upFullOpen + '"><span class="a">Show all stock</span><span class="b">Show less</span></button>' : '') +
+    '</div></div>' : '';
+  $('upDet').innerHTML = jobsHtml + stockHtml;
 }
 var upFullOpen = false;   // "Full stock" list under Details; closed again on every load
-/** "Tests due" pills under the cards (no heading), two fixed rows (2026-10-02): FC, CC, pH on top, then TA, CH, CYA
- *  (other tests at the end of that row). Within a row, Late pills move to the front, then Due, then the rest in that order.
- *  Phones start each row on its own line (.tbrk); computers show one line. */
+/** Coming up, top part (2026-10-06): jobs due now or late (Superchlorinate, feeders, products) as rows in a white card,
+ *  late first; at most 3 rows, then "+N more" (opens Details). Under it: "All jobs done" when nothing is due, and
+ *  "Next: … in N days". Returns true when there is anything to show. Tap a row = its popover (data-ti). */
+function renderJobs(ts){
+  var ord = trkOrder(ts), all = ord.main.concat(ord.extra), today = todayCentral();
+  function late(t){ var s = trkState(t), span = t.warn != null ? t.warn : t.over; return span != null && s.d != null ? s.d - span : 0; }
+  var due = all.filter(function(i){ var t = ts[i], lv = trkState(t).lv; return t.err || lv === 'red' || lv === 'yellow'; });
+  due.sort(function(a, b){
+    var ra = ts[a].err || trkState(ts[a]).lv === 'red' ? 0 : 1, rb = ts[b].err || trkState(ts[b]).lv === 'red' ? 0 : 1;
+    return ra - rb || late(ts[b]) - late(ts[a]) || a - b;
+  });
+  var shown = due.length > 3 ? due.slice(0, 2) : due;
+  var rows = shown.map(function(i){
+    var t = ts[i], s = trkState(t), red = t.err || s.lv === 'red', n = late(t);
+    var st = t.err ? 'Check setting' : red ? (n >= 1 ? n + (n === 1 ? ' day late' : ' days late') : 'Late') : 'Due now';
+    return '<button type="button" class="jrow lv-' + (red ? 'red' : 'yellow') + '" data-ti="' + i + '"><span class="dot" aria-hidden="true"></span><b>' + esc(trkJob(t)) + '</b><span class="st">' + esc(st) + '</span></button>';
+  });
+  if (due.length > 3) rows.push('<button type="button" class="jrow more" id="jMore">+' + (due.length - 2) + ' more due now</button>');
+  $('jobs').innerHTML = rows.join('');
+  $('jobs').hidden = !rows.length;
+  // Next: the soonest job that is not due yet (main ones only)
+  var best = null, names = [];
+  ord.main.forEach(function(i){
+    var t = ts[i], s = trkState(t), span = t.warn != null ? t.warn : t.over;
+    if (t.err || s.lv !== 'green' || s.d == null || span == null) return;
+    var left = span - s.d;
+    if (best === null || left < best){ best = left; names = [trkJob(t)]; } else if (left === best) names.push(trkJob(t));
+  });
+  var lines = [];
+  if (!rows.length && all.length) lines.push('<div class="jline"><span><span class="ok">✓</span> <b>All jobs done</b></span></div>');
+  if (best !== null) lines.push('<div class="jline"><span>Next: ' + esc(names.slice(0, 2).join(' · ')) + '</span><span>' + (best <= 1 ? 'tomorrow' : 'in ' + best + ' days') + '</span></div>');
+  $('jlines').innerHTML = lines.join('');
+  return !!(rows.length || lines.length);
+}
+/** Coming up, bottom part (2026-10-06): the tests as a row of boxes that never move - FC, CC, pH, TA, CH, CYA (other tests
+ *  after). Each box: the name, then "✓ today" (daily test done), the due day, "Tomorrow" / "Due today" (yellow) or
+ *  "N days late" (red). Boxes are as wide as their words. Tap = its popover (data-ti). */
 var TEST_ORDER = ['fc', 'cc', 'ph', 'ta', 'ch', 'cya'];
 function renderTestsDue(ts){
-  var el = $('tdue'), idx = [];
+  var el = $('tdue'), idx = [], today = todayCentral();
   ts.forEach(function(t, i){ if (t.type === 'test' && (t.warn != null || t.err)) idx.push(i); });
   function pos(t){ var k = TEST_ORDER.indexOf(String(t.name).trim().toLowerCase()); return k < 0 ? 99 : k; }
-  function row(t){ return pos(t) < 3 ? 0 : 1; }
-  function urg(t){ var lv = t.err ? 'red' : trkState(t).lv; return lv === 'red' ? 0 : lv === 'yellow' ? 1 : 2; }
-  idx.sort(function(a, b){ var ta = ts[a], tb = ts[b]; return row(ta) - row(tb) || urg(ta) - urg(tb) || pos(ta) - pos(tb) || a - b; });
-  var brk = idx.findIndex(function(i){ return row(ts[i]) === 1; });
-  el.innerHTML = idx.map(function(i, n){
-    var t = ts[i], s = trkState(t), txt;
-    if (t.err) txt = '<span class="s">Check setting</span>';
-    else if (s.d === null) txt = '<span class="s">No test on record</span>';
-    else if (s.lv === 'red') txt = '<span class="s">Late</span> · ' + esc(trkDay(s.due));
-    else if (s.lv === 'yellow') txt = '<span class="s">Due</span> · ' + esc(s.d >= t.warn ? 'today' : trkDay(s.due));
-    else if (t.warn <= 1) txt = '<span class="s">Done</span> · today';
-    else txt = '<span class="s">Due</span> · ' + esc(trkDay(s.due));
-    return (n && n === brk ? '<span class="tbrk" aria-hidden="true"></span>' : '') +
-      '<button type="button" class="tdc lv-' + (t.err ? 'red' : s.lv) + '" data-ti="' + i + '"><b>' + esc(t.name) + '</b>' + txt + '</button>';
+  idx.sort(function(a, b){ return pos(ts[a]) - pos(ts[b]) || a - b; });
+  el.innerHTML = idx.map(function(i){
+    var t = ts[i], s = trkState(t), lv = t.err ? 'red' : s.lv, txt, sh, done = false;
+    function md(d){ var p = d.split('-'); return (+p[1]) + '/' + (+p[2]); }
+    if (t.err) { txt = 'Check setting'; sh = 'Check'; }
+    else if (s.d === null) { txt = 'No test yet'; sh = 'None'; }
+    else if (lv === 'red'){ var n = daysBetween(s.due, today); txt = n >= 1 ? n + (n === 1 ? ' day late' : ' days late') : 'Late'; sh = n >= 1 ? n + 'd late' : 'Late'; }
+    else if (lv === 'yellow'){ var k = daysBetween(today, s.due); txt = k <= 0 ? 'Due today' : k === 1 ? 'Tomorrow' : fmtDay(s.due, false); sh = k <= 0 ? 'Today' : k === 1 ? 'Tmrw' : md(s.due); }
+    else if (t.warn <= 1){ txt = '✓ today'; sh = '✓'; done = true; }
+    else { txt = fmtDay(s.due, false); sh = md(s.due); }
+    return '<button type="button" class="tdc lv-' + lv + (done ? ' done' : '') + '" data-ti="' + i + '" aria-label="' + esc(t.name + ': ' + txt) + '"><b>' + esc(t.name) + '</b>' +
+      '<span class="s"><span class="sl">' + esc(txt) + '</span><span class="ss">' + esc(sh) + '</span></span></button>';
   }).join('');
   el.hidden = !idx.length;
+  fitTests();
+}
+/** Narrow phones: when the six boxes don't fit on one line, every box uses its short words ("3d late", "Tmrw", "10/13"). */
+function fitTests(){
+  var el = $('tdue');
+  if (!el || el.hidden) return;
+  el.classList.remove('tight');
+  if (el.scrollWidth > el.clientWidth + 1) el.classList.add('tight');
 }
 function trkReopen(i){
-  var card = document.querySelector('.trk-c[data-ti="' + i + '"], .tdc[data-ti="' + i + '"]');
+  var card = document.querySelector('.jrow[data-ti="' + i + '"], .dj[data-ti="' + i + '"], .trk-c[data-ti="' + i + '"], .tdc[data-ti="' + i + '"]');
   if (card) openPopFor(card, true); else closePop();
 }
 function trkSaveTiming(i){
@@ -2144,12 +2388,16 @@ function fitPred(){
   }
 }
 function fitWeather(){
-  var heads = document.querySelectorAll('.head');
+  var heads = document.querySelectorAll('.card .head');
   for (var i = 0; i < heads.length; i++){
-    var wx = heads[i].querySelector('.wx'), tm = heads[i].querySelector('.time');
-    if (!wx || !tm) continue;
-    wx.classList.remove('short');
-    if (wx.offsetTop > tm.offsetTop + 4) wx.classList.add('short');
+    var h = heads[i], wx = h.querySelector('.wx'), l = h.querySelector('.lhs');
+    if (!wx || !l) continue;
+    wx.classList.remove('s1', 's2');
+    // tight = the time / name side is being squeezed (the ⋯ hangs 6px past the edge on purpose, so the line's own width can't tell)
+    var who = l.querySelector('.who');
+    var tight = function(){ return l.scrollWidth > l.clientWidth + 1 || (who && who.scrollWidth > who.clientWidth + 1); };
+    if (tight()) wx.classList.add('s1');                                   // "Storm" instead of "Thunderstorm"
+    if (tight()){ wx.classList.remove('s1'); wx.classList.add('s2'); }     // just the temperature
   }
 }
 function selectedItems(from, to, withChems, withTests, withNotes){
@@ -2187,7 +2435,7 @@ function renderList(){
   if (!items.length){ $('list').innerHTML = '<div class="empty">' + (LEVEL === 'member' ? 'No tests in the last ' + (DATA.memberDays || 7) + ' days.' : 'Nothing recorded in this range.') + '</div>'; return; }
   var html = '', day = '';
   items.forEach(function(it){
-    if (it.day !== day){ day = it.day; html += '<div class="day">' + esc(dayWord(day) || fmtDayLong(day)) + '</div>'; }
+    if (it.day !== day){ day = it.day; html += '<div class="day">' + esc(dayWord(day) || (day.slice(0, 4) === todayCentral().slice(0, 4) ? fmtDayLong(day).replace(/, \d{4}$/, '') : fmtDayLong(day))) + '</div>'; }
     if (it.type === 't') html += testCard(it.d);
     else if (it.type === 'n') html += noteCard(it.d);
     else {
@@ -2213,7 +2461,7 @@ function histRangeText(){
   return names[state.preset] || dateLabel();
 }
 function renderPresets(){
-  var defs = [['30','Last 30 days'],['month','This month'],['last','Last month'],['all','All time']];
+  var defs = [['30','30 days'],['month','This month'],['last','Last month'],['all','All']];
   var ph = defs.map(function(d){
     return '<button type="button" class="pill' + (state.preset === d[0] ? ' on' : '') + '" data-p="' + d[0] + '">' + d[1] + '</button>';
   }).join('');
@@ -2230,6 +2478,10 @@ function renderPresets(){
   $('vPred').className = 'tgl' + (state.pred ? ' on' : '');
   $('vPred').setAttribute('aria-checked', state.pred ? 'true' : 'false');
   $('vPredRow').style.display = showP ? '' : 'none';
+  $('oPred').className = 'tgl' + (state.pred ? ' on' : '');
+  $('oPred').setAttribute('aria-checked', state.pred ? 'true' : 'false');
+  $('oPredRow').style.display = showP ? '' : 'none';
+  $('oRange').textContent = dateLabel();
   $('dateChipTxt').textContent = dateLabel();
   $('histRange').textContent = histRangeText();
   $('viewChipTxt').textContent = state.mode === 'both' ? 'Readings + chemicals' : (state.mode === 'chem' ? 'Chemicals' : 'Readings');
@@ -2357,12 +2609,26 @@ function buildPrint(o){
     PRINT_COLS.map(function(c){ return '<th' + (PRINT_HEADER_TINT ? ' class="r-' + c[0] + '"' : c[0] === 'bor' ? ' class="pbor"' : '') + '>' + (c[0] === 'bor' ? 'Bor' : c[1]) + '</th>'; }).join('') +
     (testCost ? '<th>Cost</th>' : '') + '</tr></thead>';
   var theadB = '<thead><tr><th style="text-align:left">Date / Time</th><th colspan="' + PRINT_COLS.length + '" style="text-align:left">Chemical additions</th>' + (showCost ? '<th>Cost</th>' : '') + '</tr></thead>';
+  // who entered each dashboard test, as initials in the Date / Time cell (2026-10-06): "CC", "AS"; the shared Manager
+  // password "Mgr"; Pool Math tests none. Two people with the same initials get more of their first name ("AnS", "AlS").
+  var ini = {};
+  (function(){
+    var names = [];
+    tests.forEach(function(t){ if (t.src === 'Dashboard' && t.by){ var f = fullName(t.by); if (names.indexOf(f) < 0) names.push(f); } });
+    function base(n, k){ var w = n.split(/\s+/); return (w[0].slice(0, k).charAt(0).toUpperCase() + w[0].slice(1, k).toLowerCase()) + w.slice(1).map(function(x){ return x.charAt(0).toUpperCase(); }).join(''); }
+    names.forEach(function(n){
+      if (n === 'Manager') { ini[n] = 'Mgr'; return; }
+      var k = 1, v = base(n, 1);
+      while (k < 4 && names.some(function(o){ return o !== n && o !== 'Manager' && base(o, k) === v; })) { k++; v = base(n, k); }
+      ini[n] = v;
+    });
+  })();
   var rowHtml = rows.map(function(r){
     var dim = o.whole && (from || to) && !inRange(r.d.day, from, to);
     if (r.type === 't'){
       var t = r.d;
       var storeBlank = t.store && !dim;   // Leslie's: tint every cell that carries no range color, value or not
-      return '<tr class="{{L}}' + (t.store ? 'storerow ' : '') + (dim ? ' dim' : '') + '"><td class="dt' + (storeBlank ? ' noread' : '') + '"><span class="pd">{{D}}</span><span class="ptm">' + esc(t.time) + '</span></td>' +
+      return '<tr class="{{L}}' + (t.store ? 'storerow ' : '') + (dim ? ' dim' : '') + '"><td class="dt' + (storeBlank ? ' noread' : '') + '"><span class="pd">{{D}}</span><span class="ptm">' + esc(t.time) + '</span>' + (t.src === 'Dashboard' && t.by && ini[fullName(t.by)] ? '<span class="pby" title="Entered by ' + esc(fullName(t.by)) + '">' + esc(ini[fullName(t.by)]) + '</span>' : '') + '</td>' +
         PRINT_COLS.map(function(c){
           var v = t[c[0]];
           if (!isNum(v)) return '<td' + (storeBlank ? ' class="noread"' : '') + '></td>';
@@ -3286,6 +3552,8 @@ document.addEventListener('DOMContentLoaded', function(){
     var l = this.querySelector('.upfulllist'); if (l) l.hidden = !upFullOpen;
   });
   $('upBtn').addEventListener('click', function(){ var o = $('upDet').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  // "+N more due now" in the jobs card opens Details (the full list is under Next 7 days)
+  $('jobs').addEventListener('click', function(e){ if (e.target.closest && e.target.closest('#jMore') && !$('upDet').classList.contains('open')) $('upBtn').click(); });
   $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg'].forEach(function(id){
@@ -3296,8 +3564,10 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
   $('mPred').addEventListener('click', function(){ state.pred = !state.pred; renderPresets(); renderList(); });
+  $('oPred').addEventListener('click', function(){ state.pred = !state.pred; renderPresets(); renderList(); });
+  $('oCustom').addEventListener('click', function(){ var d = $('oDates'); d.hidden = !d.hidden; this.setAttribute('aria-expanded', d.hidden ? 'false' : 'true'); });
   var rt = null;
-  window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(fitWeather, 120); });
+  window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ fitWeather(); fitTests(); }, 120); });
 
   $('unlockBtn').addEventListener('click', openUnlock);
   $('gateBtn').addEventListener('click', openUnlock);
@@ -3735,7 +4005,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ---- the panel
-  function whoText(){ var me = DATA.me || WHO; return me === 'Manager' ? 'Saved as<br>Manager' : 'Saved as<br>volunteer: ' + esc(me); }
+  function whoText(){ var me = DATA.me || WHO; return 'Saved as<br>' + esc(firstName(me)); }
   function testBody(t){
     var n = t ? {day: t.day, time: to24(t.time)} : nowLocal();
     var h = '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
@@ -3831,7 +4101,7 @@ document.addEventListener('DOMContentLoaded', function(){
     $('eIcon').innerHTML = ICON[kind];
     $('eTitle').textContent = (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
     save.textContent = item ? 'Save changes' : KIND[kind][2];
-    $('eWho').innerHTML = item ? (item.by === 'Manager' ? 'Entered by<br>Manager' : 'Entered by<br>volunteer: ' + esc(item.by)) : whoText();
+    $('eWho').innerHTML = item ? 'Entered by<br>' + esc(firstName(item.by)) : whoText();
     body.innerHTML = kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : noteBody(item);
     body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
     if (kind === 'pump') {
@@ -3922,20 +4192,23 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // ---- "Entered by" line and the ⋯ menu (edit / delete) on dashboard entries
-  var PERSON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
-  window.entryByHtml = function(x, kind){
-    if (!x || x.src !== 'Dashboard' || !x.by) return '';
-    var mine = DATA.canEnter && (isMgr() || x.by === DATA.me);
-    return '<div class="eby">' + PERSON + '<span>Entered by ' + (x.by === 'Manager' ? 'Manager' : 'volunteer: ' + esc(x.by)) + '</span>' +
-      (mine ? '<button type="button" class="emk" data-ek="' + kind + '" data-eid="' + esc(x.id) + '" aria-label="Edit or delete">⋯</button>' : '') + '</div>';
+  // ---- the ⋯ on a dashboard entry (edit / delete). The name now sits by the time (whoHtml); this is only the button.
+  // The Manager's tests use the marks ⋯ instead, which has Edit / Delete too (entryEdit / entryDel).
+  function mine(x){ return !!(x && x.src === 'Dashboard' && DATA.canEnter && (isMgr() || sameName(x.by, DATA.me))); }
+  window.entryMk = function(x, kind){
+    return mine(x) ? '<button type="button" class="emk" data-ek="' + kind + '" data-eid="' + esc(x.id) + '" aria-label="Edit or delete">⋯</button>' : '';
   };
+  window.entryCanFix = mine;
+  window.entryEdit = function(kind, id){ var it = findEntry(kind, id); if (it) openPanel(kind, it, fab); };
+  window.entryDel = function(kind, id){ menu(kind, id, true); };
   function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
   var menuFor = null;
   function menu(kind, id, confirmDel, err){
     var it = findEntry(kind, id); if (!it) return;
     menuFor = {kind: kind, id: id};
     $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
+      (it.w && wxFull(it.w) ? '<p class="emsub">' + esc(wxFull(it.w)) + '</p>' : '') +
+      (it.by ? '<p class="emsub">Entered by ' + esc(fullName(it.by)) + '</p>' : '') +
       (confirmDel ? '<p>Delete this ' + kind + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
         : '<div class="row"><button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button></div>' +
           '<div class="row"><button type="button" class="btn" data-em="cancel">Close</button></div>') +
