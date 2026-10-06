@@ -30,6 +30,20 @@
 <meta name="apple-mobile-web-app-title" content="Pool Log">
 <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+<script>
+// Home-screen app (opened from the icon, no Safari bars): class "app" on <html> - no top bar; its menu is the grey ⋯ circle
+// above the + (styles: "home-screen app" block). --cornerGap puts the buttons on the screen's rounded corner: same gap from
+// the side and the bottom = the screen's corner radius minus the button's (30), by iPhone screen width.
+(function(){
+  try {
+    if (!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches))) return;
+    var d = document.documentElement, w = Math.min(screen.width, screen.height);
+    var R = {440: 62, 402: 62, 430: 55, 393: 55, 428: 53, 390: 47, 414: 41, 375: 40}[w] || 54;   // corner radius, points
+    d.classList.add('app');
+    d.style.setProperty('--cornerGap', Math.max(12, R - 30) + 'px');
+  } catch (e) {}
+})();
+</script>
 <style>
 :root{
   --bg:#fcfcfb; --card:#ffffff; --ink:#1a1a19; --ink2:#55554f; --muted:#6f6f68;
@@ -802,6 +816,22 @@ body.can-enter #entryUi{display:block}
     box-shadow:0 4px 14px rgba(0,0,0,.12);transition:background .18s,box-shadow .18s}
   #entryUi.open .efab{background:var(--accent);box-shadow:var(--eshadow)}
 }
+/* home-screen app (html.app, set in <head>): no top bar; the bar's menu is a grey ⋯ circle above the + (for everyone, the +
+   only for those who may enter); both sit on the screen's rounded corner, --cornerGap from the side and the bottom */
+.emore{display:none}
+html.app{--barH:0px}
+html.app .bar{display:none}
+html.app #entryUi{display:block}
+html.app body:not(.can-enter) #eFab{display:none}
+html.app .efab-zone{right:var(--cornerGap,24px);bottom:var(--cornerGap,24px)}
+html.app .emore{display:grid;pointer-events:auto;width:60px;height:60px;border-radius:50%;border:0;place-items:center;cursor:pointer;color:var(--accentInk);
+  background:color-mix(in srgb,var(--muted) 55%,transparent);-webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+html.app .emore svg{width:26px;height:26px}
+html.app #entryUi.open .emore{display:none}
+html.app #menuDlg{top:auto;bottom:calc(var(--cornerGap,24px) + 72px);right:var(--cornerGap,24px)}   /* just above the ⋯ */
+html.app body.can-enter #menuDlg{bottom:calc(var(--cornerGap,24px) + 144px)}                         /* ⋯ sits on the + */
+.mrow.appOnly{display:none}
+html.app .mrow.appOnly{display:flex}
 /* wide screens: just outside the right edge of the 900 px column, where there is spare room */
 @media (min-width:1100px){ .efab-zone{right:calc(50vw - 526px);bottom:24px} }
 #entryUi.open .efab svg{transform:rotate(45deg)}
@@ -980,6 +1010,8 @@ body.can-enter #entryUi{display:block}
 
 <dialog id="menuDlg" class="sheet" aria-label="More actions">
   <div class="grab"></div>
+  <button type="button" class="mrow pub appOnly" id="mnSignIn">Sign in</button>
+  <button type="button" class="mrow appOnly" id="mnRefresh">Refresh</button>
   <button type="button" class="mrow mobonly priv brd" id="mnPrint">Print</button>
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
@@ -3226,6 +3258,9 @@ document.addEventListener('DOMContentLoaded', function(){
   $('dateChip').addEventListener('click', function(){ openDlg('dateDlg'); });
   $('viewChip').addEventListener('click', function(){ openDlg('viewDlg'); });
   $('moreBtn').addEventListener('click', function(){ openMenu('menuDlg'); });
+  // home-screen app: the grey ⋯ above the + (#eMore, + button script) opens this menu, which also has Refresh and Sign in there
+  $('mnRefresh').addEventListener('click', function(){ closeDlg('menuDlg'); refreshNow(); });
+  $('mnSignIn').addEventListener('click', function(){ closeDlg('menuDlg'); openUnlock(); });
   $('navBtn').addEventListener('click', function(){
     var nd = $('navDlg'), r = this.getBoundingClientRect();
     nd.style.left = Math.max(8, Math.min(r.left, window.innerWidth - Math.min(250, window.innerWidth - 28) - 8)) + 'px';
@@ -3455,6 +3490,7 @@ document.addEventListener('DOMContentLoaded', function(){
         Log test
         <span class="ei44" style="--c:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg></span></button>
     </div>
+    <button type="button" class="emore" id="eMore" aria-label="Menu"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
     <button type="button" class="efab" id="eFab" aria-label="Add a test or note" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
@@ -3503,6 +3539,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function setOpen(o){ ui.classList.toggle('open', o); fab.setAttribute('aria-expanded', o ? 'true' : 'false'); }
   fab.addEventListener('click', function(){ setOpen(!ui.classList.contains('open')); });
+  $('eMore').addEventListener('click', function(){ openMenu('menuDlg'); });          // home-screen app only (the bar's ⋯)
   $('eScrim').addEventListener('click', function(){ if (grow.hidden) setOpen(false); });
   $('eTestBtn').addEventListener('click', function(){ openPanel('test', null, $('eTestBtn')); });
   $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
