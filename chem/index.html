@@ -28,6 +28,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pool Log">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
 <script>
@@ -41,6 +42,7 @@
     var R = {440: 62, 402: 62, 430: 55, 393: 55, 428: 53, 390: 47, 414: 41, 375: 40}[w] || 54;   // corner radius, points
     d.classList.add('app');
     d.style.setProperty('--cornerGap', Math.max(12, R - 30) + 'px');
+    d.style.setProperty('--cornerR', R + 'px');
   } catch (e) {}
 })();
 </script>
@@ -869,9 +871,13 @@ html.app .mrow.appOnly{display:flex}
 .emsg:empty{display:none}
 .emsg.err{color:var(--red)}
 .emsg.warn{background:color-mix(in srgb,var(--yellow) 22%,var(--card));border-radius:8px;padding:6px 9px}
-.ewhen{display:flex;gap:8px;margin:2px 0 4px}
-.ewhen label{flex:1;display:flex;flex-direction:column;background:var(--glassFill);border-radius:12px;padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);min-width:0}
-.ewhen input{border:0;background:none;font:inherit;font-size:16px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);padding:1px 0 0;width:100%;min-width:0}
+/* date + time: one slim bar - calendar icon, date | time (the words "Date" / "Time" stay for screen readers, not shown) */
+.ewhen{display:flex;align-items:center;height:46px;margin:2px 0 4px;padding:0 4px 0 12px;background:var(--glassFill);border-radius:14px}
+.ewhen .wi{width:18px;height:18px;flex:none;color:var(--muted);margin-right:8px}
+.ewhen label{flex:1;display:flex;align-items:center;min-width:0;height:100%;font-size:0;color:transparent}
+.ewhen label+label{flex:0 1 auto;border-left:1px solid var(--glassEdge);padding-left:12px;margin-left:8px}
+.ewhen input{border:0;background:none;font:inherit;font-size:16px;font-weight:500;color:var(--ink);padding:0;width:100%;min-width:0;height:100%;text-align:left}
+.ewhen input::-webkit-date-and-time-value{text-align:left}
 .egrp{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:14px 2px 6px}
 .egrp b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
 .egrp span{font-size:12px;color:var(--muted);text-align:right}
@@ -3521,6 +3527,7 @@ document.addEventListener('DOMContentLoaded', function(){
     note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>',
     pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>'
   };
+  var WHEN_ICO = '<svg class="wi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
   var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading']};
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
@@ -3665,7 +3672,7 @@ document.addEventListener('DOMContentLoaded', function(){
           '<input id="epTank" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off"><span class="ls" id="epTankLs">optional</span></label>' +
       '</div>' +
       '<div class="ecsi ep" id="epInfo"></div>' +
-      '<div class="ewhen" style="margin-top:10px"><label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + n.day + '"></label>' +
+      '<div class="ewhen" style="margin-top:10px">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + n.day + '"></label>' +
         '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
       '<div class="egrp"><b>Note</b><span id="epNoteHd"></span></div>' +
       '<input class="etext" id="epNote" maxlength="500" style="min-height:0" placeholder="Anything worth flagging" autocomplete="off">' +
@@ -3731,7 +3738,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function whoText(){ var me = DATA.me || WHO; return me === 'Manager' ? 'Saved as<br>Manager' : 'Saved as<br>volunteer: ' + esc(me); }
   function testBody(t){
     var n = t ? {day: t.day, time: to24(t.time)} : nowLocal();
-    var h = '<div class="ewhen"><label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
+    var h = '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
       '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>';
     GROUPS.forEach(function(g){
       h += '<div class="egrp"><b>' + g[0] + '</b><span>' + g[1] + '</span></div><div class="etiles">';
@@ -3749,7 +3756,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function noteBody(n){
     var w = n ? {day: n.day, time: to24(n.time)} : nowLocal();
-    return '<div class="ewhen"><label for="eDate">Date<input id="eDate" type="date" value="' + w.day + '" max="' + nowLocal().day + '"></label>' +
+    return '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + w.day + '" max="' + nowLocal().day + '"></label>' +
       '<label for="eTime">Time<input id="eTime" type="time" value="' + w.time + '"></label></div>' +
       '<div class="egrp"><b>Note</b></div><textarea class="etext" id="eNote" maxlength="1000" style="min-height:140px" placeholder="What happened? e.g. Water a little cloudy near the deep end">' + (n ? esc(n.text) : '') + '</textarea>';
   }
@@ -3790,7 +3797,14 @@ document.addEventListener('DOMContentLoaded', function(){
     $('eCsiFrom').textContent = p.text;
     save.disabled = busy || !Object.keys(r.v).length;
   }
-  function place(r, rad){ grow.style.top = r.top + 'px'; grow.style.left = r.left + 'px'; grow.style.width = r.width + 'px'; grow.style.height = r.height + 'px'; grow.style.borderRadius = rad + 'px'; }
+  function place(r, rad){ grow.style.top = r.top + 'px'; grow.style.left = r.left + 'px'; grow.style.width = r.width + 'px'; grow.style.height = r.height + 'px'; grow.style.borderRadius = typeof rad === 'number' ? rad + 'px' : rad; }
+  /** Panel corners: top rounded around the × (its 22 px radius + the 7 px padding); bottom follows the screen's own corner in the
+   *  home-screen app (screen radius minus the 6 px gap), else 40. */
+  function panelRad(){
+    var R = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cornerR')) || 0;
+    var b = document.documentElement.classList.contains('app') && R && window.innerWidth <= 720 ? R - 6 : 40;
+    return '30px 30px ' + b + 'px ' + b + 'px';
+  }
   function safeTop(){
     var p = document.createElement('div');
     p.style.cssText = 'position:fixed;top:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)';
@@ -3799,7 +3813,8 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function full(){
     // below the phone's status bar: the home-screen app runs the page right up under it (safe-area inset; 0 in a browser tab)
-    var top = 6 + Math.max(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('padding-top')) || 0, safeTop());
+    var inset = Math.max(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('padding-top')) || 0, safeTop());
+    var top = inset ? inset + 14 : 6;                                // below the status bar, clear of its blur
     var r = {top: top, left: 6, width: window.innerWidth - 12, height: window.innerHeight - top - 6};
     if (window.innerWidth > 720) { r.width = 640; r.left = (window.innerWidth - 640) / 2; }             // computers: a column, not the whole screen
     if (mode === 'note') { var h = Math.min(r.height, 430); r.top = window.innerHeight - 6 - h; r.height = h; }
@@ -3840,7 +3855,7 @@ document.addEventListener('DOMContentLoaded', function(){
     grow.classList.remove('big'); grow.style.transition = 'none'; place(r, Math.min(30, r.height / 2)); grow.hidden = false;
     if (fromEl && fromEl.classList.contains('eact')) fromEl.classList.add('hold');
     void grow.offsetWidth; grow.style.transition = '';
-    requestAnimationFrame(function(){ place(full(), 40); grow.classList.add('big'); body.scrollTop = 0; });
+    requestAnimationFrame(function(){ place(full(), panelRad()); grow.classList.add('big'); body.scrollTop = 0; });
     setTimeout(function(){ try { $('eX').focus({preventScroll: true}); } catch(e){} }, reduce ? 0 : 340);
   }
   function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); }
@@ -3849,7 +3864,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var r = originRect(); place(r, Math.min(30, r.height / 2));
     setTimeout(shut, reduce ? 0 : 320);
   }
-  window.addEventListener('resize', function(){ if (!grow.hidden && grow.classList.contains('big')) place(full(), 40); });
+  window.addEventListener('resize', function(){ if (!grow.hidden && grow.classList.contains('big')) place(full(), panelRad()); });
 
   function say(text, cls){ msg.textContent = text; msg.className = 'emsg' + (cls ? ' ' + cls : ''); }
   save.addEventListener('click', function(){
