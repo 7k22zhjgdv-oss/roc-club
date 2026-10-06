@@ -3658,7 +3658,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // chip and tracker-card popover: hover previews on desktop, click/tap pins it open (also how it toggles on phones)
-  [$('list'), $('trk'), $('tdue')].forEach(function(host){
+  [$('list'), $('trk'), $('tdue'), $('jobs'), $('upDet')].forEach(function(host){   // jobs card + Details job rows (2026-10-06)
     host.addEventListener('mouseover', function(e){
       if (isTouch || popPinned) return;
       var chip = chipFromEvent(e); if (!chip || chip.classList.contains('popopen') || chip.classList.contains('mk')) return;   // ⋯ opens on click only
