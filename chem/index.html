@@ -826,6 +826,9 @@ body.can-enter #entryUi{display:block}
 .emore{display:none}
 html.app{--barH:0px}
 html.app .bar{display:none}
+/* solid strip behind the clock / battery: the page draws it itself, so it looks the same at the top and while scrolling
+   whatever the iPhone does with the status-bar setting (0 tall when the phone already gives the page a solid bar) */
+html.app body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:50;pointer-events:none}
 html.app #entryUi{display:block}
 html.app body:not(.can-enter) #eFab{display:none}
 html.app .efab-zone{right:var(--cornerGap,24px);bottom:var(--cornerGap,24px)}
