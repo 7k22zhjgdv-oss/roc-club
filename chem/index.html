@@ -807,13 +807,12 @@ body.can-enter #entryUi{display:block}
 #entryUi.open .efab svg{transform:rotate(45deg)}
 .efab:focus-visible,.eact:focus-visible,.gx:focus-visible,.esave:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
 .eacts{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
-.eact{height:60px;display:flex;align-items:center;gap:12px;padding:0 20px 0 8px;border-radius:30px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;font-weight:500;box-shadow:var(--eshadow);cursor:pointer;text-decoration:none;
+.eact{height:60px;display:flex;align-items:center;gap:12px;padding:0 8px 0 20px;border-radius:30px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;font-weight:500;box-shadow:var(--eshadow);cursor:pointer;text-decoration:none;
   opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .16s,transform .18s}
 #entryUi.open .eact{opacity:1;transform:none;pointer-events:auto}
 #entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s}
 .eact.hold{opacity:0!important;transition:none}
 .eact.off{color:var(--muted);cursor:default;box-shadow:none;background:var(--soft)}
-.eact .soon{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--muted)}
 .ei44{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,var(--card));color:var(--c)}
 .ei44 svg{width:22px;height:22px}
 .egrow{position:fixed;z-index:62;background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(190%);backdrop-filter:blur(28px) saturate(190%);
@@ -885,6 +884,17 @@ body.can-enter #entryUi{display:block}
 .eby svg{width:13px;height:13px;flex:0 0 13px}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
 .emk:hover{color:var(--ink);background:var(--soft)}
+/* Remove test (test ⋯) and Review removed tests (top ⋯), Manager */
+.mkrm{display:flex;gap:8px;margin-top:10px}
+.mkrm .btn{flex:1}
+.mkrm .btn.danger,#entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+.rmhint{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.rmrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rmrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rmrow span{font-size:13px;color:var(--muted)}
+.rmrow .btn{flex:none}
+.rmnone{color:var(--muted)}
+.rmerr{color:var(--red)}
 #entryMenu .row{display:flex;gap:8px;margin-top:12px}
 #entryMenu .row button{flex:1}
 #entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
@@ -972,9 +982,18 @@ body.can-enter #entryUi{display:block}
   <div class="grab"></div>
   <button type="button" class="mrow mobonly priv brd" id="mnPrint">Print</button>
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
+  <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
   <button type="button" class="mrow priv" id="mnLock" style="border-bottom:0">Sign out</button>
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
+</dialog>
+
+<dialog id="removedDlg" class="sheet" aria-labelledby="rmH">
+  <div class="grab"></div>
+  <h2 id="rmH">Removed tests</h2>
+  <p class="rmhint">Removed tests are left out for everyone. Bring one back to show and count it again.</p>
+  <div id="rmList"></div>
+  <button type="button" class="btn primary go" id="rmDone">Done</button>
 </dialog>
 
 <dialog id="dateDlg" class="sheet" aria-labelledby="dateH">
@@ -1459,6 +1478,7 @@ function popNode(){
     popEl.addEventListener('click', function(e){
       e.stopPropagation();
       if (e.target.closest && e.target.closest('[data-mktoggle]') && popCurChip && popCurChip.hasAttribute('data-mkid')){ mkToggle(popCurChip, e.target.closest('[data-mktoggle]').getAttribute('data-mktoggle')); return; }
+      if (e.target.closest && e.target.closest('[data-mkrm]') && popCurChip && popCurChip.hasAttribute('data-mkid')){ mkRemove(popCurChip, e.target.closest('[data-mkrm]').getAttribute('data-mkrm')); return; }
       var te =e.target && e.target.closest && e.target.closest('[data-trkedit], [data-trkcancel]');
       if (te && popCurChip){
         trkEdit = te.hasAttribute('data-trkedit') ? +te.getAttribute('data-trkedit') : -1;
@@ -1642,7 +1662,7 @@ function chipFromEvent(e){ return e.target && e.target.closest ? e.target.closes
 
 // ------------------------------------------------------------------ ⋯ marks: slow feed (additions) and Leslie's (tests)
 // Saved on the sheet's Manual marks tab; Yes or No there wins over the Pool Math note rules.
-var mkBusy = false, mkMsg = '';
+var mkBusy = false, mkMsg = '', mkConfirm = '';
 function mkItem(kind, id){
   var list = kind === 'slow' ? (DATA.chems || []) : (DATA.tests || []);
   return list.filter(function(x){ return x.id === id; })[0] || null;
@@ -1661,7 +1681,11 @@ function mkPopHtml(btn){
     '<div class="mksw"><span>' + label + '</span><button type="button" class="tgl' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(label) + '" data-mktoggle="' + kind + '"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
     '<div class="trkhint">' + (mkBusy ? 'Saving…' : esc(hint)) + '</div>' +
     (kind === 'store' ? '<div class="mksw"><span>Hide from members</span><button type="button" class="tgl' + (it.hidden ? ' on' : '') + '" role="switch" aria-checked="' + !!it.hidden + '" aria-label="Hide from members" data-mktoggle="hide"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
-      '<div class="trkhint">' + esc(it.hidden ? 'Members do not see this test. Board and manager still do.' : 'Members see tests from the last ' + (DATA.memberDays || 7) + ' days.') + '</div>' : '') +
+      '<div class="trkhint">' + esc(it.hidden ? 'Members do not see this test. Board and manager still do.' : 'Members see tests from the last ' + (DATA.memberDays || 7) + ' days.') + '</div>' +
+      (mkConfirm === id
+        ? '<div class="trkhint" style="color:var(--ink)">Remove this test? It disappears for everyone and stops counting for due dates, predictions and CSI. You can bring it back from ⋯ &gt; Review removed tests.</div>' +
+          '<div class="mkrm"><button type="button" class="btn" data-mkrm="no">Keep it</button><button type="button" class="btn danger" data-mkrm="yes"' + (mkBusy ? ' disabled' : '') + '>Remove</button></div>'
+        : '<div class="mkrm"><button type="button" class="btn danger" data-mkrm="ask"' + (mkBusy ? ' disabled' : '') + '>Remove test…</button></div>') : '') +
     (mkMsg ? '<div class="trkerr">' + esc(mkMsg) + '</div>' : '');
 }
 function mkFind(kind, id){ return document.querySelector('.mk[data-mk="' + kind + '"][data-mkid="' + id + '"]'); }
@@ -1680,6 +1704,29 @@ function mkToggle(btn, which){
     if (!res || !res.ok){ mkMsg = (res && res.message) || 'Could not save.'; mkReopen(kind, id); return; }
     DATA = res.data; renderAll(); mkReopen(kind, id);
   }, function(err){ mkBusy = false; mkMsg = 'Could not reach the server: ' + (err && err.message || err); mkReopen(kind, id); });
+}
+
+/** Remove a test (Manager): 'ask' shows the confirm, 'no' backs out, 'yes' saves the Removed mark. */
+function mkRemove(btn, step){
+  if (mkBusy) return;
+  var id = btn.getAttribute('data-mkid'), it = mkItem('store', id);
+  if (!it) return;
+  if (step !== 'yes') { mkConfirm = step === 'ask' ? id : ''; mkMsg = ''; openPopFor(btn, true); return; }
+  mkBusy = true; openPopFor(btn, true);
+  setRemoved(id, true, 'Test ' + it.day + ' ' + it.time, function(err){
+    mkBusy = false; mkConfirm = '';
+    if (err) { mkMsg = err; mkReopen('store', id); return; }
+    closePop();
+    bgSet('Test removed. Bring it back from ⋯ > Review removed tests.', 'ok'); setTimeout(function(){ bgSet(''); }, 4000);
+  });
+}
+/** Save or clear the Removed mark; done(errorText or '') after the page has the fresh data. */
+function setRemoved(id, on, what, done){
+  serverCall('saveMark', [CODE, {id: id, kind: 'gone', on: on, what: what}], function(res){
+    if (handleDenied(res)) return;
+    if (!res || !res.ok) { done((res && res.message) || 'Could not save.'); return; }
+    DATA = res.data; renderAll(); done('');
+  }, function(err){ done('Could not reach the server: ' + (err && err.message || err)); });
 }
 
 function renderPopHtml(chip){
@@ -3236,6 +3283,28 @@ document.addEventListener('DOMContentLoaded', function(){
   $('lockBtn').addEventListener('click', function(){ lockNow(''); });
   $('refreshBtn').addEventListener('click', refreshNow);
   $('mnImport').addEventListener('click', function(){ closeDlg('menuDlg'); importNow(); });
+  // Review removed tests (Manager): each with Bring back
+  var RM_KEYS = [['fc','FC'], ['cc','CC'], ['ph','pH'], ['ta','TA'], ['ch','CH'], ['cya','CYA'], ['tempF','Temp'], ['salt','Salt'], ['bor','Borates'], ['csi','CSI']];
+  function rmRender(msg){
+    var list = (DATA && DATA.removed) || [];
+    $('rmList').innerHTML = (msg ? '<p class="rmerr">' + esc(msg) + '</p>' : '') + (!list.length ? '<p class="rmnone">No removed tests.</p>' : list.map(function(t){
+      var vals = RM_KEYS.filter(function(k){ return isNum(t[k[0]]); }).map(function(k){ return k[1] + ' ' + fmtNum(t[k[0]]); }).join(' · ');
+      return '<div class="rmrow"><div><b>' + esc(fmtDayRel(t.day) + ', ' + t.time) + '</b><span>' + esc(vals || 'No readings') + (t.src === 'Dashboard' && t.by ? ' · entered by ' + esc(t.by) : '') + '</span></div>' +
+        '<button type="button" class="btn" data-rmback="' + esc(t.id) + '">Bring back</button></div>';
+    }).join(''));
+  }
+  $('mnRemoved').addEventListener('click', function(){ closeDlg('menuDlg'); rmRender(''); openDlg('removedDlg'); });
+  $('rmDone').addEventListener('click', function(){ closeDlg('removedDlg'); });
+  $('rmList').addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-rmback]');
+    if (!b || b.disabled) return;
+    var id = b.getAttribute('data-rmback'), t = ((DATA && DATA.removed) || []).filter(function(x){ return x.id === id; })[0];
+    b.disabled = true; b.textContent = 'Bringing back…';
+    setRemoved(id, false, t ? 'Test ' + t.day + ' ' + t.time : 'Test', function(err){
+      rmRender(err);
+      if (!err) { bgSet('Test brought back.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500); }
+    });
+  });
   $('impX').addEventListener('click', impClose);
   $('printBtn').addEventListener('click', openPrint);
   $('pRange').addEventListener('change', function(){ $('pCustom').style.display = this.value === 'custom' ? 'block' : 'none'; });
@@ -3373,18 +3442,18 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="escrim" id="eScrim"></div>
   <div class="efab-zone">
     <div class="eacts">
-      <button type="button" class="eact off" aria-disabled="true" tabindex="-1">
-        <span class="ei44" style="--c:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span>
-        Add chemical <span class="soon">Soon</span></button>
       <button type="button" class="eact" id="ePump">
-        <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span>
-        Log pump reading</button>
+        Log pump reading
+        <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span></button>
+      <button type="button" class="eact off" aria-disabled="true" tabindex="-1">
+        Add chemical
+        <span class="ei44" style="--c:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span></button>
       <button type="button" class="eact" id="eNoteBtn">
-        <span class="ei44" style="--c:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg></span>
-        Add a note</button>
+        Add a note
+        <span class="ei44" style="--c:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg></span></button>
       <button type="button" class="eact" id="eTestBtn">
-        <span class="ei44" style="--c:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg></span>
-        Log test</button>
+        Log test
+        <span class="ei44" style="--c:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg></span></button>
     </div>
     <button type="button" class="efab" id="eFab" aria-label="Add a test or note" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -3685,8 +3754,15 @@ document.addEventListener('DOMContentLoaded', function(){
     save.disabled = busy || !Object.keys(r.v).length;
   }
   function place(r, rad){ grow.style.top = r.top + 'px'; grow.style.left = r.left + 'px'; grow.style.width = r.width + 'px'; grow.style.height = r.height + 'px'; grow.style.borderRadius = rad + 'px'; }
+  function safeTop(){
+    var p = document.createElement('div');
+    p.style.cssText = 'position:fixed;top:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)';
+    document.body.appendChild(p); var h = p.getBoundingClientRect().height; p.remove();
+    return h;
+  }
   function full(){
-    var top = 6 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('padding-top')) || 0);
+    // below the phone's status bar: the home-screen app runs the page right up under it (safe-area inset; 0 in a browser tab)
+    var top = 6 + Math.max(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('padding-top')) || 0, safeTop());
     var r = {top: top, left: 6, width: window.innerWidth - 12, height: window.innerHeight - top - 6};
     if (window.innerWidth > 720) { r.width = 640; r.left = (window.innerWidth - 640) / 2; }             // computers: a column, not the whole screen
     if (mode === 'note') { var h = Math.min(r.height, 430); r.top = window.innerHeight - 6 - h; r.height = h; }
@@ -3727,7 +3803,7 @@ document.addEventListener('DOMContentLoaded', function(){
     grow.classList.remove('big'); grow.style.transition = 'none'; place(r, Math.min(30, r.height / 2)); grow.hidden = false;
     if (fromEl && fromEl.classList.contains('eact')) fromEl.classList.add('hold');
     void grow.offsetWidth; grow.style.transition = '';
-    requestAnimationFrame(function(){ place(full(), 34); grow.classList.add('big'); body.scrollTop = 0; });
+    requestAnimationFrame(function(){ place(full(), 40); grow.classList.add('big'); body.scrollTop = 0; });
     setTimeout(function(){ try { $('eX').focus({preventScroll: true}); } catch(e){} }, reduce ? 0 : 340);
   }
   function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); }
@@ -3736,7 +3812,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var r = originRect(); place(r, Math.min(30, r.height / 2));
     setTimeout(shut, reduce ? 0 : 320);
   }
-  window.addEventListener('resize', function(){ if (!grow.hidden && grow.classList.contains('big')) place(full(), 34); });
+  window.addEventListener('resize', function(){ if (!grow.hidden && grow.classList.contains('big')) place(full(), 40); });
 
   function say(text, cls){ msg.textContent = text; msg.className = 'emsg' + (cls ? ' ' + cls : ''); }
   save.addEventListener('click', function(){
