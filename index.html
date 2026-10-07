@@ -9,12 +9,23 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm"];
-  function call(fn, args, ok, fail){
+  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword"];
+  // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
+  // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  function call(fn, args, ok, fail, tries){
+    tries = tries || 0;
+    var got = false;
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply'); })
-      .catch(function(e){ if (fail) fail(e); });
+      .then(function(j){
+        got = true;
+        if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply');
+      })
+      .catch(function(e){
+        if (!got && tries < 2 && SAFE.indexOf(fn) >= 0) return setTimeout(function(){ call(fn, args, ok, fail, tries + 1); }, 1000 * (tries + 1));
+        if (fail) fail(e);
+      });
   }
   function runner(ok, fail){
     var r = { withSuccessHandler: function(f){ return runner(f, fail); }, withFailureHandler: function(f){ return runner(ok, f); } };
@@ -212,6 +223,7 @@ body.signed-in .si-out{display:none!important}
 body:not(.signed-in) .si-in{display:none!important}
 body:not(.lvl-board):not(.lvl-manager) .si-brd{display:none!important}
 body:not(.lvl-manager) .si-mgr{display:none!important}
+body:not(.is-vol) .si-vol{display:none!important}
 /* Manager: Edit page text */
 body.editing [data-edit]{outline:1.5px dashed var(--oak);outline-offset:3px;border-radius:3px;cursor:text;-webkit-user-select:text;user-select:text}
 body.editing [data-edit]:focus{outline-style:solid;background:rgba(214,154,74,.12)}
@@ -271,6 +283,8 @@ dialog.pwdlg p{margin:0 0 14px;color:var(--paper-2);font-size:.9rem}
 .pw-wrap{position:relative;display:block}
 .pw-show{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:0;padding:6px 10px;min-height:36px;color:var(--oak);font:600 .9rem var(--font);cursor:pointer}
 dialog.pwdlg input.secret,dialog.pwdlg input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:10px;color:var(--paper);font-size:16px}
+dialog.pwdlg label{display:block;margin:12px 0 5px;color:var(--paper-2);font-size:.88rem}
+dialog.pwdlg .pw-wrap input{padding-right:64px}
 dialog.pwdlg .err{color:#e2836b;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .ok{color:#9fca8c;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .row{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
@@ -786,6 +800,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         <span class="mem-actions">
           <button type="button" class="lockbtn si-mgr" id="editTextBtn">Edit page text</button>
           <button type="button" class="lockbtn si-brd" id="importOpenBtn">Update Rules PDF</button>
+          <button type="button" class="lockbtn si-vol" id="chgPwBtn">Change my password</button>
           <button type="button" class="lockbtn" id="chemRelockBtn">Sign out</button>
         </span>
       </div>
@@ -902,6 +917,25 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   </div>
 </dialog>
 
+<dialog id="chgDlg" class="pwdlg">
+  <h3>Change my password</h3>
+  <p>At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
+  <form id="chgForm" autocomplete="off">
+    <label for="chgCur">Current password</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="chgCur" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgCur">Show</button></span>
+    <label for="chgNew">New password</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="chgNew" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew">Show</button></span>
+    <label for="chgNew2">New password again</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="chgNew2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew2">Show</button></span>
+    <div class="err" id="chgErr" role="alert"></div>
+    <div class="ok" id="chgOk"></div>
+    <div class="row">
+      <button type="button" id="chgCancel">Cancel</button>
+      <button type="submit" class="primary" id="chgGo">Change password</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="importDlg" class="pwdlg">
   <h3>Update Rules &amp; Regulations PDF</h3>
   <p>Choose the new PDF. It replaces the current one immediately.</p>
@@ -929,7 +963,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // dashboards ({roc:'hello'|'save'|'forget'} up, {roc:'code'} down).
   var WRAP_ORIGIN = 'https://www.rollingoaksclub.org';
   var NAMES = {member: 'Member', board: 'Board', manager: 'Manager'};
-  var CODE = '', tried = {};
+  var CODE = '', tried = {}, volName = '';
   function wrapSend(msg){ try { if (window.top !== window) window.top.postMessage(msg, WRAP_ORIGIN); } catch(e){} }
   function saveCode(c, level, who){ try { localStorage.setItem('rocPass', c); } catch(e){} wrapSend({roc: 'save', code: c, level: level, who: who}); }
   function loadCode(){ return CODE; }
@@ -947,19 +981,20 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (window.rocFitDash) setTimeout(window.rocFitDash, 0);
     $('whoTxt').textContent = on ? 'Signed in as: ' + NAMES[level] + (who && who !== NAMES[level] ? ' (' + who + ')' : '') : '';
   }
-  function signOut(){ CODE = ''; forgetCode(); setLevel('public'); }
+  function signOut(){ CODE = ''; forgetCode(); setLevel('public'); document.body.classList.remove('is-vol'); }
   /** how: 'wrap' (from the wrapper), 'saved' (this device), 'typed' (the dialog). */
   function check(code, how, done){
     if (!code || !(window.google && google.script && google.script.run)) return;
     google.script.run.withSuccessHandler(function(r){
       if (r && r.ok){ var keep = r.pass || code; CODE = keep; saveCode(keep, r.level, r.who); setLevel(r.level, r.who); }
+      if (r && r.ok){ document.body.classList.toggle('is-vol', !!r.vol); volName = r.vol ? r.who : ''; }   // own login: Change my password
       else if (how === 'wrap'){
         if (r && r.why === 'wrong'){ wrapSend({roc: 'forget'}); if (CODE === code){ CODE = ''; setLevel('public'); } }  // shown early, then turned out wrong
         if (CODE) wrapSend({roc: 'save', code: CODE});
       }
       else if (how === 'saved' && r && r.why === 'wrong' && !CODE){ try { localStorage.removeItem('rocPass'); } catch(e){} }
       if (done) done(r);
-    }).withFailureHandler(function(){ if (done) done({ok: false, message: 'Something went wrong. Try again.'}); }).whoAmI(code);
+    }).withFailureHandler(function(x){ if (done) done({ok: false, message: 'Something went wrong (' + ((x && x.message) || x) + '). Try again.'}); }).whoAmI(code);
   }
   function auto(code, how){
     if (!code || tried[code] || (CODE && (how !== 'wrap' || code === CODE))) return;
@@ -1275,6 +1310,40 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         try { localStorage.setItem('rocSignAs', as); if (name) localStorage.setItem('rocLoginName', name); } catch(e){} pwIn.value = ''; pwIn.blur(); memPanel.classList.remove('open'); pwForm.hidden = true; $('signInBtn').setAttribute('aria-expanded', 'false'); }
       else pwErr.textContent = (r && r.message) || 'That key number or password is not right.';
     });
+  });
+
+  // Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
+  // hands back a new pass, kept in place of the old one (the old pass stops working: their other devices sign out).
+  var chgDlg = $('chgDlg');
+  $('chgPwBtn').addEventListener('click', function(){
+    ['chgCur', 'chgNew', 'chgNew2'].forEach(function(id){ $(id).value = ''; pwShow($(id), false); });
+    $('chgErr').textContent = ''; $('chgOk').textContent = ''; $('chgGo').disabled = false;
+    chgDlg.showModal(); $('chgCur').focus();
+  });
+  $('chgCancel').addEventListener('click', function(){ chgDlg.close(); });
+  $('chgForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var cur = $('chgCur').value.trim(), n1 = $('chgNew').value.trim(), n2 = $('chgNew2').value.trim(), err = $('chgErr');
+    err.textContent = '';
+    if (!cur){ err.textContent = 'Enter your current password.'; $('chgCur').focus(); return; }
+    if (n1.length < 8){ err.textContent = 'The new password needs at least 8 characters.'; $('chgNew').focus(); return; }
+    if (n1 !== n2){ err.textContent = 'The two new passwords don\'t match.'; $('chgNew2').focus(); return; }
+    $('chgGo').disabled = true;
+    var fail = function(m){ $('chgGo').disabled = false; err.textContent = m || 'Something went wrong. Try again.'; };
+    var done = function(){ $('chgOk').textContent = 'Password changed.'; setTimeout(function(){ chgDlg.close(); }, 1500); };
+    google.script.run.withSuccessHandler(function(r){
+      if (!r || !r.ok){
+        if (r && r.why === 'wrong'){ chgDlg.close(); signOut(); return; }
+        return fail(r && r.message);
+      }
+      if (!r.pass){ $('chgOk').textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ chgDlg.close(); signOut(); }, 2500); return; }
+      CODE = r.pass; saveCode(r.pass, r.level, r.who);
+      done();
+    }).withFailureHandler(function(x){
+      // the reply may have been lost after the change was saved: sign in with the new password to find out
+      if (!volName) return fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.');
+      check(volName + '\n' + n1, 'typed', function(v){ if (v && v.ok) done(); else fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); });
+    }).accessChangePassword(CODE, cur, n1);
   });
 
   $('chemRelockBtn').addEventListener('click', function(){ if (document.body.classList.contains('editing')) endEdit(true); signOut(); });
