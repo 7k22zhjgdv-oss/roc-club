@@ -677,6 +677,12 @@
   #signDlg .err { min-height: 18px; margin-top: 6px; font-size: 13px; color: var(--bad); }
   #signDlg .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
   #signDlg button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-1); cursor: pointer; }
+  #signDlg .si-q { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
+  #signDlg button.si-big { display: block; width: 100%; text-align: left; margin-bottom: 10px; padding: 12px 14px; border-radius: 12px; font-size: 17px; font-weight: 600; }
+  #signDlg button.si-big span { display: block; margin-top: 2px; font-size: 13px; font-weight: 400; color: var(--ink-muted); }
+  #signDlg button.si-back { background: none; border: 0; padding: 0 0 10px; border-radius: 0; color: var(--accent); font-weight: 600; }
+  #signDlg .si-hint { margin: 6px 0 0; font-size: 13px; color: var(--ink-muted); }
+  #signDlg #nameRow { margin-bottom: 10px; }
   #signDlg button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
@@ -688,12 +694,21 @@
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof">No data yet</div><div id="mnUpd"></div></div>
 </dialog>
 <dialog id="signDlg" aria-labelledby="signH">
-  <h2 id="signH">Sign in</h2>
-  <p class="hint">Members: your pool key number (letter and number).<br>Board and manager: your password.<br>This device stays signed in until you tap Sign out.</p>
-  <form id="signForm" autocomplete="off">
-    <label for="signIn">Key number or password</label>
+  <div id="siPick">
+    <h2 class="si-q" id="signH">Who's signing in?</h2>
+    <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
+    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>I sign in with my name and password</span></button>
+    <div class="row"><button type="button" id="pickCancel">Cancel</button></div>
+  </div>
+  <form id="signForm" autocomplete="off" hidden>
+    <button type="button" class="si-back" id="siBack">&larr; Back</button>
+    <h2 class="si-q" id="siTitle">Pool member</h2>
+    <div id="nameRow" hidden><label for="nameIn">First and last name</label><input type="text" id="nameIn" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" data-1p-ignore data-lpignore="true" data-form-type="other"></div>
+    <label for="signIn" id="signLbl">Your pool key number</label>
     <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="signIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="signIn">Show</button></span>
+    <p class="si-hint" id="siHint"></p>
     <div class="err" id="signErr" role="alert"></div>
+    <p class="si-hint">This device stays signed in until you tap Sign out.</p>
     <div class="row"><button type="button" id="signCancel">Cancel</button><button type="submit" class="primary" id="signGo">Sign in</button></div>
   </form>
 </dialog>
@@ -2218,21 +2233,54 @@ window.rocStartPump = function (DATA) {
   });
   var dlg = $('signDlg'), menu = $('menuDlg');
   $('gateSignIn').addEventListener('click', function(){ $('mnSignIn').click(); });
+  // Sign in: first "Who's signing in?" (three big buttons), then one simple box for that choice. The choice is
+  // remembered on this device (rocSignAs; on the website shared by all pages), so next time it opens straight on step 2.
+  // Volunteers and Board type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
+  var SIGN_AS = {
+    member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
+    vol: {title: 'Volunteer or board', label: 'Your password', hint: 'Board: your name and the board password.', secret: true}
+  };
+  var signAs = '';
+  function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
+  function showPick(){ signAs = ''; $('siPick').hidden = false; $('signForm').hidden = true; $('signErr').textContent = ''; }
+  function showStep(as){
+    var c = SIGN_AS[as], inp = $('signIn'); signAs = as;
+    $('siPick').hidden = true; $('signForm').hidden = false;
+    $('siTitle').textContent = c.title; $('signLbl').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
+    $('nameRow').hidden = as !== 'vol';
+    inp.value = ''; $('signErr').textContent = ''; pwShow(inp, false);
+    inp.classList.toggle('secret', c.secret);
+    inp.parentNode.querySelector('.pw-show').hidden = !c.secret;
+    inp.setAttribute('autocapitalize', as === 'member' ? 'characters' : 'off');
+    if (as === 'vol' && !$('nameIn').value) $('nameIn').value = stored('rocLoginName');
+    setTimeout(function(){ try { (as === 'vol' && !$('nameIn').value ? $('nameIn') : inp).focus(); } catch(e){} }, 50);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#signDlg .si-big'), function(b){
+    b.addEventListener('click', function(){ showStep(b.getAttribute('data-as')); });
+  });
+  $('siBack').addEventListener('click', showPick);
+  $('pickCancel').addEventListener('click', function(){ dlg.close(); });
+  $('nameIn').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); $('signIn').focus(); } });
   $('mnSignIn').addEventListener('click', function(){
-    menu.close(); $('signIn').value = ''; $('signErr').textContent = ''; pwShow($('signIn'), false);
+    menu.close();
+    var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
+    if (SIGN_AS[as]) showStep(as); else showPick();
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
-    setTimeout(function(){ try { $('signIn').focus(); } catch(e){} }, 50);
   });
   $('mnSignOut').addEventListener('click', function(){ menu.close(); signOut(); });
   $('signCancel').addEventListener('click', function(){ dlg.close(); });
   $('signForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var code = $('signIn').value.trim(), b = $('signGo');
-    if (!code){ $('signErr').textContent = 'Enter your key number or password.'; return; }
+    var code = $('signIn').value.trim(), b = $('signGo'), as = signAs;
+    var name = as === 'vol' ? $('nameIn').value.trim().replace(/\s+/g, ' ') : '';
+    if (as === 'vol' && name.indexOf(' ') < 0){ $('signErr').textContent = 'Enter your first and last name.'; $('nameIn').focus(); return; }
+    if (!code){ $('signErr').textContent = as === 'member' ? 'Enter your pool key number.' : 'Enter your password.'; return; }
     if (!run()){ $('signErr').textContent = 'Only works in the live dashboard.'; return; }
+    if (name) code = name + '\n' + code;
     b.disabled = true; b.textContent = 'Checking…'; $('signErr').textContent = '';
     check(code, 'typed', function(res){
       b.disabled = false; b.textContent = 'Sign in';
+      if (res && res.ok){ try { localStorage.setItem('rocSignAs', as); if (name) localStorage.setItem('rocLoginName', name); } catch(e){} }
       if (res && res.ok) dlg.close(); else $('signErr').textContent = (res && res.message) || 'Could not sign in.';
     });
   });
