@@ -10,11 +10,22 @@
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
   var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword"];
-  function call(fn, args, ok, fail){
+  // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
+  // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  function call(fn, args, ok, fail, tries){
+    tries = tries || 0;
+    var got = false;
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply'); })
-      .catch(function(e){ if (fail) fail(e); });
+      .then(function(j){
+        got = true;
+        if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply');
+      })
+      .catch(function(e){
+        if (!got && tries < 2 && SAFE.indexOf(fn) >= 0) return setTimeout(function(){ call(fn, args, ok, fail, tries + 1); }, 1000 * (tries + 1));
+        if (fail) fail(e);
+      });
   }
   function runner(ok, fail){
     var r = { withSuccessHandler: function(f){ return runner(f, fail); }, withFailureHandler: function(f){ return runner(ok, f); } };
@@ -952,7 +963,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // dashboards ({roc:'hello'|'save'|'forget'} up, {roc:'code'} down).
   var WRAP_ORIGIN = 'https://www.rollingoaksclub.org';
   var NAMES = {member: 'Member', board: 'Board', manager: 'Manager'};
-  var CODE = '', tried = {};
+  var CODE = '', tried = {}, volName = '';
   function wrapSend(msg){ try { if (window.top !== window) window.top.postMessage(msg, WRAP_ORIGIN); } catch(e){} }
   function saveCode(c, level, who){ try { localStorage.setItem('rocPass', c); } catch(e){} wrapSend({roc: 'save', code: c, level: level, who: who}); }
   function loadCode(){ return CODE; }
@@ -976,7 +987,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (!code || !(window.google && google.script && google.script.run)) return;
     google.script.run.withSuccessHandler(function(r){
       if (r && r.ok){ var keep = r.pass || code; CODE = keep; saveCode(keep, r.level, r.who); setLevel(r.level, r.who); }
-      if (r && r.ok) document.body.classList.toggle('is-vol', !!r.vol);   // own login: Change my password
+      if (r && r.ok){ document.body.classList.toggle('is-vol', !!r.vol); volName = r.vol ? r.who : ''; }   // own login: Change my password
       else if (how === 'wrap'){
         if (r && r.why === 'wrong'){ wrapSend({roc: 'forget'}); if (CODE === code){ CODE = ''; setLevel('public'); } }  // shown early, then turned out wrong
         if (CODE) wrapSend({roc: 'save', code: CODE});
@@ -1319,6 +1330,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (n1 !== n2){ err.textContent = 'The two new passwords don\'t match.'; $('chgNew2').focus(); return; }
     $('chgGo').disabled = true;
     var fail = function(m){ $('chgGo').disabled = false; err.textContent = m || 'Something went wrong. Try again.'; };
+    var done = function(){ $('chgOk').textContent = 'Password changed.'; setTimeout(function(){ chgDlg.close(); }, 1500); };
     google.script.run.withSuccessHandler(function(r){
       if (!r || !r.ok){
         if (r && r.why === 'wrong'){ chgDlg.close(); signOut(); return; }
@@ -1326,9 +1338,12 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       }
       if (!r.pass){ $('chgOk').textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ chgDlg.close(); signOut(); }, 2500); return; }
       CODE = r.pass; saveCode(r.pass, r.level, r.who);
-      $('chgOk').textContent = 'Password changed.';
-      setTimeout(function(){ chgDlg.close(); }, 1500);
-    }).withFailureHandler(function(x){ fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); }).accessChangePassword(CODE, cur, n1);
+      done();
+    }).withFailureHandler(function(x){
+      // the reply may have been lost after the change was saved: sign in with the new password to find out
+      if (!volName) return fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.');
+      check(volName + '\n' + n1, 'typed', function(v){ if (v && v.ok) done(); else fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); });
+    }).accessChangePassword(CODE, cur, n1);
   });
 
   $('chemRelockBtn').addEventListener('click', function(){ if (document.body.classList.contains('editing')) endEdit(true); signOut(); });
