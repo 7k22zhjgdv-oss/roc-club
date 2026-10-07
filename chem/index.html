@@ -8,10 +8,10 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck","accessAliases"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
@@ -883,6 +883,27 @@ html.app .mrow.appOnly{display:flex}
 #entryUi.open .eact{opacity:1;transform:none;pointer-events:auto}
 #entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s}
 .eact.hold{opacity:0!important;transition:none}
+/* home-screen app: the ⋯ opens the menu as bubbles, like the + (2026-10-07). Built from the menu's rows (buildMenuBubbles). */
+.macts{display:none}
+html.app #entryUi.menu .macts{display:flex}
+#entryUi.menu .escrim{background:var(--escrim);visibility:visible;pointer-events:auto;transition:background-color .18s}
+html.app #entryUi.menu #eFab{display:none}
+#entryUi.menu .macts .eact{opacity:1;transform:none;pointer-events:auto;animation:mpop .2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mpop{from{opacity:0;transform:translateY(12px) scale(.96)}}
+.macts .mcap{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px;font-size:13px;line-height:1.5;color:var(--muted);text-align:right;box-shadow:var(--eshadow);animation:mpop .2s both}
+/* the Volunteers panel (Manager): the same growing panel as Log test, without the save row */
+.egrow.nofoot .gfoot{display:none}
+.vlist{padding:2px 2px 8px}
+.vlist .vh{margin:14px 2px 6px;font-size:15px;font-weight:600}
+.vlist .vwarn{background:var(--rTint);border:1px solid var(--red);border-radius:10px;padding:8px 12px;font-size:14px;margin-top:6px}
+.vlist .vempty{color:var(--muted);font-size:14px;margin:0 2px}
+.vlist .vcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.vlist .vname{font-weight:600;font-size:16px}
+.vlist .vsub{color:var(--muted);font-size:13px;margin-top:2px;word-break:break-word}
+.vlist .vbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vlist .vbtns button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.vlist .vbtns button.primary{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-weight:600}
+.vlist .vbtns input{flex:1 1 160px;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px;font-size:16px}
 .eact.off{color:var(--muted);cursor:default;box-shadow:none;background:var(--soft)}
 .ei44{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,var(--card));color:var(--c)}
 .ei44 svg{width:22px;height:22px}
@@ -3786,7 +3807,11 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
   $('mnChgPw').addEventListener('click', function(){ closeDlg('menuDlg'); openChgPw(); });
   $('akaSave').addEventListener('click', saveAliases);
-  $('mnVols').addEventListener('click', function(){ closeDlg('menuDlg'); window.top.location.href = 'https://www.rollingoaksclub.org/?volunteers'; });
+  $('mnVols').addEventListener('click', function(){
+    closeDlg('menuDlg');
+    if (window.openVolunteersPanel && getComputedStyle($('entryUi')).display !== 'none') openVolunteersPanel($('moreBtn'));
+    else window.top.location.href = 'https://www.rollingoaksclub.org/?volunteers';   // only if the panel can't show here
+  });
   $('chgCancel').addEventListener('click', function(){ closeDlg('chgDlg'); });
   $('chgForm').addEventListener('submit', submitChgPw);
   $('upDet').addEventListener('click', function(e){
@@ -4021,6 +4046,7 @@ document.addEventListener('DOMContentLoaded', function(){
         Log test
         <span class="ei44" style="--c:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg></span></button>
     </div>
+    <div class="eacts macts" id="mActs"></div>
     <button type="button" class="emore" id="eMore" aria-label="Menu"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
     <button type="button" class="efab" id="eFab" aria-label="Add a test or note" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -4053,7 +4079,10 @@ document.addEventListener('DOMContentLoaded', function(){
     pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>'
   };
   var WHEN_ICO = '<svg class="wi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
-  var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading']};
+  var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
+    vols: ['Volunteers', 'var(--red)', '']};
+  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
+  ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
     ['Daily', 'tested every day', [['fc','FC','ppm',0,20], ['cc','CC','ppm',0,5], ['ph','pH','',6.4,8.6]]],
@@ -4071,15 +4100,41 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function setOpen(o){ ui.classList.toggle('open', o); fab.setAttribute('aria-expanded', o ? 'true' : 'false'); }
   fab.addEventListener('click', function(){ setOpen(!ui.classList.contains('open')); });
-  $('eMore').addEventListener('click', function(){ openMenu('menuDlg'); });          // home-screen app only (the bar's ⋯)
-  $('eScrim').addEventListener('click', function(){ if (grow.hidden) setOpen(false); });
+  $('eMore').addEventListener('click', function(){ setMenu(!ui.classList.contains('menu')); });   // home-screen app only (the bar's ⋯)
+  $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
+  // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
+  // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
+  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnVols', 'mnChgPw', 'mnLock'];
+  function setMenu(o){
+    if (o) buildMenuBubbles();
+    ui.classList.toggle('menu', o);
+    $('eMore').setAttribute('aria-expanded', o ? 'true' : 'false');
+  }
+  function buildMenuBubbles(){
+    var box = $('mActs'), ids = MENU_BOTTOM_UP.filter(function(id){ var b = $(id); return b && getComputedStyle(b).display !== 'none'; }).reverse();
+    box.textContent = '';
+    var cap = ['mnWho', 'mnAsof', 'mnUpd'].map(function(id){ return $(id) ? $(id).textContent.trim() : ''; }).filter(Boolean);
+    if (cap.length){ var c = document.createElement('div'); c.className = 'mcap'; cap.forEach(function(t, i){ if (i) c.appendChild(document.createElement('br')); c.appendChild(document.createTextNode(t)); }); box.appendChild(c); }
+    ids.forEach(function(id, i){
+      var row = $(id), pill = document.createElement('button');
+      pill.type = 'button'; pill.className = 'eact';
+      pill.style.animationDelay = ((ids.length - 1 - i) * 0.025) + 's';
+      pill.innerHTML = '<span>' + row.innerHTML + '</span><span class="ei44" style="--c:' + (id === 'mnVols' ? 'var(--red)' : id === 'mnLock' ? 'var(--muted)' : 'var(--accent)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + MENU_ICONS[id] + '</svg></span>';
+      pill.addEventListener('click', function(){
+        if (id === 'mnVols'){ openPanel('vols', null, pill); return; }
+        setMenu(false); row.click();
+      });
+      box.appendChild(pill);
+    });
+  }
+  window.openVolunteersPanel = function(from){ openPanel('vols', null, from); };
   $('eTestBtn').addEventListener('click', function(){ openPanel('test', null, $('eTestBtn')); });
   $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
   $('ePump').addEventListener('click', function(){ openPanel('pump', null, $('ePump')); });
   $('eX').addEventListener('click', function(){ closePanel(); });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
-    if (!grow.hidden && !busy) closePanel(); else if (ui.classList.contains('open')) setOpen(false);
+    if (!grow.hidden && !busy) closePanel(); else if (ui.classList.contains('open')) setOpen(false); else if (ui.classList.contains('menu')) setMenu(false);
   });
 
   /** Called from renderAll: show the button only for those who may enter. */
@@ -4299,6 +4354,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function refresh(){
     msg.textContent = ''; msg.className = 'emsg'; dupOk = false;
+    if (mode === 'vols') return;
     if (!busy) save.textContent = editing ? 'Save changes' : KIND[mode][2];
     if (mode === 'note') { save.disabled = busy || !$('eNote').value.trim(); return; }
     if (mode === 'pump') {
@@ -4354,10 +4410,12 @@ document.addEventListener('DOMContentLoaded', function(){
     mode = kind; editing = item; fromEl = from || fab;
     $('eIcon').style.setProperty('--c', KIND[kind][1]);
     $('eIcon').innerHTML = ICON[kind];
-    $('eTitle').textContent = (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
+    $('eTitle').textContent = kind === 'vols' ? 'Volunteers' : (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
+    grow.classList.toggle('nofoot', kind === 'vols');
     save.textContent = item ? 'Save changes' : KIND[kind][2];
     $('eWho').innerHTML = item ? 'Entered by<br>' + esc(firstName(item.by)) : whoText();
-    body.innerHTML = kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : noteBody(item);
+    body.innerHTML = kind === 'vols' ? '<div class="vlist" id="vList">Loading…</div>' : kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : noteBody(item);
+    if (kind === 'vols') volLoad('');
     body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
     if (kind === 'pump') {
       body.querySelectorAll('[data-pt]').forEach(function(b){ b.addEventListener('click', function(){
@@ -4383,7 +4441,80 @@ document.addEventListener('DOMContentLoaded', function(){
     requestAnimationFrame(function(){ place(full(), panelRad()); grow.classList.add('big'); body.scrollTop = 0; });
     setTimeout(function(){ try { $('eX').focus({preventScroll: true}); } catch(e){} }, reduce ? 0 : 340);
   }
-  function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); }
+  function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); setMenu(false); }
+
+  // ---- the Volunteers panel (Manager): accessVolunteerList / accessVolunteerAction in Access. Names come from the public
+  // sign-up, so everything goes on the page as text, never as HTML.
+  var LVN = {member: 'Member', board: 'Board', manager: 'Manager', pending: 'Waiting for approval', paused: 'Paused'};
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function volLoad(note){
+    serverCall('accessVolunteerList', [CODE], function(r){
+      var list = $('vList'); if (!list) return;
+      list.textContent = '';
+      if (note){ var m = el('div', 'emsg', note); list.appendChild(m); }
+      if (!r || !r.ok){ list.appendChild(el('div', 'emsg err', (r && r.message) || 'Could not load the list.')); return; }
+      if (r.managers > r.maxManagers) list.appendChild(el('div', 'vwarn', r.managers + ' people have Manager level (more than ' + r.maxManagers + '). If that is not on purpose, change the extra ones on the ROC Access sheet.'));
+      var pend = r.people.filter(function(p){ return p.level === 'pending'; }), rest = r.people.filter(function(p){ return p.level !== 'pending'; });
+      if (window.setWaiting) setWaiting(pend.length);
+      list.appendChild(el('div', 'vh', 'Waiting for approval'));
+      if (!pend.length) list.appendChild(el('div', 'vempty', 'No one is waiting.'));
+      pend.forEach(function(p){ list.appendChild(volCard(p)); });
+      list.appendChild(el('div', 'vh', 'Volunteers'));
+      if (!rest.length) list.appendChild(el('div', 'vempty', 'No volunteers yet.'));
+      rest.forEach(function(p){ list.appendChild(volCard(p)); });
+    }, function(x){ var list = $('vList'); if (list) list.textContent = 'Could not load the list (' + ((x && x.message) || x) + ').'; });
+  }
+  function volCard(p){
+    var card = el('div', 'vcard'), btns = el('div', 'vbtns');
+    card.appendChild(el('div', 'vname', p.name));
+    var sub = (LVN[p.level] || 'Member') + (p.level !== 'pending' && p.level !== 'manager' ? ' · ' + (p.edit ? 'can add readings and notes' : 'view only') : '') + (p.email ? ' · ' + p.email : '');
+    if (p.status && p.status !== 'OK' && p.level !== 'pending' && p.level !== 'paused') sub += ' · ' + p.status;
+    card.appendChild(el('div', 'vsub', sub));
+    function b(label, fn, primary){ var x = el('button', primary ? 'primary' : '', label); x.type = 'button'; x.addEventListener('click', fn); btns.appendChild(x); }
+    function act(req, done, ask){
+      if (ask && !confirm(ask)) return;
+      req.row = p.row; req.name = p.name;
+      Array.prototype.forEach.call(card.querySelectorAll('button'), function(x){ x.disabled = true; });
+      serverCall('accessVolunteerAction', [CODE, req], function(r){
+        if (!r || !r.ok){ Array.prototype.forEach.call(card.querySelectorAll('button'), function(x){ x.disabled = false; }); alert((r && r.message) || 'That did not work.'); return; }
+        if (window.setWaiting) setWaiting(r.pending);
+        volLoad(done());
+      }, function(x){ alert('Something went wrong (' + ((x && x.message) || x) + '). Close and open the list to see what happened.'); });
+    }
+    if (p.level === 'manager'){ card.appendChild(el('div', 'vsub', 'Change Manager rows on the ROC Access sheet.')); return card; }
+    if (p.level === 'pending'){
+      b('Approve as Member', function(){ act({action: 'approve', level: 'member'}, function(){ return p.name + ' approved as Member. Let them know they can sign in.'; }); }, true);
+      b('Approve as Board', function(){ act({action: 'approve', level: 'board'}, function(){ return p.name + ' approved as Board. Let them know they can sign in.'; }); }, true);
+      b('Delete', function(){ act({action: 'remove'}, function(){ return p.name + ' deleted.'; }, 'Delete the sign-up from ' + p.name + '?'); });
+    } else {
+      if (p.level === 'paused'){
+        b('Unpause as Member', function(){ act({action: 'unpause', level: 'member'}, function(){ return p.name + ' can sign in again (Member).'; }); });
+        b('Unpause as Board', function(){ act({action: 'unpause', level: 'board'}, function(){ return p.name + ' can sign in again (Board).'; }); });
+      } else {
+        var other = p.level === 'board' ? 'member' : 'board';
+        b('Make ' + LVN[other], function(){ act({action: 'level', level: other}, function(){ return p.name + ' is now ' + LVN[other] + '.'; }); });
+        b(p.edit ? 'Make view only' : 'Allow adding readings', function(){
+          act({action: 'edit', edit: !p.edit}, function(){ return p.edit ? p.name + ' can now only view.' : p.name + ' can add readings and notes again.'; });
+        });
+        b('Pause', function(){ act({action: 'pause'}, function(){ return p.name + ' is paused and signed out.'; }, 'Pause ' + p.name + '? They are signed out and can\'t sign in until you unpause them.'); });
+      }
+      b('Reset password', function(){
+        var row = el('div', 'vbtns'), inp = el('input'), save = el('button', 'primary', 'Save'), cancel = el('button', '', 'Cancel');
+        inp.type = 'text'; inp.placeholder = 'New password (8+ characters)'; inp.setAttribute('autocomplete', 'off'); inp.setAttribute('autocapitalize', 'off');
+        save.type = 'button'; cancel.type = 'button';
+        row.appendChild(inp); row.appendChild(save); row.appendChild(cancel); card.appendChild(row); inp.focus();
+        cancel.addEventListener('click', function(){ card.removeChild(row); });
+        save.addEventListener('click', function(){
+          var pw = inp.value.trim();
+          if (pw.length < 8){ alert('The password needs at least 8 characters.'); inp.focus(); return; }
+          act({action: 'reset', password: pw}, function(){ return p.name + '\'s password is changed. Tell them the new one; their devices are signed out.'; });
+        });
+      });
+      b('Remove', function(){ act({action: 'remove'}, function(){ return p.name + ' removed.'; }, 'Remove ' + p.name + '? They are signed out and their row is deleted from the Volunteers tab.'); });
+    }
+    card.appendChild(btns);
+    return card;
+  }
   function closePanel(){
     grow.classList.remove('big');
     var r = originRect(); place(r, Math.min(30, r.height / 2));
