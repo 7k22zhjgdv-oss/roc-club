@@ -419,7 +419,8 @@ body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
 body:not(.is-vol) .volonly{display:none !important}
 #moreBtn{position:relative}
-#moreBtn.has-dot::after{content:'';position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#d9534f;border:2px solid var(--card)}
+#moreBtn.has-dot{overflow:visible}
+#moreBtn.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--card);pointer-events:none}
 #akaIn{width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font-size:16px}
 /* members: test readings only - no date picker, view switcher, predictions or tracker cards */
 body.lvl-member .mchips,body.lvl-member .controls,body.lvl-member #trk{display:none !important}
@@ -2987,8 +2988,8 @@ function saveAliases(){
 // The Manager's notice: a dot on the ··· button and "Volunteers (2 waiting)" in its menu (opens the screen on Home)
 function setWaiting(n){
   n = Number(n) || 0;
-  $('moreBtn').classList.toggle('has-dot', n > 0);
-  $('mnVols').textContent = n ? 'Volunteers (' + n + ' waiting)' : 'Volunteers';
+  $('moreBtn').classList.toggle('has-dot', n > 0); $('moreBtn').setAttribute('data-count', n > 9 ? '9+' : String(n));
+  $('mnVols').innerHTML = 'Volunteers' + (n ? '&nbsp;<span style="color:var(--red);font-weight:600">(' + n + ' waiting)</span>' : '');
 }
 function openChgPw(){
   loadAliases();
