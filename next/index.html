@@ -249,6 +249,7 @@ a.give-btn{text-decoration:none;display:inline-block}
 .si-back{align-self:flex-start;background:none;border:none;color:var(--oak);font:600 .95rem var(--font);cursor:pointer;padding:4px 0}
 .si-pick,.si-step{display:flex;flex-direction:column;gap:10px}
 .si-pick[hidden],.si-step[hidden]{display:none}
+.si-step .mem-in{flex:none}
 .mem-cancel{background:none;border:none;color:var(--paper-2);font:.9rem var(--font);text-decoration:underline;cursor:pointer;padding:8px 4px}
 .mem-btn:disabled{opacity:.6;cursor:default}
 .mem-err{color:#e2836b;font-size:.88rem;min-height:1.2em}
@@ -735,15 +736,14 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     </nav>
     <div class="mem-panel si-out" id="memPanel">
       <div class="mem-text">
-        <h2 class="mem-h">Members &amp; Board</h2>
+        <h2 class="mem-h">Members and Volunteers</h2>
       </div>
       <button type="button" class="mem-btn" id="signInBtn" aria-expanded="false" aria-controls="pwForm">Sign in</button>
       <form id="pwForm" class="mem-form" autocomplete="off" hidden>
         <div class="si-pick" id="siPick">
           <p class="si-q">Who's signing in?</p>
           <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
-          <button type="button" class="si-big" data-as="vol">Volunteer<span>I have my own password</span></button>
-          <button type="button" class="si-big" data-as="board">Board or manager<span>Shared board password</span></button>
+          <button type="button" class="si-big" data-as="vol">Volunteer or board<span>I sign in with my name and password</span></button>
           <button type="button" class="mem-cancel" id="pickCancel" style="align-self:flex-start">Cancel</button>
         </div>
         <div class="si-step" id="siStep" hidden>
@@ -1208,11 +1208,10 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 
   // Sign in: first "Who's signing in?" (three big buttons), then one simple box for that choice. The choice is
   // remembered on this device (rocSignAs; on the website shared by all pages), so next time it opens straight on step 2.
-  // Volunteers type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
+  // Volunteers and Board type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
   var SIGN_AS = {
     member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
-    vol: {title: 'Volunteer', label: 'Your password', hint: '', secret: true},
-    board: {title: 'Board or manager', label: 'Board or manager password', hint: '', secret: true}
+    vol: {title: 'Volunteer or board', label: 'Your password', hint: 'Board: your name and the board password.', secret: true}
   };
   var signAs = '', nameIn = $('nameIn');
   function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
@@ -1242,14 +1241,14 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (e.key === 'Escape') openSignIn(false);
     else if (e.key === 'Enter'){ e.preventDefault(); pwIn.focus(); }
   });
-  // Sign in opens right in the Members & Board panel (no popup)
+  // Sign in opens right in the Members and Volunteers panel (no popup)
   function openSignIn(open){
     memPanel.classList.toggle('open', open);
     pwForm.hidden = !open;
     $('signInBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
     pwErr.textContent = ''; pwIn.value = ''; pwShow(pwIn, false);
     if (open){
-      var as = stored('rocSignAs');
+      var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
       if (SIGN_AS[as]) showStep(as); else showPick();
       // put the top of the panel near the top of the screen, so the whole panel stays above the phone keyboard
       // (again once the keyboard is up, since the phone scrolls on its own when it opens)
