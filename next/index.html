@@ -983,7 +983,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       }
       else if (how === 'saved' && r && r.why === 'wrong' && !CODE){ try { localStorage.removeItem('rocPass'); } catch(e){} }
       if (done) done(r);
-    }).withFailureHandler(function(){ if (done) done({ok: false, message: 'Something went wrong. Try again.'}); }).whoAmI(code);
+    }).withFailureHandler(function(x){ if (done) done({ok: false, message: 'Something went wrong (' + ((x && x.message) || x) + '). Try again.'}); }).whoAmI(code);
   }
   function auto(code, how){
     if (!code || tried[code] || (CODE && (how !== 'wrap' || code === CODE))) return;
