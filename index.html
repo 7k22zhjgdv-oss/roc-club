@@ -9,10 +9,10 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","volunteerList","volunteerAction","accessNameCheck","accessAliases"];
+  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","accessVolunteerList","accessVolunteerAction","accessNameCheck","accessAliases"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
@@ -1487,7 +1487,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       list.appendChild(el('div', 'vol-h', 'Volunteers'));
       if (!rest.length) list.appendChild(el('div', 'vol-empty', 'No volunteers yet.'));
       rest.forEach(function(p){ list.appendChild(volCard(p)); });
-    }).withFailureHandler(function(x){ $('volErr').textContent = 'Could not load the list (' + ((x && x.message) || x) + ').'; }).volunteerList(CODE);
+    }).withFailureHandler(function(x){ $('volErr').textContent = 'Could not load the list (' + ((x && x.message) || x) + ').'; }).accessVolunteerList(CODE);
   }
   function volCard(p){
     var card = el('div', 'vol-card'), btns = el('div', 'vol-btns');
@@ -1503,7 +1503,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       google.script.run.withSuccessHandler(function(r){
         if (!r || !r.ok){ Array.prototype.forEach.call(btns.querySelectorAll('button'), function(x){ x.disabled = false; }); $('volErr').textContent = (r && r.message) || 'That did not work.'; $('volOk').textContent = ''; return; }
         volLoad(done(r));
-      }).withFailureHandler(function(x){ $('volErr').textContent = 'Something went wrong (' + ((x && x.message) || x) + '). Close and open the list to see what happened.'; }).volunteerAction(CODE, req);
+      }).withFailureHandler(function(x){ $('volErr').textContent = 'Something went wrong (' + ((x && x.message) || x) + '). Close and open the list to see what happened.'; }).accessVolunteerAction(CODE, req);
     }
     if (p.level === 'manager'){ card.appendChild(el('div', 'vol-sub', 'Change Manager rows on the ROC Access sheet.')); return card; }
     if (p.level === 'pending'){
