@@ -9,10 +9,10 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword"];
+  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","volunteerList","volunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
@@ -285,6 +285,19 @@ dialog.pwdlg p{margin:0 0 14px;color:var(--paper-2);font-size:.9rem}
 dialog.pwdlg input.secret,dialog.pwdlg input[type=file]{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:10px;color:var(--paper);font-size:16px}
 dialog.pwdlg label{display:block;margin:12px 0 5px;color:var(--paper-2);font-size:.88rem}
 dialog.pwdlg .pw-wrap input{padding-right:64px}
+dialog.pwdlg input.plain{width:100%;box-sizing:border-box;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:10px;color:var(--paper);font-size:16px}
+dialog.pwdlg.wide{max-width:560px}
+.vol-list{max-height:60vh;overflow:auto;margin:0 -4px;padding:0 4px}
+.vol-h{margin:16px 0 6px;font-size:.95rem;font-weight:600;color:var(--paper)}
+.vol-card{border:1px solid var(--glass-line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.vol-name{font-weight:600;color:var(--paper)}
+.vol-sub{font-size:.85rem;color:var(--paper-2);margin-top:2px;word-break:break-all}
+.vol-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vol-btns button{border-radius:8px;border:1px solid var(--glass-line);background:var(--glass);color:var(--paper);padding:7px 10px;font:inherit;font-size:.85rem;cursor:pointer}
+.vol-btns button.primary{background:var(--oak);color:var(--bark);border-color:var(--oak);font-weight:600}
+.vol-btns input{flex:1 1 160px;min-width:0;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:8px;padding:7px 10px;color:var(--paper);font-size:16px}
+.vol-warn{background:rgba(226,131,107,.15);border:1px solid #e2836b;border-radius:10px;padding:8px 12px;font-size:.88rem;color:var(--paper);margin-top:8px}
+.vol-empty{font-size:.88rem;color:var(--paper-2)}
 dialog.pwdlg .err{color:#e2836b;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .ok{color:#9fca8c;font-size:.85rem;min-height:18px;margin-top:8px}
 dialog.pwdlg .row{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
@@ -774,6 +787,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
             <button type="button" class="mem-cancel" id="pwCancel">Cancel</button>
           </div>
           <p class="mem-note" id="siHint"></p>
+          <button type="button" class="mem-cancel" id="signUpBtn" style="align-self:flex-start" hidden>New volunteer? Sign up</button>
           <div class="mem-err" id="pwErr" role="alert"></div>
           <p class="mem-note">This device stays signed in until you tap Sign out.</p>
         </div>
@@ -800,6 +814,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         <span class="mem-actions">
           <button type="button" class="lockbtn si-mgr" id="editTextBtn">Edit page text</button>
           <button type="button" class="lockbtn si-brd" id="importOpenBtn">Update Rules PDF</button>
+          <button type="button" class="lockbtn si-mgr" id="volBtn">Volunteers</button>
           <button type="button" class="lockbtn si-vol" id="chgPwBtn">Change my password</button>
           <button type="button" class="lockbtn" id="chemRelockBtn">Sign out</button>
         </span>
@@ -915,6 +930,36 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       <button type="button" class="primary" id="memUpload">Upload form</button>
     </div>
   </div>
+</dialog>
+
+<dialog id="joinVolDlg" class="pwdlg">
+  <h3>Sign up to volunteer</h3>
+  <p>The manager looks at each sign-up. You'll get an email when you're approved, and then you sign in with your name and this password.</p>
+  <form id="joinVolForm" autocomplete="off">
+    <label for="jvName">First and last name</label>
+    <input type="text" class="plain" id="jvName" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+    <label for="jvEmail">Email</label>
+    <input type="email" class="plain" id="jvEmail" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <label for="jvPw">Choose a password (at least 8 characters)</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="jvPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="jvPw">Show</button></span>
+    <label for="jvPw2">Password again</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="jvPw2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="jvPw2">Show</button></span>
+    <div class="err" id="jvErr" role="alert"></div>
+    <div class="ok" id="jvOk"></div>
+    <div class="row">
+      <button type="button" id="jvCancel">Cancel</button>
+      <button type="submit" class="primary" id="jvGo">Sign up</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="volDlg" class="pwdlg wide">
+  <h3>Volunteers</h3>
+  <p>People with their own login. Manager level can only be given on the ROC Access sheet.</p>
+  <div class="vol-list" id="volList"></div>
+  <div class="err" id="volErr" role="alert"></div>
+  <div class="ok" id="volOk"></div>
+  <div class="row"><button type="button" class="primary" id="volClose">Close</button></div>
 </dialog>
 
 <dialog id="chgDlg" class="pwdlg">
@@ -1259,7 +1304,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var c = SIGN_AS[as]; signAs = as;
     $('siPick').hidden = true; $('siStep').hidden = false;
     $('siTitle').textContent = c.title; $('pwLabel').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
-    $('nameRow').hidden = as !== 'vol';
+    $('nameRow').hidden = as !== 'vol'; $('signUpBtn').hidden = as !== 'vol';
     pwIn.value = ''; pwErr.textContent = ''; pwShow(pwIn, false);
     pwIn.classList.toggle('secret', c.secret);
     pwIn.parentNode.querySelector('.pw-show').hidden = !c.secret;
@@ -1311,6 +1356,106 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       else pwErr.textContent = (r && r.message) || 'That key number or password is not right.';
     });
   });
+
+  // Sign up to volunteer (public): volunteerSignUp in Code.gs puts a Pending row on the Volunteers tab and emails the manager.
+  var joinVolDlg = $('joinVolDlg');
+  $('signUpBtn').addEventListener('click', function(){
+    ['jvName', 'jvEmail', 'jvPw', 'jvPw2'].forEach(function(id){ $(id).value = ''; });
+    pwShow($('jvPw'), false); pwShow($('jvPw2'), false);
+    $('jvErr').textContent = ''; $('jvOk').textContent = ''; $('jvGo').disabled = false; $('jvGo').hidden = false; $('jvCancel').textContent = 'Cancel';
+    joinVolDlg.showModal(); $('jvName').focus();
+  });
+  $('jvCancel').addEventListener('click', function(){ joinVolDlg.close(); });
+  $('joinVolForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('jvName').value.trim().replace(/\s+/g, ' '), email = $('jvEmail').value.trim(), p1 = $('jvPw').value.trim(), p2 = $('jvPw2').value.trim(), err = $('jvErr');
+    err.textContent = '';
+    if (name.indexOf(' ') < 0){ err.textContent = 'Enter your first and last name.'; $('jvName').focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent = 'Enter your email address.'; $('jvEmail').focus(); return; }
+    if (p1.length < 8){ err.textContent = 'The password needs at least 8 characters.'; $('jvPw').focus(); return; }
+    if (p1 !== p2){ err.textContent = 'The two passwords don\'t match.'; $('jvPw2').focus(); return; }
+    $('jvGo').disabled = true;
+    google.script.run.withSuccessHandler(function(r){
+      $('jvGo').disabled = false;
+      if (!r || !r.ok){ err.textContent = (r && r.message) || 'Something went wrong. Try again.'; return; }
+      $('jvOk').textContent = 'Thanks! The manager will email you when you\'re approved.';
+      $('jvGo').hidden = true; $('jvCancel').textContent = 'Close';
+      try { localStorage.setItem('rocSignAs', 'vol'); localStorage.setItem('rocLoginName', name); } catch(x){}
+      nameIn.value = name;
+    }).withFailureHandler(function(x){
+      $('jvGo').disabled = false;
+      err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). If you get no email in a few days, ask the manager.';
+    }).volunteerSignUp(name, email, p1);
+  });
+
+  // Manager: the Volunteers screen (volunteerList / volunteerAction in Code.gs). Names come from the public sign-up,
+  // so everything is put on the page as text (never as HTML).
+  var volDlg = $('volDlg'), LVN = {member: 'Member', board: 'Board', manager: 'Manager', pending: 'Waiting for approval', paused: 'Paused'};
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function volLoad(msg){
+    $('volErr').textContent = ''; $('volOk').textContent = msg || '';
+    google.script.run.withSuccessHandler(function(r){
+      var list = $('volList'); list.textContent = '';
+      if (!r || !r.ok){ $('volErr').textContent = (r && r.message) || 'Could not load the list.'; return; }
+      if (r.managers > r.maxManagers) list.appendChild(el('div', 'vol-warn', r.managers + ' people have Manager level (more than ' + r.maxManagers + '). If that is not on purpose, change the extra ones on the ROC Access sheet.'));
+      var pend = r.people.filter(function(p){ return p.level === 'pending'; }), rest = r.people.filter(function(p){ return p.level !== 'pending'; });
+      list.appendChild(el('div', 'vol-h', 'Waiting for approval'));
+      if (!pend.length) list.appendChild(el('div', 'vol-empty', 'No one is waiting.'));
+      pend.forEach(function(p){ list.appendChild(volCard(p)); });
+      list.appendChild(el('div', 'vol-h', 'Volunteers'));
+      if (!rest.length) list.appendChild(el('div', 'vol-empty', 'No volunteers yet.'));
+      rest.forEach(function(p){ list.appendChild(volCard(p)); });
+    }).withFailureHandler(function(x){ $('volErr').textContent = 'Could not load the list (' + ((x && x.message) || x) + ').'; }).volunteerList(CODE);
+  }
+  function volCard(p){
+    var card = el('div', 'vol-card'), btns = el('div', 'vol-btns');
+    card.appendChild(el('div', 'vol-name', p.name));
+    var sub = (LVN[p.level] || 'Member') + (p.email ? ' · ' + p.email : '');
+    if (p.status && p.status !== 'OK' && p.level !== 'pending' && p.level !== 'paused') sub += ' · ' + p.status;
+    card.appendChild(el('div', 'vol-sub', sub));
+    function b(label, fn, primary){ var x = el('button', primary ? 'primary' : '', label); x.type = 'button'; x.addEventListener('click', fn); btns.appendChild(x); }
+    function act(req, done, ask){
+      if (ask && !confirm(ask)) return;
+      req.row = p.row; req.name = p.name;
+      Array.prototype.forEach.call(btns.querySelectorAll('button'), function(x){ x.disabled = true; });
+      google.script.run.withSuccessHandler(function(r){
+        if (!r || !r.ok){ Array.prototype.forEach.call(btns.querySelectorAll('button'), function(x){ x.disabled = false; }); $('volErr').textContent = (r && r.message) || 'That did not work.'; $('volOk').textContent = ''; return; }
+        volLoad(done(r));
+      }).withFailureHandler(function(x){ $('volErr').textContent = 'Something went wrong (' + ((x && x.message) || x) + '). Close and open the list to see what happened.'; }).volunteerAction(CODE, req);
+    }
+    if (p.level === 'manager'){ card.appendChild(el('div', 'vol-sub', 'Change Manager rows on the ROC Access sheet.')); return card; }
+    if (p.level === 'pending'){
+      b('Approve as Member', function(){ act({action: 'approve', level: 'member'}, function(r){ return p.name + ' approved as Member.' + (r.mailed ? ' Email sent.' : ' (No email sent.)'); }); }, true);
+      b('Approve as Board', function(){ act({action: 'approve', level: 'board'}, function(r){ return p.name + ' approved as Board.' + (r.mailed ? ' Email sent.' : ' (No email sent.)'); }); }, true);
+      b('Delete', function(){ act({action: 'remove'}, function(){ return p.name + ' deleted.'; }, 'Delete the sign-up from ' + p.name + '?'); });
+    } else {
+      if (p.level === 'paused'){
+        b('Unpause as Member', function(){ act({action: 'unpause', level: 'member'}, function(){ return p.name + ' can sign in again (Member).'; }); });
+        b('Unpause as Board', function(){ act({action: 'unpause', level: 'board'}, function(){ return p.name + ' can sign in again (Board).'; }); });
+      } else {
+        var other = p.level === 'board' ? 'member' : 'board';
+        b('Make ' + LVN[other], function(){ act({action: 'level', level: other}, function(){ return p.name + ' is now ' + LVN[other] + '.'; }); });
+        b('Pause', function(){ act({action: 'pause'}, function(){ return p.name + ' is paused and signed out.'; }, 'Pause ' + p.name + '? They are signed out and can\'t sign in until you unpause them.'); });
+      }
+      b('Reset password', function(){
+        var row = el('div', 'vol-btns'), inp = el('input'), save = el('button', 'primary', 'Save'), cancel = el('button', '', 'Cancel');
+        inp.type = 'text'; inp.placeholder = 'New password (8+ characters)'; inp.setAttribute('autocomplete', 'off'); inp.setAttribute('autocapitalize', 'off');
+        save.type = 'button'; cancel.type = 'button';
+        row.appendChild(inp); row.appendChild(save); row.appendChild(cancel); card.appendChild(row); inp.focus();
+        cancel.addEventListener('click', function(){ card.removeChild(row); });
+        save.addEventListener('click', function(){
+          var pw = inp.value.trim();
+          if (pw.length < 8){ $('volErr').textContent = 'The password needs at least 8 characters.'; inp.focus(); return; }
+          act({action: 'reset', password: pw}, function(){ return p.name + '\'s password is changed. Tell them the new one; their devices are signed out.'; });
+        });
+      });
+      b('Remove', function(){ act({action: 'remove'}, function(){ return p.name + ' removed.'; }, 'Remove ' + p.name + '? They are signed out and their row is deleted from the Volunteers tab.'); });
+    }
+    card.appendChild(btns);
+    return card;
+  }
+  $('volBtn').addEventListener('click', function(){ $('volList').textContent = 'Loading…'; volDlg.showModal(); volLoad(''); });
+  $('volClose').addEventListener('click', function(){ volDlg.close(); });
 
   // Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
   // hands back a new pass, kept in place of the old one (the old pass stops working: their other devices sign out).
