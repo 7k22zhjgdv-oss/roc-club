@@ -2311,6 +2311,7 @@ window.rocStartPump = function (DATA) {
         if (r && r.why === 'wrong'){ chg.close(); signOut(); return; }
         return fail(r && r.message);
       }
+      if (!r.pass){ err.style.color = 'var(--good, #2e7d32)'; err.textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ chg.close(); signOut(); }, 2500); return; }
       if (r.pass){
         CODE = r.pass;
         try { localStorage.setItem(KEY, r.pass); } catch(x){}
@@ -2318,7 +2319,7 @@ window.rocStartPump = function (DATA) {
       }
       err.style.color = 'var(--good, #2e7d32)'; err.textContent = 'Password changed.';
       setTimeout(function(){ chg.close(); }, 1500);
-    }).withFailureHandler(function(){ fail(); }).accessChangePassword(CODE, cur, n1);
+    }).withFailureHandler(function(x){ fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); }).accessChangePassword(CODE, cur, n1);
   });
   $('signCancel').addEventListener('click', function(){ dlg.close(); });
   $('signForm').addEventListener('submit', function(e){
