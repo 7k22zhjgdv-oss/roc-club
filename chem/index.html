@@ -234,6 +234,8 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chipPop .poptrend{color:var(--ink2);margin:4px 0}
 .chipPop .popspark{margin-top:8px}
 .chipPop .spark{width:100%;display:block}
+.chipPop .spark .sparktick{stroke:var(--line);stroke-width:1}
+.chipPop .spark .sparkdate{fill:var(--muted);font-size:10px}
 .chipPop .sparkband{opacity:.18}
 .chipPop .sparkband.green{fill:var(--green)}
 .chipPop .sparkband.yellow{fill:var(--yellow)}
@@ -418,9 +420,10 @@ body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
 body:not(.is-vol) .volonly{display:none !important}
-#moreBtn{position:relative}
-#moreBtn.has-dot{overflow:visible}
-#moreBtn.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--card);pointer-events:none}
+#moreBtn,#eMore{position:relative}
+#moreBtn.has-dot,#eMore.has-dot{overflow:visible}
+#moreBtn.has-dot::after,#eMore.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--card);pointer-events:none}
+#eMore.has-dot::after{top:-2px;right:-2px;min-width:22px;height:22px;line-height:22px;font-size:13px;border-radius:11px}
 #akaIn{width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font-size:16px}
 /* members: test readings only - no date picker, view switcher, predictions or tracker cards */
 body.lvl-member .mchips,body.lvl-member .controls,body.lvl-member #trk{display:none !important}
@@ -1776,8 +1779,12 @@ function predCard(p, day, gid){
 }
 
 /* ------------------------------------------------------------ chip popover (range / trend / history) */
-var POP_HIST_OPTIONS = [10, 20, 30];  // sparkline: how many past tests to show, and the choices offered
-var popHistN = POP_HIST_OPTIONS[0];
+// Sparkline (2026-10-07): spaced by date over a time span; the choices offered (days, button label). Members only get
+// the first (they only see the last 7 days of tests anyway). Default for everyone else: POP_HIST_DEFAULT.
+var POP_HIST_OPTIONS = [[7, '1 week'], [30, '1 month'], [120, '4 months']];
+var POP_HIST_DEFAULT = 30;
+function popHistStart(){ return LEVEL === 'member' ? POP_HIST_OPTIONS[0][0] : POP_HIST_DEFAULT; }
+var popHistN = POP_HIST_DEFAULT;   // days shown
 var popPinned = false, popEl = null, popCurChip = null, popShowT = null, popHideT = null;
 var isTouch = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
 // Which slow-feed products a still-ramping addition can belong to, per reading - mirrors rampAffects_ in Code.gs.
@@ -1851,9 +1858,12 @@ function positionPop(anchor){
  * outside them, not just what today's value is. Falls back to auto-scaling to the values themselves (no bands)
  * when there's no colored range for this reading (Salt, Borates, Temp).
  */
-function sparkSvg(vals, readingName, dom){
-  if (vals.length < 2) return '';
-  var w = 288, h = 84, pad = 5;
+/** The line graph: pts = [{v, ms}] oldest first, placed by time across t0..t1 (ms), with light week ticks and a date
+ *  at each end. Same-day tests sit close together; every test gets a dot. */
+function sparkSvg(pts0, readingName, dom, t0, t1){
+  if (pts0.length < 2) return '';
+  var vals = pts0.map(function(p){ return p.v; });
+  var w = 288, h = 84, pad = 5, foot = 16;
   var lo, hi;
   if (dom){ lo = dom.lo; hi = dom.hi; }
   else { lo = Math.min.apply(null, vals); hi = Math.max.apply(null, vals); }
@@ -1866,14 +1876,23 @@ function sparkSvg(vals, readingName, dom){
       return '<rect x="0" y="' + y1.toFixed(1) + '" width="' + w + '" height="' + Math.max(0, y2 - y1).toFixed(1) + '" class="sparkband ' + r.color + '"></rect>';
     }).join('');
   }
-  var pts = vals.map(function(v, i){
-    var x = pad + i * (w - pad * 2) / (vals.length - 1);
-    return x.toFixed(1) + ',' + y_(v).toFixed(1);
-  });
-  var last = pts[pts.length - 1].split(',');
-  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true">' + bg +
+  var span = Math.max(1, t1 - t0);
+  var x_ = function(ms){ return pad + (Math.max(t0, Math.min(t1, ms)) - t0) * (w - pad * 2) / span; };
+  var ticks = '';
+  for (var tk = t1 - 7 * 86400000; tk > t0; tk -= 7 * 86400000){   // a light line every week, counted back from the end
+    ticks += '<line x1="' + x_(tk).toFixed(1) + '" x2="' + x_(tk).toFixed(1) + '" y1="0" y2="' + h + '" class="sparktick"></line>';
+  }
+  var pts = pts0.map(function(p){ return x_(p.ms).toFixed(1) + ',' + y_(p.v).toFixed(1); });
+  var dots = pts.map(function(xy, i){
+    var c = xy.split(','), lastOne = i === pts.length - 1;
+    return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (lastOne ? 3.5 : 2.4) + '" fill="var(--accent)"' + (lastOne ? '' : ' opacity=".8"') + '></circle>';
+  }).join('');
+  var dl = function(ms){ return new Date(ms).toLocaleDateString('en-US', {timeZone: 'America/Chicago', month: 'short', day: 'numeric'}); };
+  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + (h + foot) + '" width="' + w + '" height="' + (h + foot) + '" aria-hidden="true">' + bg + ticks +
     '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round" stroke-linecap="round"></polyline>' +
-    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3" fill="var(--accent)"></circle></svg>';
+    dots +
+    '<text x="' + pad + '" y="' + (h + 12) + '" class="sparkdate">' + esc(dl(t0)) + '</text>' +
+    '<text x="' + (w - pad) + '" y="' + (h + 12) + '" class="sparkdate" text-anchor="end">' + esc(dl(t1)) + '</text></svg>';
 }
 // Full names for the popover title, where the short chip label is an abbreviation worth spelling out.
 var FULL_NAME = { fc: 'Free Chlorine', cc: 'Combined Chlorine', ta: 'Total Alkalinity', ch: 'Calcium Hardness',
@@ -1942,15 +1961,17 @@ function rangeBarHtml(readingName, curVal, dom){
   }
   return '<div class="popbarwrap"><div class="popbar">' + segs + mark + '</div></div>';
 }
-/** Chronological (oldest to newest) tests reporting `key` at or before ms, last popHistN of them. */
-function historyFor(key, ms){
-  var have = (DATA.tests || []).filter(function(t){ return isNum(t[key]) && t.ms <= ms; });
+/** Chronological (oldest to newest) tests reporting `key` at or before ms; with `days`, only those in the last `days` days up to ms. */
+function historyFor(key, ms, days){
+  var from = days ? ms - days * 86400000 : -Infinity;
+  var have = (DATA.tests || []).filter(function(t){ return isNum(t[key]) && t.ms <= ms && t.ms > from; });
   have.sort(function(a, b){ return a.ms - b.ms; });
-  return have.slice(-popHistN);
+  return have;
 }
 function histBtnsHtml(){
-  return '<div class="pophistbtns">' + POP_HIST_OPTIONS.map(function(n){
-    return '<button type="button" class="pophistbtn' + (n === popHistN ? ' on' : '') + '" data-histn="' + n + '">' + n + '</button>';
+  if (LEVEL === 'member') return '';   // members only have the last week
+  return '<div class="pophistbtns">' + POP_HIST_OPTIONS.map(function(o){
+    return '<button type="button" class="pophistbtn' + (o[0] === popHistN ? ' on' : '') + '" data-histn="' + o[0] + '">' + o[1] + '</button>';
   }).join('') + '</div>';
 }
 function trendHtml(key, hist){
@@ -1963,14 +1984,18 @@ function trendHtml(key, hist){
   return '<div class="poptrend">' + arrow + ' ' + (d > 0 ? '+' : '') + fmtNum(d) + ' since last test (' + esc(when) + ')</div>';
 }
 function popContentReal(rk, readingName, label, cur, ms){
-  var hist = historyFor(rk, ms);
-  var vals = hist.map(function(t){ return t[rk]; });
+  var all = historyFor(rk, ms);                       // the "since last test" line compares with the test before, however long ago
+  if (LEVEL === 'member') popHistN = POP_HIST_OPTIONS[0][0];
+  var hist = historyFor(rk, ms, popHistN);
   var dom = readingName ? bandDomain_(readingName) : null;
-  var spark = vals.length > 1 ? sparkSvg(vals, readingName, dom) : '';
+  var spark = hist.length > 1 ? sparkSvg(hist.map(function(t){ return {v: t[rk], ms: t.ms}; }), readingName, dom, ms - popHistN * 86400000, ms) : '';
+  var spanName = POP_HIST_OPTIONS.filter(function(o){ return o[0] === popHistN; }).map(function(o){ return o[1]; })[0] || (popHistN + ' days');
+  var footText = hist.length > 1 ? hist.length + ' tests' : (hist.length ? 'Only 1 test in the last ' + spanName : 'No tests in the last ' + spanName);
   return '<div class="poph"><b>' + popTitleHtml(rk, label) + '</b><span class="popv">' + numHtml(rk, cur) + '</span></div>' +
     rangeBarHtml(readingName, cur, dom) +
-    trendHtml(rk, hist) +
-    (spark ? '<div class="popspark">' + spark + '</div><div class="popsparkfoot"><span class="popsl">last ' + vals.length + ' tests</span>' + histBtnsHtml() + '</div>' : '');
+    trendHtml(rk, all) +
+    (all.length > 1 ? (spark ? '<div class="popspark">' + spark + '</div>' : '') +
+      '<div class="popsparkfoot"><span class="popsl">' + esc(footText) + '</span>' + histBtnsHtml() + '</div>' : '');
 }
 function popContentPred(rk, readingName, label, from, to, gid){
   var pred = DATA.preds && DATA.preds[gid];
@@ -2075,7 +2100,7 @@ function renderPopHtml(chip){
   return popContentReal(rk, col[2], col[1], cur, ms);
 }
 function openPopFor(chip, pinned){
-  if (chip !== popCurChip){ popHistN = POP_HIST_OPTIONS[0]; if (!mkBusy) mkMsg = ''; if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== trkEdit){ trkEdit = -1; trkMsg = ''; } }   // switching to a different chip: back to the defaults
+  if (chip !== popCurChip){ popHistN = popHistStart(); if (!mkBusy) mkMsg = ''; if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== trkEdit){ trkEdit = -1; trkMsg = ''; } }   // switching to a different chip: back to the defaults
   popCurChip = chip;
   var html = renderPopHtml(chip);
   if (!html) return;
@@ -2988,7 +3013,10 @@ function saveAliases(){
 // The Manager's notice: a dot on the ··· button and "Volunteers (2 waiting)" in its menu (opens the screen on Home)
 function setWaiting(n){
   n = Number(n) || 0;
-  $('moreBtn').classList.toggle('has-dot', n > 0); $('moreBtn').setAttribute('data-count', n > 9 ? '9+' : String(n));
+  ['moreBtn', 'eMore'].forEach(function(id){   // the top bar's ··· and the round ··· of the home-screen app
+    var b = $(id); if (!b) return;
+    b.classList.toggle('has-dot', n > 0); b.setAttribute('data-count', n > 9 ? '9+' : String(n));
+  });
   $('mnVols').innerHTML = 'Volunteers' + (n ? '&nbsp;<span style="color:var(--red);font-weight:600">(' + n + ' waiting)</span>' : '');
 }
 function openChgPw(){
