@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck","accessAliases"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
@@ -418,6 +418,9 @@ body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
 body:not(.is-vol) .volonly{display:none !important}
+#moreBtn{position:relative}
+#moreBtn.has-dot::after{content:'';position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#d9534f;border:2px solid var(--card)}
+#akaIn{width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font-size:16px}
 /* members: test readings only - no date picker, view switcher, predictions or tracker cards */
 body.lvl-member .mchips,body.lvl-member .controls,body.lvl-member #trk{display:none !important}
 /* signed out: no readings at all, just the sign-in screen */
@@ -1221,7 +1224,8 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
-  <button type="button" class="mrow priv volonly" id="mnChgPw">Change my password</button>
+  <button type="button" class="mrow priv mgr" id="mnVols">Volunteers</button>
+  <button type="button" class="mrow priv volonly" id="mnChgPw">My login</button>
   <button type="button" class="mrow priv" id="mnLock" style="border-bottom:0">Sign out</button>
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
@@ -1281,7 +1285,13 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 </dialog>
 
 <dialog id="chgDlg">
-  <h2>Change my password</h2>
+  <h2>My login</h2>
+  <label for="akaIn">Also goes by (other first names)</label>
+  <input type="text" id="akaIn" placeholder="Like Kayti, Kat" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+  <p class="hint" style="margin:6px 0 0">You can sign in with any of these and your last name.</p>
+  <div class="row" style="margin-top:8px"><button class="btn" type="button" id="akaSave">Save names</button></div>
+  <div class="err" id="akaErr" role="alert"></div>
+  <h2 style="margin-top:18px">Change password</h2>
   <p class="hint" style="margin:0 0 6px">At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
   <form id="chgForm" autocomplete="off">
     <label for="chgCur">Current password</label>
@@ -2889,10 +2899,11 @@ function setUnlocked(on, level, who){
 function applyUnlocked(data, code, res){
   DATA = data; CODE = code; setUnlocked(true, (res && res.level) || data.level, res && res.who); renderAll();
   try { localStorage.setItem('rocChemData', JSON.stringify({ level: LEVEL, who: WHO, data: data })); } catch(e){}
-  document.body.classList.toggle('is-vol', !!(res && res.vol));   // own login: Change my password
+  document.body.classList.toggle('is-vol', !!(res && res.vol));   // own login: My login
+  setWaiting(res && (res.level || data.level) === 'manager' ? res.pending : 0);
 }
 function lockNow(msg){
-  CODE = ''; forgetCode(); document.body.classList.remove('is-vol');
+  CODE = ''; forgetCode(); document.body.classList.remove('is-vol'); setWaiting(0);
   closePop();
   DATA.tests = []; DATA.chems = []; DATA.trackers = []; DATA.stock = {}; DATA.hasPrices = false; DATA.priceRows = []; DATA.chemicals = []; DATA.priceWarnings = []; DATA.noteIssues = []; DATA.calc = null; DATA.locked = true;
   $('printView').innerHTML = '';
@@ -2964,7 +2975,23 @@ function showStep(as){
 }
 // Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
 // hands back a new pass, kept in place of the old one (the old pass stops working: their other devices sign out).
+// My login: "Also goes by" names (accessAliases in Access), then Change password below
+function loadAliases(){
+  $('akaIn').value = ''; $('akaErr').textContent = ''; $('akaErr').style.color = ''; $('akaSave').disabled = true;
+  serverCall('accessAliases', [CODE], function(r){ $('akaSave').disabled = false; if (r && r.ok) $('akaIn').value = r.aliases || ''; else $('akaErr').textContent = (r && r.message) || ''; }, function(){ $('akaSave').disabled = false; });
+}
+function saveAliases(){
+  $('akaErr').textContent = ''; $('akaErr').style.color = ''; $('akaSave').disabled = true;
+  serverCall('accessAliases', [CODE, $('akaIn').value], function(r){ $('akaSave').disabled = false; if (r && r.ok){ $('akaIn').value = r.aliases || ''; $('akaErr').style.color = 'var(--green)'; $('akaErr').textContent = 'Saved.'; } else $('akaErr').textContent = (r && r.message) || 'Could not save.'; }, function(x){ $('akaSave').disabled = false; $('akaErr').textContent = 'Something went wrong (' + ((x && x.message) || x) + ').'; });
+}
+// The Manager's notice: a dot on the ··· button and "Volunteers (2 waiting)" in its menu (opens the screen on Home)
+function setWaiting(n){
+  n = Number(n) || 0;
+  $('moreBtn').classList.toggle('has-dot', n > 0);
+  $('mnVols').textContent = n ? 'Volunteers (' + n + ' waiting)' : 'Volunteers';
+}
 function openChgPw(){
+  loadAliases();
   ['chgCur', 'chgNew', 'chgNew2'].forEach(function(id){ $(id).value = ''; pwShow($(id), false); });
   $('chgErr').textContent = ''; $('chgErr').style.color = ''; $('chgGo').disabled = false;
   openDlg('chgDlg');
@@ -3729,6 +3756,8 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
   $('mnChgPw').addEventListener('click', function(){ closeDlg('menuDlg'); openChgPw(); });
+  $('akaSave').addEventListener('click', saveAliases);
+  $('mnVols').addEventListener('click', function(){ closeDlg('menuDlg'); window.top.location.href = 'https://www.rollingoaksclub.org/?volunteers'; });
   $('chgCancel').addEventListener('click', function(){ closeDlg('chgDlg'); });
   $('chgForm').addEventListener('submit', submitChgPw);
   $('upDet').addEventListener('click', function(e){
