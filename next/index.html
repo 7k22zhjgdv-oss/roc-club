@@ -792,12 +792,12 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
           <p class="mem-note" id="siHint"></p>
           <div class="si-msg" id="siNew" hidden>
             <p>Looks like you're a new volunteer! Would you like to sign up?</p>
-            <div class="si-btns"><button type="button" class="mem-btn" id="signUpBtn">Sign up</button><button type="button" class="mem-cancel" id="siRetry">Try a different name</button></div>
+            <div class="si-btns"><button type="button" class="mem-btn" id="signUpBtn">Sign up</button><button type="button" class="mem-cancel" id="siRetry">Back</button></div>
             <button type="button" class="mem-cancel" id="siShared" style="align-self:flex-start">I'm on the board: use the board password</button>
           </div>
           <div class="si-msg" id="siPending" hidden>
             <p>Your sign-up is waiting for approval. Someone on the board will contact you.</p>
-            <div class="si-btns"><button type="button" class="mem-cancel" id="siRetry2">Try a different name</button></div>
+            <div class="si-btns"><button type="button" class="mem-cancel" id="siRetry2">Back</button></div>
           </div>
           <div class="mem-err" id="pwErr" role="alert"></div>
           <p class="mem-note">This device stays signed in until you tap Sign out.</p>
@@ -1340,7 +1340,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     focusEl(as === 'vol' && !nameIn.value ? nameIn : pwIn);
   }
   nameIn.addEventListener('input', function(){ if (signAs === 'vol' && volPhase !== 'name'){ setPhase('name'); pwErr.textContent = ''; } });
-  function retryName(){ nameIn.value = ''; pwErr.textContent = ''; setPhase('name'); focusEl(nameIn); }
+  function retryName(){ pwErr.textContent = ''; setPhase('name'); focusEl(nameIn); }
   $('siRetry').addEventListener('click', retryName);
   $('siRetry2').addEventListener('click', retryName);
   $('siShared').addEventListener('click', function(){ setPhase('shared'); pwIn.value = ''; focusEl(pwIn); });
@@ -1453,6 +1453,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       if (!r || !r.ok){ $('volErr').textContent = (r && r.message) || 'Could not load the list.'; return; }
       if (r.managers > r.maxManagers) list.appendChild(el('div', 'vol-warn', r.managers + ' people have Manager level (more than ' + r.maxManagers + '). If that is not on purpose, change the extra ones on the ROC Access sheet.'));
       var pend = r.people.filter(function(p){ return p.level === 'pending'; }), rest = r.people.filter(function(p){ return p.level !== 'pending'; });
+      if (r.notify) list.appendChild(el('div', 'vol-sub', 'Sign-up emails go to ' + r.notify + '.'));
       list.appendChild(el('div', 'vol-h', 'Waiting for approval'));
       if (!pend.length) list.appendChild(el('div', 'vol-empty', 'No one is waiting.'));
       pend.forEach(function(p){ list.appendChild(volCard(p)); });
