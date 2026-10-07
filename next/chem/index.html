@@ -995,6 +995,17 @@ html.app #entryUi.menu #eFab{display:none}
 .eci .ecx{margin-top:7px;font-size:13.5px;color:var(--ink2);line-height:1.45}
 .eci .ecx:empty{display:none}
 .eci .ecx .low{color:var(--red)}
+.ecvs{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px}
+.ecv{display:inline-flex;align-items:baseline;gap:5px;border-radius:9px;padding:4px 9px;background:var(--card);font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums}
+.ecv i{font-style:normal;font-weight:700;font-size:12px;color:var(--ink2)}
+.ecv b{font-size:15px;font-weight:650}
+.ecv small{font-size:12px;color:var(--muted)}
+.ecv.green{background:var(--okT)} .ecv.green i{color:var(--okInk)}
+.ecv.yellow{background:var(--yTint);box-shadow:inset 0 0 0 1.5px var(--yellow)}
+.ecv.red{background:var(--rTint);box-shadow:inset 0 0 0 1.5px var(--red)}
+.ecv.purple{background:color-mix(in srgb,var(--purple) 18%,var(--card));box-shadow:inset 0 0 0 1.5px var(--purple)}
+.ectot{margin:0 0 8px;color:var(--ink2)}
+.ectot .top{font-weight:600;font-size:13px;margin-bottom:4px}
 .ecadd{width:100%;height:46px;border:1.5px dashed var(--glassEdge);border-radius:14px;background:none;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
 #entryMenu .emsub{margin:-6px 0 8px;color:var(--muted);font-size:13px}
@@ -4401,7 +4412,7 @@ document.addEventListener('DOMContentLoaded', function(){
     chem.items = c ? [chemItem(pickFor(c), c)] : []; chem.picking = !c; chem.more = false;
     return '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
       '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
-      '<div id="ecItems"></div><div id="ecPick"></div>' +
+      '<div id="ecItems"></div><div id="ecTot"></div><div id="ecPick"></div>' +
       (c ? '' : '<div class="egrp"><b>Note</b><span>optional</span></div><textarea class="etext" id="eNote" maxlength="1000" placeholder="Anything worth noting"></textarea>');
   }
   function chemDraw(focusI){
@@ -4474,43 +4485,56 @@ document.addEventListener('DOMContentLoaded', function(){
     for (var i = 0; i < 60; i++) { var m = (lo + hi) / 2; if (f(m) > target) hi = m; else lo = m; }
     return (lo + hi) / 2;
   }
+  /** How one addition should move each reading, right after mixing: {d: {fc, ph, ta, ch, cya, bor}, why}. */
   function estimate(c){
     var b = EST_BASE[c.unit], pct = isNum(c.strength) && c.strength > 0 ? Number(c.strength) : /tri-?chlor/i.test(c.product) ? 90 : /di-?chlor/i.test(c.product) ? 56 : null;
-    var fc = b && pct !== null && c.kind !== 'Count' ? c.amount * b * pct * 10 / EST_L : null, out = {main: '', also: [], why: ''};
-    var r1 = function(x){ return Math.round(x * 10) / 10; };
-    if (c.affects === 'fc' && c.dir !== 'down' && fc !== null) out.main = 'FC ' + effNum(r1(fc), 'FC') + ' ppm';
-    var borax = c.kind !== 'Liquid' && /borax/i.test(c.product) && (c.unit === 'lb' || c.unit === 'oz');
-    if (borax) {
+    var fc = b && pct !== null && c.kind !== 'Count' ? c.amount * b * pct * 10 / EST_L : null, d = {}, why = '';
+    if (c.affects === 'fc' && c.dir !== 'down' && fc !== null) d.fc = fc;
+    if (c.kind !== 'Liquid' && /borax/i.test(c.product) && (c.unit === 'lb' || c.unit === 'oz')) {
       var mol = c.amount * b / 381.37, bor = mol * 4 * 61.83 * 1000 / EST_L, bta = mol * 2 * 50000 / EST_L;
-      if (c.affects === 'bor') out.main = 'Borates ' + effNum(r1(bor), 'BOR') + ' ppm';
+      d.bor = bor; d.ta = bta;
       var ph0 = estLast('ph', c.ms), ta0 = estLast('ta', c.ms);
-      if (ph0 !== null && ta0 !== null) { var p2 = phAfter(ph0, ta0, estLast('cya', c.ms, 45 * 86400000), estLast('bor', c.ms, 45 * 86400000), bta, bor); if (p2 !== null && p2 > ph0) out.also.push('pH ' + effNum(Math.round((p2 - ph0) * 100) / 100, 'pH')); }
-      if (bta > 0) out.also.push('TA ' + effNum(r1(bta), 'TA'));
+      if (ph0 !== null && ta0 !== null) { var p2 = phAfter(ph0, ta0, estLast('cya', c.ms, 45 * 86400000), estLast('bor', c.ms, 45 * 86400000), bta, bor); if (p2 !== null && p2 > ph0) d.ph = p2 - ph0; }
     }
     if (c.affects === 'ph' && c.dir === 'down' && c.kind === 'Liquid' && pct !== null && b) {
       var ta = c.amount * b * (1 + 0.005 * pct) * pct / 100 / 36.46 * 50000 / EST_L;
       var ph = estLast('ph', c.ms), ta1 = estLast('ta', c.ms);
-      var d = ph !== null && ta1 !== null ? phDrop(ph, ta1, estLast('cya', c.ms), ta) : null;
-      if (d !== null) out.main = 'pH ' + effNum(-r1(d), 'pH').replace(/0$/, '');
-      else out.why = 'No pH estimate: it needs a pH and TA test from the last 14 days.';
-      out.also.push('TA ' + effNum(-r1(ta), 'TA'));
+      var drop = ph !== null && ta1 !== null ? phDrop(ph, ta1, estLast('cya', c.ms), ta) : null;
+      if (drop !== null) d.ph = -drop; else why = 'No pH estimate: it needs a pH and TA test from the last 14 days.';
+      d.ta = -ta;
     }
-    if (fc !== null && c.kind !== 'Liquid' && /cal-?hypo/i.test(c.product)) out.also.push('CH ' + effNum(r1(fc * 100 / 141.8), 'CH'));
-    if (fc !== null && c.kind !== 'Liquid' && /tri-?chlor/i.test(c.product)) out.also.push('CYA ' + effNum(r1(fc * 129 / 212.7), 'CYA'));
-    else if (fc !== null && c.kind !== 'Liquid' && /di-?chlor/i.test(c.product)) out.also.push('CYA ' + effNum(r1(fc * 129 / 141.8), 'CYA'));
-    return out;
+    if (fc !== null && c.kind !== 'Liquid' && /cal-?hypo/i.test(c.product)) d.ch = fc * 100 / 141.8;
+    if (fc !== null && c.kind !== 'Liquid' && /tri-?chlor/i.test(c.product)) d.cya = fc * 129 / 212.7;
+    else if (fc !== null && c.kind !== 'Liquid' && /di-?chlor/i.test(c.product)) d.cya = fc * 129 / 141.8;
+    return {d: d, why: why};
+  }
+  // From the last test to where the reading should land: "FC 3.5 → 11.3" in that reading's range color; just "+7.8" without a test.
+  var EFF_ORDER = ['fc', 'ph', 'ta', 'ch', 'cya', 'bor'];
+  var EFF_AGE = {fc: 14, ph: 14, ta: 45, ch: 45, cya: 45, bor: 45};
+  function effRound(k, v){ return k === 'ph' || k === 'fc' || Math.abs(v) < 10 ? Math.round(v * 10) / 10 : Math.round(v); }
+  function effChips(d, ms){
+    return EFF_ORDER.filter(function(k){ return isNum(d[k]) && Math.abs(d[k]) >= (k === 'ph' ? 0.05 : 0.05); }).map(function(k){
+      var col = COLBY[k], from = estLast(k, ms, EFF_AGE[k] * 86400000), dv = effRound(k, d[k]);
+      var sign = (dv < 0 ? '−' : '+') + fmtNum(Math.abs(dv));
+      if (from === null) return '<span class="ecv"><i>' + col[3] + '</i><b>' + sign + '</b></span>';
+      var to = effRound(k, from + d[k]); if (to < 0) to = 0;
+      var tone = col[2] ? colorOf(col[2], to) : '';
+      return '<span class="ecv ' + tone + '" title="' + esc(col[1] + ': last test ' + fmtNum(from) + ', ' + sign + ' from this') + '"><i>' + col[3] + '</i><b>' + fmtNum(from) + ' → ' + fmtNum(to) + '</b><small>' + sign + '</small></span>';
+    }).join('');
   }
   function chemLine(it, ms){
     var a = chemAmt(it); if (!(a > 0)) return '';
     var kind = it.info.kind || UNIT_KIND[it.unit], lines = [], sk = slowKind(it);
     var c = {product: it.name, amount: a, unit: it.unit, kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
       strength: it.info.sMode === 'entry' ? chemPct(it) : it.info.sMode === 'fixed' ? Number(it.info.strength) : ''};
+    it.eff = null;
     if (sk === 'tri' || it.slow) lines.push('Slow feed: reaches the pool over several days, so no instant estimate.');
     else {
-      var e = estimate(c), parts = (e.main ? ['<b>' + esc(e.main) + '</b>'] : []).concat(e.also.map(esc));
-      if (parts.length) lines.push('Estimate ' + parts.join(' · ') + ' <span style="color:var(--muted)">(right after mixing)</span>');
+      var e = estimate(c), chips = effChips(e.d, ms);
+      it.eff = e.d;
+      if (chips) lines.push('<div class="ecvs">' + chips + '</div>');
       if (e.why) lines.push(esc(e.why));
-      if (!parts.length && !e.why) { var w = (DATA.chems || []).filter(function(x){ return x.what && String(x.product).toLowerCase() === it.name.toLowerCase(); })[0]; if (w) lines.push(esc(w.what)); }
+      if (!chips && !e.why) { var w = (DATA.chems || []).filter(function(x){ return x.what && String(x.product).toLowerCase() === it.name.toLowerCase(); })[0]; if (w) lines.push(esc(w.what)); }
     }
     var key = it.slow && /cal-?hypo/i.test(it.name) ? 'cal-hypo puck' : it.name.toLowerCase(), st = (DATA.stock || {})[key];
     if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[it.unit]) {
@@ -4521,11 +4545,16 @@ document.addEventListener('DOMContentLoaded', function(){
       lines.push(after < -0.05 ? '<span class="low">More than the ' + rnd(Math.max(left, 0)) + ' ' + st.unit + ' in stock. Check the amount (or Adjust stock in Prices).</span>'
         : 'Stock after this: about ' + rnd(Math.max(after, 0)) + ' ' + st.unit);
     }
-    return lines.join('<br>');
+    return lines.map(function(l){ return l.indexOf('<div') === 0 ? l : '<div>' + l + '</div>'; }).join('');
   }
   function chemRefresh(){
     var w = when(), ms = w ? w.ms : Date.now();
     chem.items.forEach(function(it, i){ var el = $('ecx_' + i); if (el) el.innerHTML = chemLine(it, ms); });
+    // two or more chemicals: what they do together (slow feed left out, it doesn't land at once)
+    var sum = {}, n = 0;
+    chem.items.forEach(function(it){ if (it.eff && Object.keys(it.eff).length) { n++; Object.keys(it.eff).forEach(function(k){ sum[k] = (sum[k] || 0) + it.eff[k]; }); } });
+    var tot = $('ecTot'), chips = n > 1 ? effChips(sum, ms) : '';
+    if (tot) tot.innerHTML = chips ? '<div class="ecsi ectot"><div class="top"><span>All together</span></div><div class="ecvs">' + chips + '</div></div>' : '';
     if (!busy && !editing) save.textContent = chem.items.length > 1 ? 'Save ' + chem.items.length + ' chemicals' : KIND.chem[2];
     save.disabled = busy || !chem.items.length || chem.items.some(function(it){ return !(chemAmt(it) > 0); });
   }
