@@ -1267,8 +1267,7 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
   <div id="siPick">
     <h2 class="si-q">Who's signing in?</h2>
     <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
-    <button type="button" class="si-big" data-as="vol">Volunteer<span>I have my own password</span></button>
-    <button type="button" class="si-big" data-as="board">Board or manager<span>Shared board password</span></button>
+    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>I sign in with my name and password</span></button>
     <div class="row"><button class="btn" type="button" id="pickCancel">Cancel</button></div>
   </div>
   <form id="unlockForm" autocomplete="off" hidden>
@@ -2876,11 +2875,10 @@ function pwShow(inp, on){
 }
 // Sign in: first "Who's signing in?" (three big buttons), then one simple box for that choice. The choice is
 // remembered on this device (rocSignAs; on the website shared by all pages), so next time it opens straight on step 2.
-// Volunteers type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
+// Volunteers and Board type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
 var SIGN_AS = {
   member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
-  vol: {title: 'Volunteer', label: 'Your password', hint: '', secret: true},
-  board: {title: 'Board or manager', label: 'Board or manager password', hint: '', secret: true}
+  vol: {title: 'Volunteer or board', label: 'Your password', hint: 'Board: your name and the board password.', secret: true}
 };
 var signAs = '';
 function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
@@ -2898,7 +2896,7 @@ function showStep(as){
   setTimeout(function(){ try { (as === 'vol' && !$('nameIn').value ? $('nameIn') : inp).focus(); } catch(e){} }, 50);
 }
 function openUnlock(){
-  var as = stored('rocSignAs');
+  var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
   if (SIGN_AS[as]) showStep(as); else showPick();
   openDlg('unlockDlg');
 }
