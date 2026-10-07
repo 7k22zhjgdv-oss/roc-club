@@ -2939,10 +2939,11 @@ function submitChgPw(e){
       err.textContent = (r && r.message) || 'Could not change the password.';
       return;
     }
-    if (r.pass){ CODE = r.pass; saveCode(r.pass, r); }
+    if (!r.pass){ err.style.color = 'var(--green)'; err.textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ closeDlg('chgDlg'); lockNow(''); }, 2500); return; }
+    CODE = r.pass; saveCode(r.pass, r);
     err.style.color = 'var(--green)'; err.textContent = 'Password changed.';
     setTimeout(function(){ closeDlg('chgDlg'); }, 1500);
-  }, function(x){ b.disabled = false; err.textContent = 'Could not reach the server: ' + (x && x.message || x); });
+  }, function(x){ b.disabled = false; err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'; });
 }
 function openUnlock(){
   var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
