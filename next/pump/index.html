@@ -726,12 +726,12 @@
     <div class="si-msg" id="siNew" hidden>
       <p>Looks like you're a new volunteer! Would you like to sign up?</p>
       <button type="button" class="primary" id="signUpBtn">Sign up</button>
-      <button type="button" class="si-link" id="siRetry">Try a different name</button>
+      <button type="button" class="si-link" id="siRetry">Back</button>
       <button type="button" class="si-link" id="siShared">I'm on the board: use the board password</button>
     </div>
     <div class="si-msg" id="siPending" hidden>
       <p>Your sign-up is waiting for approval. Someone on the board will contact you.</p>
-      <button type="button" class="si-link" id="siRetry2">Try a different name</button>
+      <button type="button" class="si-link" id="siRetry2">Back</button>
     </div>
     <div class="err" id="signErr" role="alert"></div>
     <p class="si-hint">This device stays signed in until you tap Sign out.</p>
@@ -2298,7 +2298,7 @@ window.rocStartPump = function (DATA) {
     $('siShared').textContent = sharedOk === 'board' ? 'I\'m on the board: use the board password' : 'I\'m the manager: use the manager password';
     $('nameIn').setAttribute('enterkeyhint', ph === 'name' ? 'go' : 'next');
   }
-  function retryName(){ $('nameIn').value = ''; $('signErr').textContent = ''; setPhase('name'); $('nameIn').focus(); }
+  function retryName(){ $('signErr').textContent = ''; setPhase('name'); $('nameIn').focus(); }
   function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
   function showPick(){ signAs = ''; $('siPick').hidden = false; $('signForm').hidden = true; $('signErr').textContent = ''; }
   function showStep(as){
