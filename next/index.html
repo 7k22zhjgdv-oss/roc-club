@@ -1324,10 +1324,11 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
         if (r && r.why === 'wrong'){ chgDlg.close(); signOut(); return; }
         return fail(r && r.message);
       }
-      if (r.pass){ CODE = r.pass; saveCode(r.pass, r.level, r.who); }
+      if (!r.pass){ $('chgOk').textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ chgDlg.close(); signOut(); }, 2500); return; }
+      CODE = r.pass; saveCode(r.pass, r.level, r.who);
       $('chgOk').textContent = 'Password changed.';
       setTimeout(function(){ chgDlg.close(); }, 1500);
-    }).withFailureHandler(function(){ fail(); }).accessChangePassword(CODE, cur, n1);
+    }).withFailureHandler(function(x){ fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); }).accessChangePassword(CODE, cur, n1);
   });
 
   $('chemRelockBtn').addEventListener('click', function(){ if (document.body.classList.contains('editing')) endEdit(true); signOut(); });
