@@ -9,10 +9,10 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","volunteerList","volunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","volunteerList","volunteerAction","accessNameCheck"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
@@ -260,7 +260,10 @@ a.give-btn{text-decoration:none;display:inline-block}
 .si-big:hover,.si-big:focus-visible{border-color:var(--oak);outline:none}
 .si-back{align-self:flex-start;background:none;border:none;color:var(--oak);font:600 .95rem var(--font);cursor:pointer;padding:4px 0}
 .si-pick,.si-step{display:flex;flex-direction:column;gap:10px}
-.si-pick[hidden],.si-step[hidden]{display:none}
+.si-pick[hidden],.si-step[hidden],.pw-wrap[hidden],.si-msg[hidden],.mem-row[hidden]{display:none}
+.si-msg{display:flex;flex-direction:column;gap:10px;border:1px solid var(--glass-line);border-radius:12px;padding:12px 14px;background:rgba(255,248,236,.06)}
+.si-msg p{margin:0!important;color:var(--paper)!important;font-size:.98rem!important}
+.si-btns{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .si-step .mem-in{flex:none}
 .mem-cancel{background:none;border:none;color:var(--paper-2);font:.9rem var(--font);text-decoration:underline;cursor:pointer;padding:8px 4px}
 .mem-btn:disabled{opacity:.6;cursor:default}
@@ -787,7 +790,15 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
             <button type="button" class="mem-cancel" id="pwCancel">Cancel</button>
           </div>
           <p class="mem-note" id="siHint"></p>
-          <button type="button" class="mem-cancel" id="signUpBtn" style="align-self:flex-start" hidden>New volunteer? Sign up</button>
+          <div class="si-msg" id="siNew" hidden>
+            <p>Looks like you're a new volunteer! Would you like to sign up?</p>
+            <div class="si-btns"><button type="button" class="mem-btn" id="signUpBtn">Sign up</button><button type="button" class="mem-cancel" id="siRetry">Try a different name</button></div>
+            <button type="button" class="mem-cancel" id="siShared" style="align-self:flex-start">I'm on the board: use the board password</button>
+          </div>
+          <div class="si-msg" id="siPending" hidden>
+            <p>Your sign-up is waiting for approval. Someone on the board will contact you.</p>
+            <div class="si-btns"><button type="button" class="mem-cancel" id="siRetry2">Try a different name</button></div>
+          </div>
           <div class="mem-err" id="pwErr" role="alert"></div>
           <p class="mem-note">This device stays signed in until you tap Sign out.</p>
         </div>
@@ -1291,9 +1302,24 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // Volunteers and Board type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
   var SIGN_AS = {
     member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
-    vol: {title: 'Volunteer or board', label: 'Your password', hint: 'Board: your name and the board password.', secret: true}
+    vol: {title: 'Volunteer or board', label: 'Your password', hint: '', secret: true}
   };
-  var signAs = '', nameIn = $('nameIn');
+  // Volunteer or board asks the name first (accessNameCheck): known -> password, pending -> waiting note, new -> offer the
+  // sign-up (and, while a shared password still works with any name, "use the board password"). A remembered name
+  // (rocLoginName, from a sign-in that worked) goes straight to the password.
+  var signAs = '', nameIn = $('nameIn'), volPhase = 'pw', sharedOk = '';
+  function setPhase(ph){
+    var vol = signAs === 'vol', showPw = !vol || ph === 'pw' || ph === 'shared';
+    volPhase = ph;
+    $('pwLabel').hidden = !showPw; pwIn.parentNode.hidden = !showPw;
+    $('pwSubmit').parentNode.hidden = vol && (ph === 'new' || ph === 'pending');
+    $('pwSubmit').textContent = vol && ph === 'name' ? 'Next' : 'Sign in';
+    $('siNew').hidden = !(vol && ph === 'new'); $('siPending').hidden = !(vol && ph === 'pending');
+    $('pwLabel').textContent = !vol ? SIGN_AS[signAs].label : ph === 'shared' ? (sharedOk === 'board' ? 'Board or manager password' : 'Manager password') : 'Your password';
+    $('siShared').hidden = !sharedOk;
+    $('siShared').textContent = sharedOk === 'board' ? 'I\'m on the board: use the board password' : 'I\'m the manager: use the manager password';
+    nameIn.setAttribute('enterkeyhint', ph === 'name' ? 'go' : 'next');
+  }
   function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
   function focusEl(el){ try { el.focus({preventScroll: true}); } catch(x){ el.focus(); } }
   function showPick(){
@@ -1304,14 +1330,20 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var c = SIGN_AS[as]; signAs = as;
     $('siPick').hidden = true; $('siStep').hidden = false;
     $('siTitle').textContent = c.title; $('pwLabel').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
-    $('nameRow').hidden = as !== 'vol'; $('signUpBtn').hidden = as !== 'vol';
+    $('nameRow').hidden = as !== 'vol';
     pwIn.value = ''; pwErr.textContent = ''; pwShow(pwIn, false);
     pwIn.classList.toggle('secret', c.secret);
     pwIn.parentNode.querySelector('.pw-show').hidden = !c.secret;
     pwIn.setAttribute('autocapitalize', as === 'member' ? 'characters' : 'off');
     if (as === 'vol' && !nameIn.value) nameIn.value = stored('rocLoginName');
+    setPhase(as === 'vol' && !nameIn.value ? 'name' : 'pw');
     focusEl(as === 'vol' && !nameIn.value ? nameIn : pwIn);
   }
+  nameIn.addEventListener('input', function(){ if (signAs === 'vol' && volPhase !== 'name'){ setPhase('name'); pwErr.textContent = ''; } });
+  function retryName(){ nameIn.value = ''; pwErr.textContent = ''; setPhase('name'); focusEl(nameIn); }
+  $('siRetry').addEventListener('click', retryName);
+  $('siRetry2').addEventListener('click', retryName);
+  $('siShared').addEventListener('click', function(){ setPhase('shared'); pwIn.value = ''; focusEl(pwIn); });
   Array.prototype.forEach.call(document.querySelectorAll('.si-big'), function(b){
     b.addEventListener('click', function(){ showStep(b.getAttribute('data-as')); });
   });
@@ -1319,7 +1351,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   $('pickCancel').addEventListener('click', function(){ openSignIn(false); });
   nameIn.addEventListener('keydown', function(e){
     if (e.key === 'Escape') openSignIn(false);
-    else if (e.key === 'Enter'){ e.preventDefault(); pwIn.focus(); }
+    else if (e.key === 'Enter'){ e.preventDefault(); if (volPhase === 'name') $('pwSubmit').click(); else pwIn.focus(); }
   });
   // Sign in opens right in the Members and Volunteers panel (no popup)
   function openSignIn(open){
@@ -1346,6 +1378,18 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     var name = as === 'vol' ? nameIn.value.trim().replace(/\s+/g, ' ') : '';
     pwErr.textContent = '';
     if (as === 'vol' && name.indexOf(' ') < 0) { pwErr.textContent = 'Enter your first and last name.'; nameIn.focus(); return; }
+    if (as === 'vol' && (volPhase === 'new' || volPhase === 'pending')) return;
+    if (as === 'vol' && volPhase === 'name') {
+      $('pwSubmit').disabled = true;
+      google.script.run.withSuccessHandler(function(r){
+        $('pwSubmit').disabled = false;
+        if (!r || !r.ok) { pwErr.textContent = (r && r.message) || 'Something went wrong. Try again.'; return; }
+        sharedOk = r.shared || '';
+        setPhase(r.state === 'known' ? 'pw' : r.state === 'pending' ? 'pending' : 'new');
+        if (r.state === 'known') focusEl(pwIn);
+      }).withFailureHandler(function(){ $('pwSubmit').disabled = false; setPhase('pw'); focusEl(pwIn); }).accessNameCheck(name);
+      return;
+    }
     if (!code) { pwErr.textContent = as === 'member' ? 'Enter your pool key number.' : 'Enter your password.'; pwIn.focus(); return; }
     if (name) code = name + '\n' + code;
     $('pwSubmit').disabled = true;
@@ -1361,10 +1405,20 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   var joinVolDlg = $('joinVolDlg');
   $('signUpBtn').addEventListener('click', function(){
     ['jvName', 'jvEmail', 'jvPw', 'jvPw2'].forEach(function(id){ $(id).value = ''; });
+    $('jvName').value = nameIn.value.trim();
     pwShow($('jvPw'), false); pwShow($('jvPw2'), false);
     $('jvErr').textContent = ''; $('jvOk').textContent = ''; $('jvGo').disabled = false; $('jvGo').hidden = false; $('jvCancel').textContent = 'Cancel';
-    joinVolDlg.showModal(); $('jvName').focus();
+    joinVolDlg.showModal(); ($('jvName').value ? $('jvEmail') : $('jvName')).focus();
   });
+  // ?signup (from the sign-up link on Chemistry / Pump, which leave the typed name in rocSignUpName): open the sign-up
+  if (/[?&]signup\b/.test(location.search)) {
+    try { history.replaceState(null, '', location.pathname); } catch(x){}
+    setTimeout(function(){
+      openSignIn(true); showStep('vol'); nameIn.value = stored('rocSignUpName');
+      try { localStorage.removeItem('rocSignUpName'); } catch(x){}
+      $('signUpBtn').click();
+    }, 300);
+  }
   $('jvCancel').addEventListener('click', function(){ joinVolDlg.close(); });
   $('joinVolForm').addEventListener('submit', function(e){
     e.preventDefault();
@@ -1410,7 +1464,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   function volCard(p){
     var card = el('div', 'vol-card'), btns = el('div', 'vol-btns');
     card.appendChild(el('div', 'vol-name', p.name));
-    var sub = (LVN[p.level] || 'Member') + (p.email ? ' · ' + p.email : '');
+    var sub = (LVN[p.level] || 'Member') + (p.level !== 'pending' && p.level !== 'manager' ? ' · ' + (p.edit ? 'can add readings and notes' : 'view only') : '') + (p.email ? ' · ' + p.email : '');
     if (p.status && p.status !== 'OK' && p.level !== 'pending' && p.level !== 'paused') sub += ' · ' + p.status;
     card.appendChild(el('div', 'vol-sub', sub));
     function b(label, fn, primary){ var x = el('button', primary ? 'primary' : '', label); x.type = 'button'; x.addEventListener('click', fn); btns.appendChild(x); }
@@ -1435,6 +1489,9 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       } else {
         var other = p.level === 'board' ? 'member' : 'board';
         b('Make ' + LVN[other], function(){ act({action: 'level', level: other}, function(){ return p.name + ' is now ' + LVN[other] + '.'; }); });
+        b(p.edit ? 'Make view only' : 'Allow adding readings', function(){
+          act({action: 'edit', edit: !p.edit}, function(){ return p.edit ? p.name + ' can now only view.' : p.name + ' can add readings and notes again.'; });
+        });
         b('Pause', function(){ act({action: 'pause'}, function(){ return p.name + ' is paused and signed out.'; }, 'Pause ' + p.name + '? They are signed out and can\'t sign in until you unpause them.'); });
       }
       b('Reset password', function(){
