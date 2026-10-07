@@ -934,7 +934,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 
 <dialog id="joinVolDlg" class="pwdlg">
   <h3>Sign up to volunteer</h3>
-  <p>The manager looks at each sign-up. You'll get an email when you're approved, and then you sign in with your name and this password.</p>
+  <p>Thank you so much for volunteering with us! It takes a neighborhood to keep this place running. Someone on the board will contact you. Once you're approved, you sign in with your name and this password.</p>
   <form id="joinVolForm" autocomplete="off">
     <label for="jvName">First and last name</label>
     <input type="text" class="plain" id="jvName" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
@@ -1378,13 +1378,13 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     google.script.run.withSuccessHandler(function(r){
       $('jvGo').disabled = false;
       if (!r || !r.ok){ err.textContent = (r && r.message) || 'Something went wrong. Try again.'; return; }
-      $('jvOk').textContent = 'Thanks! The manager will email you when you\'re approved.';
+      $('jvOk').textContent = 'Thank you! Someone on the board will contact you soon.';
       $('jvGo').hidden = true; $('jvCancel').textContent = 'Close';
       try { localStorage.setItem('rocSignAs', 'vol'); localStorage.setItem('rocLoginName', name); } catch(x){}
       nameIn.value = name;
     }).withFailureHandler(function(x){
       $('jvGo').disabled = false;
-      err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). If you get no email in a few days, ask the manager.';
+      err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). If no one contacts you in a few days, please let a board member know.';
     }).volunteerSignUp(name, email, p1);
   });
 
