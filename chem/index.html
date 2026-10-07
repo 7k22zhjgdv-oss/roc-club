@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
@@ -975,6 +975,38 @@ html.app #entryUi.menu #eFab{display:none}
 .erec .r b{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
 .erec .r .g{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink2)}
 .erec .none{padding:8px 4px;font-size:13px;color:var(--muted)}
+/* Add chemical panel (2026-10-07): chemical buttons, then one block per chemical (amount + unit, strength, slow feeder, estimate, stock) */
+.ecpick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;container-type:inline-size}
+.ecpick button{height:48px;min-width:0;border:1.5px solid transparent;border-radius:14px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);font:inherit;font-size:14.5px;font-size:min(15px,3.9cqi);font-weight:600;text-align:left;padding:0 9px;cursor:pointer;line-height:1.2;display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;letter-spacing:-.01em}
+.ecpick button i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--c)}
+.ecpick button.more{background:var(--glassFill);color:var(--ink2);font-weight:500;justify-content:center}
+.eci{border-radius:14px;background:color-mix(in srgb,var(--c) 10%,transparent);border:1.5px solid color-mix(in srgb,var(--c) 30%,transparent);padding:8px 10px 10px;margin-bottom:8px}
+.eci .ech{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;color:var(--ink)}
+.eci .ech i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.eci .ech span{flex:1;min-width:0}
+.eci .ech button{flex:none;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:4px 6px}
+.eci .ecr{display:flex;gap:6px;margin-top:6px;align-items:stretch}
+.eci .etile{flex:1;background:var(--card)}
+.eci .etile.pct{flex:0 0 96px}
+.eci .ecu{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--glassFill)}
+.eci .ecu button{min-width:48px;border:0;border-radius:10px;background:none;font:inherit;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer;padding:0 8px}
+.eci .ecu button[aria-pressed="true"]{background:var(--card);color:var(--c);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.eci .echk{margin-top:8px;font-size:14.5px}
+.eci .ecx{margin-top:7px;font-size:13.5px;color:var(--ink2);line-height:1.45}
+.eci .ecx:empty{display:none}
+.eci .ecx .low{color:var(--red)}
+.ecvs{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px}
+.ecv{display:inline-flex;align-items:baseline;gap:5px;border-radius:9px;padding:4px 9px;background:var(--card);font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums}
+.ecv i{font-style:normal;font-weight:700;font-size:12px;color:var(--ink2)}
+.ecv b{font-size:15px;font-weight:650}
+.ecv small{font-size:12px;color:var(--muted)}
+.ecv.green{background:var(--okT)} .ecv.green i{color:var(--okInk)}
+.ecv.yellow{background:var(--yTint);box-shadow:inset 0 0 0 1.5px var(--yellow)}
+.ecv.red{background:var(--rTint);box-shadow:inset 0 0 0 1.5px var(--red)}
+.ecv.purple{background:color-mix(in srgb,var(--purple) 18%,var(--card));box-shadow:inset 0 0 0 1.5px var(--purple)}
+.ectot{margin:0 0 8px;color:var(--ink2)}
+.ectot .top{font-weight:600;font-size:13px;margin-bottom:4px}
+.ecadd{width:100%;height:46px;border:1.5px dashed var(--glassEdge);border-radius:14px;background:none;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
 #entryMenu .emsub{margin:-6px 0 8px;color:var(--muted);font-size:13px}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
@@ -1644,7 +1676,11 @@ function mkBtn(kind, id){
   return '<button type="button" class="mk" data-mk="' + kind + '" data-mkid="' + esc(id) + '" aria-label="' + (kind === 'slow' ? 'Slow feed setting' : 'Test settings') + '">⋯</button>';
 }
 /** An addition row's right end: its ⋯, or (Manager) an empty slot the same width so the prices stay in one column. */
-function rowMk(c){ return c.canSlow ? mkBtn('slow', c.id) : (isMgr() ? '<span class="mkph" aria-hidden="true"></span>' : ''); }
+function rowMk(c){
+  if (c.canSlow && isMgr()) return mkBtn('slow', c.id);
+  var e = window.entryMk ? entryMk(c, 'chem') : '';     // a dashboard addition: its person (or the Manager) can edit / delete it
+  return e || (isMgr() ? '<span class="mkph" aria-hidden="true"></span>' : '');
+}
 var NOTE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>';
 var MAINT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>';
 function noteCard(n){
@@ -1736,7 +1772,7 @@ function chemIcon(tone){ return '<span class="cic" aria-hidden="true">' + CHEM_I
 function chemCard(c){
   return '<div class="card chem r-' + toneOf(c) + '">' + chemIcon(toneOf(c)) + '<div class="cb">' +
     '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>' +
-    '<div class="head"><span class="lhs"><span class="time">' + esc(groupInfo(c).time) + '</span>' + catHtml(c.category) + tagHtml(c) + '</span></div></div></div>';
+    '<div class="head"><span class="lhs"><span class="time">' + esc(groupInfo(c).time) + '</span>' + whoHtml(c) + catHtml(c.category) + tagHtml(c) + '</span></div></div></div>';
 }
 /** Sums the calculations of several additions that change the same reading (one set of numbers for the block). */
 function blockCalc(items){
@@ -1769,7 +1805,7 @@ function groupCard(items){
     return '<div class="blk r-' + b.tone + '" style="--c:' + cur + '">' + chemIcon(b.tone) + '<div class="cb">' +
       b.items.map(function(c){ return '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>'; }).join('') +
       '<div class="head"><span class="lhs"><span class="time">' + esc(gi.time) + '</span>' +
-      catHtml(b.category) + tagHtml(pseudo) + '</span></div></div></div>';
+      whoHtml(b.items.filter(function(c){ return c.src === 'Dashboard'; })[0]) + catHtml(b.category) + tagHtml(pseudo) + '</span></div></div></div>';
   }).join('');
   return '<div class="card chem chemg">' + html + '</div>';
 }
@@ -1830,8 +1866,8 @@ function popNode(){
       if (e.target.closest && e.target.closest('[data-mkrm]') && popCurChip && popCurChip.hasAttribute('data-mkid')){ mkRemove(popCurChip, e.target.closest('[data-mkrm]').getAttribute('data-mkrm')); return; }
       var ed = e.target.closest && e.target.closest('[data-mked]');
       if (ed && popCurChip && popCurChip.hasAttribute('data-mkid')){
-        var eid = popCurChip.getAttribute('data-mkid'); closePop();
-        if (ed.getAttribute('data-mked') === 'edit') { if (window.entryEdit) entryEdit('test', eid); } else if (window.entryDel) entryDel('test', eid);
+        var eid = popCurChip.getAttribute('data-mkid'), ek = popCurChip.getAttribute('data-mk') === 'slow' ? 'chem' : 'test'; closePop();
+        if (ed.getAttribute('data-mked') === 'edit') { if (window.entryEdit) entryEdit(ek, eid); } else if (window.entryDel) entryDel(ek, eid);
         return;
       }
       var te =e.target && e.target.closest && e.target.closest('[data-trkedit], [data-trkcancel]');
@@ -2052,9 +2088,10 @@ function mkPopHtml(btn){
   return '<div class="poph"><b>' + esc(title) + '</b></div>' +
     '<div style="color:var(--muted)">' + esc(fmtDayRel(it.day) + ', ' + (kind === 'slow' ? groupInfo(it).time : it.time)) + '</div>' +
     (kind === 'store' && it.w && wxFull(it.w) ? '<div style="color:var(--muted)">' + esc(wxFull(it.w)) + '</div>' : '') +
-    (kind === 'store' && it.src === 'Dashboard' && it.by ? '<div style="color:var(--muted)">Entered by ' + esc(fullName(it.by)) + '</div>' : '') +
+    (it.src === 'Dashboard' && it.by ? '<div style="color:var(--muted)">Entered by ' + esc(fullName(it.by)) + '</div>' : '') +
     '<div class="mksw"><span>' + label + '</span><button type="button" class="tgl' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(label) + '" data-mktoggle="' + kind + '"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
     '<div class="trkhint">' + (mkBusy ? 'Saving…' : esc(hint)) + '</div>' +
+    (kind === 'slow' && it.src === 'Dashboard' ? '<div class="mkrm"><button type="button" class="btn" data-mked="edit">Edit</button><button type="button" class="btn danger" data-mked="del">Delete</button></div>' : '') +
     (kind === 'store' ? '<div class="mksw"><span>Hide from members</span><button type="button" class="tgl' + (it.hidden ? ' on' : '') + '" role="switch" aria-checked="' + !!it.hidden + '" aria-label="Hide from members" data-mktoggle="hide"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
       '<div class="trkhint">' + esc(it.hidden ? 'Members do not see this test. Board and manager still do.' : 'Members see tests from the last ' + (DATA.memberDays || 7) + ' days.') + '</div>' +
       (it.src === 'Dashboard'
@@ -4036,9 +4073,9 @@ document.addEventListener('DOMContentLoaded', function(){
       <button type="button" class="eact" id="ePump">
         Log pump reading
         <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span></button>
-      <button type="button" class="eact off" aria-disabled="true" tabindex="-1">
+      <button type="button" class="eact" id="eChemBtn">
         Add chemical
-        <span class="ei44" style="--c:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span></button>
+        <span class="ei44" style="--c:var(--k-fc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span></button>
       <button type="button" class="eact" id="eNoteBtn">
         Add a note
         <span class="ei44" style="--c:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg></span></button>
@@ -4076,10 +4113,12 @@ document.addEventListener('DOMContentLoaded', function(){
   var ICON = {
     test: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg>',
     note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>',
-    pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>'
+    pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>',
+    chem: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg>'
   };
   var WHEN_ICO = '<svg class="wi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
   var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
+    chem: ['chemical', 'var(--k-fc)', 'Save chemical'],
     vols: ['Volunteers', 'var(--red)', '']};
   var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
   ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
@@ -4131,6 +4170,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eTestBtn').addEventListener('click', function(){ openPanel('test', null, $('eTestBtn')); });
   $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
   $('ePump').addEventListener('click', function(){ openPanel('pump', null, $('ePump')); });
+  $('eChemBtn').addEventListener('click', function(){ openPanel('chem', null, $('eChemBtn')); });
   $('eX').addEventListener('click', function(){ closePanel(); });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
@@ -4142,6 +4182,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var can = !!(unlocked && DATA && DATA.canEnter);
     document.body.classList.toggle('can-enter', can);
     $('ePump').style.display = isBrd() ? '' : 'none';               // the Pump Log needs Board or Manager
+    $('eChemBtn').style.display = isBrd() ? '' : 'none';            // so do chemicals (members don't see them at all)
     if (!can){ setOpen(false); if (!grow.hidden) shut(); }
   };
 
@@ -4314,6 +4355,257 @@ document.addEventListener('DOMContentLoaded', function(){
     return {reading: raw === '' ? NaN : Number(raw), readRaw: raw, tank: tr === '' ? '' : Number(tr)};
   }
 
+  // ---- Add chemical (Board and Manager who may enter): saveChems in Code.gs. Pick a chemical (most used in the last 4 months
+  // first), amount + unit (last used), strength for liquid chlorine (last used), slow feeder box where it applies; the estimate
+  // is worked out here the same way as effectFor_ / alsoFor_ in Code.gs, and the stock line from DATA.stock.
+  var chem = {items: [], picking: true, more: false};
+  var CHEM_MAX_ITEMS = 8;
+  var CHEM_MAX = {'gal': 50, 'fl oz': 2000, 'lb': 200, 'oz': 3200, 'unit': 100};            // same as CHEM_ENTRY_MAX
+  var EST_L = 48000 * 3.785411784, EST_BASE = {'gal': 3785.411784, 'fl oz': 29.5735295625, 'lb': 453.59237, 'oz': 28.349523125, 'unit': 1};
+  var STOCK_BASE = {gal: 3785.411784, oz: 29.5735295625, lbs: 453.59237, boxes: 65 * 28.349523125, units: 1};
+  var STOCK_KIND = {gal: 'Liquid', oz: 'Liquid', lbs: 'Dry', boxes: 'Dry', units: 'Count'};
+  var UNIT_KIND = {'gal': 'Liquid', 'fl oz': 'Liquid', 'lb': 'Dry', 'oz': 'Dry', 'unit': 'Count'};
+  // The pool manager's list and order (2026-10-07). [label, product match, slow: true = always pucks / false = never / undefined = box].
+  // Cal-hypo is one product: "Pucks" saves it as slow feed (priced from the Cal-Hypo Puck line), "Granular" as straight in.
+  var CHEM_PICKS = [
+    ['Cal-Hypo - Granular', /^70% cal-?hypo$/i, false],
+    ['Cal-Hypo - Pucks', /^70% cal-?hypo$/i, true],
+    ['Liquid Chlorine', /^liquid chlorine$/i],
+    ['Trichlor - Pucks', /^tri-?chlor$/i, true],
+    ['Muriatic Acid', /muriatic/i],
+    ['Borax', /^borax/i],
+    ['CV-600', /cv-?600/i],
+    ['PR-10000', /pr-?10000/i],
+    ['SC-1000', /sc-?1000/i, undefined, 'more'],
+    ['Dichlor', /^di-?chlor$/i, undefined, 'more']
+  ];
+  /** The picks whose product exists on the sheet: [{label, name, slow, more}]. */
+  function chemList(){
+    var out = [];
+    CHEM_PICKS.forEach(function(p){
+      var c = (DATA.chemicals || []).filter(function(x){ return p[1].test(x.name); })[0];
+      if (c) out.push({label: p[0], name: c.name, slow: p[2], more: p[3] === 'more'});
+    });
+    return out;
+  }
+  /** The pick an existing addition belongs to (for Edit). */
+  function pickFor(c){
+    return chemList().filter(function(p){ return p.name === c.product && (p.slow === undefined || p.slow === !!c.slow || !/cal-?hypo/i.test(p.name)); })[0] || {label: c.product, name: c.product};
+  }
+  /** A chemical's details from the server (addableInfo_), filled in from its past additions or its name when the server
+   *  doesn't send them: the reading it changes, which way, and its strength (liquid chlorine: typed each time). */
+  function chemInfo(name){
+    var low = String(name || '').toLowerCase();
+    var c = (DATA.chemicals || []).filter(function(x){ return x.name.toLowerCase() === low; })[0] || {name: name, kind: ''};
+    if (c.sMode && (c.affects || c.code === undefined)) return c;
+    var info = Object.assign({}, c), last = lastChem(name), n = String(name || '');
+    if (!info.affects) {
+      if (last && last.affects) { info.affects = last.affects; info.dir = last.dir; }
+      else if (/chlor|cal-?hypo/i.test(n)) { info.affects = 'fc'; info.dir = 'up'; }
+      else if (/acid/i.test(n)) { info.affects = 'ph'; info.dir = 'down'; }
+      else if (/borax/i.test(n)) { info.affects = 'bor'; info.dir = 'up'; }
+    }
+    if (!info.kind && last) info.kind = last.kind;
+    if (!info.sMode) {
+      if (/^liquid chlorine$/i.test(n)) info.sMode = 'entry';
+      else {
+        var pct = last && isNum(last.strength) ? last.strength : (n.match(/(\d+(\.\d+)?)\s*%/) || [])[1];
+        if (pct) { info.sMode = 'fixed'; info.strength = Number(pct); } else info.sMode = 'none';
+      }
+    }
+    return info;
+  }
+  function lastChem(name, slow){
+    var low = String(name || '').toLowerCase(), best = null;
+    (DATA.chems || []).forEach(function(c){ if (!c.fromNote && String(c.product || '').toLowerCase() === low && (slow === undefined || !!c.slow === slow) && (!best || c.ms > best.ms)) best = c; });
+    return best;
+  }
+  function chemItem(pick, from){
+    var info = chemInfo(pick.name), units = UNIT_BY_KIND[info.kind] || ['gal', 'fl oz', 'lb', 'oz'], last = lastChem(info.name, pick.slow);
+    var unit = from ? from.unit : last && units.indexOf(last.unit) >= 0 ? last.unit : /orenda/i.test(info.name) && info.kind === 'Liquid' ? 'fl oz' : units[0];
+    if (units.indexOf(unit) < 0) units = units.concat([unit]);
+    var pct = from && isNum(from.strength) ? from.strength : last && isNum(last.strength) ? last.strength : '';
+    return {name: info.name, label: pick.label, fixed: pick.slow !== undefined, info: info, units: units, unit: unit, amount: from ? fmtNum(from.amount) : '', pct: pct === '' ? '' : fmtNum(pct),
+      slow: pick.slow !== undefined ? pick.slow : from ? !!from.slow : false};
+  }
+  function slowKind(it){ return /tri-?chlor/i.test(it.name) ? 'tri' : it.fixed ? '' : /cal-?hypo/i.test(it.name) ? 'puck' : it.info.affects === 'ph' && it.info.dir === 'down' ? 'feeder' : ''; }
+  function chemBody(c){
+    var n = c ? {day: c.day, time: to24(c.time)} : nowLocal();
+    chem.items = c ? [chemItem(pickFor(c), c)] : []; chem.picking = !c; chem.more = false;
+    return '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
+      '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
+      '<div id="ecItems"></div><div id="ecTot"></div><div id="ecPick"></div>' +
+      (c ? '' : '<div class="egrp"><b>Note</b><span>optional</span></div><textarea class="etext" id="eNote" maxlength="1000" placeholder="Anything worth noting"></textarea>');
+  }
+  function chemDraw(focusI){
+    $('ecItems').innerHTML = chem.items.map(function(it, i){
+      var sk = slowKind(it), uw = it.unit === 'unit' ? 'units' : it.unit;
+      return '<div class="eci" style="--c:var(--k-' + priceTone(it.info) + ')"><div class="ech"><i></i><span>' + esc(it.label) + '</span>' +
+          (editing ? '' : '<button type="button" data-crm="' + i + '">Remove</button>') + '</div>' +
+        '<div class="ecr"><label class="etile"><span class="nm">Amount<i>' + esc(uw) + '</i></span><input data-camt="' + i + '" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off" value="' + esc(it.amount) + '"></label>' +
+          (it.units.length > 1 ? '<div class="ecu" role="group" aria-label="Unit">' + it.units.map(function(u){
+            return '<button type="button" data-cu="' + i + '" data-u="' + esc(u) + '" aria-pressed="' + (u === it.unit) + '">' + esc(u) + '</button>'; }).join('') + '</div>' : '') +
+          (it.info.sMode === 'entry' ? '<label class="etile pct"><span class="nm">Strength<i>%</i></span><input data-cpct="' + i + '" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off" value="' + esc(it.pct) + '"></label>' : '') +
+        '</div>' +
+        (sk === 'puck' || sk === 'feeder' ? '<label class="echk"><input type="checkbox" data-cslow="' + i + '"' + (it.slow ? ' checked' : '') + '> ' + (sk === 'puck' ? 'Pucks in the feeder (slow feed)' : 'Through the slow feeder') + '</label>' : '') +
+        '<div class="ecx" id="ecx_' + i + '"></div></div>';
+    }).join('');
+    var h = '';
+    if (!editing && chem.items.length < CHEM_MAX_ITEMS) {
+      if (chem.picking) {
+        var list = chemList(), shown = list.filter(function(p){ return chem.more || !p.more; });
+        h = '<div class="egrp"><b>' + (chem.items.length ? 'Another chemical' : 'Chemical') + '</b><span>tap to choose</span></div><div class="ecpick">' +
+          shown.map(function(c){ return '<button type="button" data-cpick="' + list.indexOf(c) + '" style="--c:var(--k-' + priceTone(c) + ')"><i></i>' + esc(c.label) + '</button>'; }).join('') +
+          (list.length > shown.length ? '<button type="button" class="more" data-cmore="1">More chemicals…</button>' : '') + '</div>';
+      } else h = '<button type="button" class="ecadd" data-cadd="1">+ Add another chemical</button>';
+    }
+    $('ecPick').innerHTML = h;
+    if (focusI !== undefined) { var f = body.querySelector('[data-camt="' + focusI + '"]'); if (f) try { f.focus({preventScroll: true}); f.scrollIntoView({block: 'nearest'}); } catch(e){} }
+    refresh();
+  }
+  function numIn(v){ v = String(v == null ? '' : v).trim().replace(',', '.'); return v === '' ? NaN : Number(v); }
+  function chemAmt(it){ return numIn(it.amount); }
+  function chemPct(it){ return numIn(it.pct); }
+  function chemCheck(){
+    if (!chem.items.length) return 'Choose a chemical first.';
+    for (var i = 0; i < chem.items.length; i++) {
+      var it = chem.items[i], a = chemAmt(it), p = chemPct(it);
+      if (!(a > 0)) return 'Enter how much ' + it.name + ' was added.';
+      if (a > CHEM_MAX[it.unit]) return 'Check the amount of ' + it.name + ' - ' + fmtNum(a) + ' ' + it.unit + ' can\'t be right.';
+      if (it.info.sMode === 'entry' && !(p >= 1 && p <= 40)) return 'Enter the strength (%) of the ' + it.name + '.';
+    }
+    return '';
+  }
+  /** An addition of the same chemical already logged within 30 minutes (Pool Math or dashboard), else null. */
+  function chemDup(ms){
+    var names = chem.items.map(function(it){ return it.name.toLowerCase(); });
+    return (DATA.chems || []).filter(function(c){
+      return !c.fromNote && (!editing || c.id !== editing.id) && Math.abs(c.ms - ms) <= DUP_MS && names.indexOf(String(c.product || '').toLowerCase()) >= 0;
+    })[0] || null;
+  }
+  // -- estimates: the same chemistry as Code.gs (fcPpm_, acidTaPpm_, chPpm_, cyaPpm_, borax, phDrop_, phAfter_)
+  function estLast(f, ms, age){
+    var b = null;
+    (DATA.tests || []).forEach(function(t){ if (t.ms <= ms && ms - t.ms <= (age || 14 * 86400000) && isNum(t[f]) && (!b || t.ms > b.ms)) b = t; });
+    return b ? Number(b[f]) : null;
+  }
+  function cyaAlk(cya, pH){ return cya * (50 / 129) / (1 + Math.pow(10, 6.88 - pH)); }
+  function borAlk(b, pH){ return (b / 61.83) * 50 / (1 + Math.pow(10, 9.24 - pH)); }
+  function carbFrac(p){ var K1 = Math.pow(10, -6.35), K2 = Math.pow(10, -10.33), h = Math.pow(10, -p); return (K1 * h + 2 * K1 * K2) / (h * h + K1 * h + K1 * K2); }
+  function phDrop(pH, ta, cya, ppm){
+    var c0 = cya || 0, carb = ta - cyaAlk(c0, pH); if (carb <= 0) return null;
+    var dic = carb / carbFrac(pH), target = ta - ppm, lo = 3, hi = pH;
+    if (target <= dic * carbFrac(lo) + cyaAlk(c0, lo)) return null;
+    for (var i = 0; i < 60; i++) { var m = (lo + hi) / 2; if (dic * carbFrac(m) + cyaAlk(c0, m) > target) hi = m; else lo = m; }
+    return pH - (lo + hi) / 2;
+  }
+  function phAfter(pH, ta, cya, b0, dAlk, dBor){
+    var c0 = cya || 0; b0 = b0 || 0;
+    var carb = ta - cyaAlk(c0, pH) - borAlk(b0, pH); if (carb <= 0) return null;
+    var dic = carb / carbFrac(pH), target = ta + dAlk, f = function(p){ return dic * carbFrac(p) + cyaAlk(c0, p) + borAlk(b0 + dBor, p); };
+    var lo = 3, hi = 11; if (target <= f(lo) || target >= f(hi)) return null;
+    for (var i = 0; i < 60; i++) { var m = (lo + hi) / 2; if (f(m) > target) hi = m; else lo = m; }
+    return (lo + hi) / 2;
+  }
+  /** How one addition should move each reading, right after mixing: {d: {fc, ph, ta, ch, cya, bor}, why}. */
+  function estimate(c){
+    var b = EST_BASE[c.unit], pct = isNum(c.strength) && c.strength > 0 ? Number(c.strength) : /tri-?chlor/i.test(c.product) ? 90 : /di-?chlor/i.test(c.product) ? 56 : null;
+    var fc = b && pct !== null && c.kind !== 'Count' ? c.amount * b * pct * 10 / EST_L : null, d = {}, why = '';
+    if (c.affects === 'fc' && c.dir !== 'down' && fc !== null) d.fc = fc;
+    if (c.kind !== 'Liquid' && /borax/i.test(c.product) && (c.unit === 'lb' || c.unit === 'oz')) {
+      var mol = c.amount * b / 381.37, bor = mol * 4 * 61.83 * 1000 / EST_L, bta = mol * 2 * 50000 / EST_L;
+      d.bor = bor; d.ta = bta;
+      var ph0 = estLast('ph', c.ms), ta0 = estLast('ta', c.ms);
+      if (ph0 !== null && ta0 !== null) { var p2 = phAfter(ph0, ta0, estLast('cya', c.ms, 45 * 86400000), estLast('bor', c.ms, 45 * 86400000), bta, bor); if (p2 !== null && p2 > ph0) d.ph = p2 - ph0; }
+    }
+    if (c.affects === 'ph' && c.dir === 'down' && c.kind === 'Liquid' && pct !== null && b) {
+      var ta = c.amount * b * (1 + 0.005 * pct) * pct / 100 / 36.46 * 50000 / EST_L;
+      var ph = estLast('ph', c.ms), ta1 = estLast('ta', c.ms);
+      var drop = ph !== null && ta1 !== null ? phDrop(ph, ta1, estLast('cya', c.ms), ta) : null;
+      if (drop !== null) d.ph = -drop; else why = 'No pH estimate: it needs a pH and TA test from the last 14 days.';
+      d.ta = -ta;
+    }
+    if (fc !== null && c.kind !== 'Liquid' && /cal-?hypo/i.test(c.product)) d.ch = fc * 100 / 141.8;
+    if (fc !== null && c.kind !== 'Liquid' && /tri-?chlor/i.test(c.product)) d.cya = fc * 129 / 212.7;
+    else if (fc !== null && c.kind !== 'Liquid' && /di-?chlor/i.test(c.product)) d.cya = fc * 129 / 141.8;
+    return {d: d, why: why};
+  }
+  // From the last test to where the reading should land: "FC 3.5 → 11.3" in that reading's range color; just "+7.8" without a test.
+  var EFF_ORDER = ['fc', 'ph', 'ta', 'ch', 'cya', 'bor'];
+  var EFF_AGE = {fc: 14, ph: 14, ta: 45, ch: 45, cya: 45, bor: 45};
+  function effRound(k, v){ return k === 'ph' || k === 'fc' || Math.abs(v) < 10 ? Math.round(v * 10) / 10 : Math.round(v); }
+  function effChips(d, ms){
+    return EFF_ORDER.filter(function(k){ return isNum(d[k]) && Math.abs(d[k]) >= (k === 'ph' ? 0.05 : 0.05); }).map(function(k){
+      var col = COLBY[k], from = estLast(k, ms, EFF_AGE[k] * 86400000), dv = effRound(k, d[k]);
+      var sign = (dv < 0 ? '−' : '+') + fmtNum(Math.abs(dv));
+      if (from === null) return '<span class="ecv"><i>' + col[3] + '</i><b>' + sign + '</b></span>';
+      var to = effRound(k, from + d[k]); if (to < 0) to = 0;
+      var tone = col[2] ? colorOf(col[2], to) : '';
+      return '<span class="ecv ' + tone + '" title="' + esc(col[1] + ': last test ' + fmtNum(from) + ', ' + sign + ' from this') + '"><i>' + col[3] + '</i><b>' + fmtNum(from) + ' → ' + fmtNum(to) + '</b><small>' + sign + '</small></span>';
+    }).join('');
+  }
+  function chemLine(it, ms){
+    var a = chemAmt(it); if (!(a > 0)) return '';
+    var kind = it.info.kind || UNIT_KIND[it.unit], lines = [], sk = slowKind(it);
+    var c = {product: it.name, amount: a, unit: it.unit, kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
+      strength: it.info.sMode === 'entry' ? chemPct(it) : it.info.sMode === 'fixed' ? Number(it.info.strength) : ''};
+    it.eff = null;
+    if (sk === 'tri' || it.slow) lines.push('Slow feed: reaches the pool over several days, so no instant estimate.');
+    else {
+      var e = estimate(c), chips = effChips(e.d, ms);
+      it.eff = e.d;
+      if (chips) lines.push('<div class="ecvs">' + chips + '</div>');
+      if (e.why) lines.push(esc(e.why));
+      if (!chips && !e.why) { var w = (DATA.chems || []).filter(function(x){ return x.what && String(x.product).toLowerCase() === it.name.toLowerCase(); })[0]; if (w) lines.push(esc(w.what)); }
+    }
+    var key = it.slow && /cal-?hypo/i.test(it.name) ? 'cal-hypo puck' : it.name.toLowerCase(), st = (DATA.stock || {})[key];
+    if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[it.unit]) {
+      var back = 0;
+      if (editing && editing.product && String(editing.product).toLowerCase() === it.name.toLowerCase() && EST_BASE[editing.unit] && !!editing.slow === !!it.slow) back = editing.amount * EST_BASE[editing.unit];
+      var left = (st.base + back) / STOCK_BASE[st.unit], after = (st.base + back - a * EST_BASE[it.unit]) / STOCK_BASE[st.unit];
+      var rnd = function(x){ return st.unit === 'oz' || st.unit === 'units' ? String(Math.round(x)) : fmtNum(Math.round(x * 10) / 10); };
+      lines.push(after < -0.05 ? '<span class="low">More than the ' + rnd(Math.max(left, 0)) + ' ' + st.unit + ' in stock. Check the amount (or Adjust stock in Prices).</span>'
+        : 'Stock after this: about ' + rnd(Math.max(after, 0)) + ' ' + st.unit);
+    }
+    return lines.map(function(l){ return l.indexOf('<div') === 0 ? l : '<div>' + l + '</div>'; }).join('');
+  }
+  function chemRefresh(){
+    var w = when(), ms = w ? w.ms : Date.now();
+    chem.items.forEach(function(it, i){ var el = $('ecx_' + i); if (el) el.innerHTML = chemLine(it, ms); });
+    // two or more chemicals: what they do together (slow feed left out, it doesn't land at once)
+    var sum = {}, n = 0;
+    chem.items.forEach(function(it){ if (it.eff && Object.keys(it.eff).length) { n++; Object.keys(it.eff).forEach(function(k){ sum[k] = (sum[k] || 0) + it.eff[k]; }); } });
+    var tot = $('ecTot'), chips = n > 1 ? effChips(sum, ms) : '';
+    if (tot) tot.innerHTML = chips ? '<div class="ecsi ectot"><div class="top"><span>All together</span></div><div class="ecvs">' + chips + '</div></div>' : '';
+    if (!busy && !editing) save.textContent = chem.items.length > 1 ? 'Save ' + chem.items.length + ' chemicals' : KIND.chem[2];
+    save.disabled = busy || !chem.items.length || chem.items.some(function(it){ return !(chemAmt(it) > 0); });
+  }
+  body.addEventListener('click', function(e){
+    if (mode !== 'chem' || !e.target.closest) return;
+    var b = e.target.closest('[data-cpick],[data-cmore],[data-crm],[data-cu],[data-cadd]'); if (!b) return;
+    if (b.hasAttribute('data-cpick')) { chem.items.push(chemItem(chemList()[+b.getAttribute('data-cpick')])); chem.picking = false; chem.more = false; chemDraw(chem.items.length - 1); }
+    else if (b.hasAttribute('data-cmore')) { chem.more = true; chemDraw(); }
+    else if (b.hasAttribute('data-cadd')) { chem.picking = true; chemDraw(); var pk = $('ecPick'); if (pk) try { pk.scrollIntoView({block: 'nearest', behavior: 'smooth'}); } catch(x){} }
+    else if (b.hasAttribute('data-crm')) { chem.items.splice(+b.getAttribute('data-crm'), 1); if (!chem.items.length) chem.picking = true; chemDraw(); }
+    else { chem.items[+b.getAttribute('data-cu')].unit = b.getAttribute('data-u'); chemDraw(); }
+  });
+  body.addEventListener('input', function(e){
+    if (mode !== 'chem') return;
+    var t = e.target, i;
+    if ((i = t.getAttribute('data-camt')) !== null) chem.items[+i].amount = t.value;
+    else if ((i = t.getAttribute('data-cpct')) !== null) chem.items[+i].pct = t.value;
+    else return;
+    refresh();
+  });
+  body.addEventListener('change', function(e){
+    if (mode !== 'chem') return;
+    var i = e.target.getAttribute('data-cslow');
+    if (i !== null) { chem.items[+i].slow = e.target.checked; refresh(); }
+  });
+  body.addEventListener('keydown', function(e){
+    if (mode === 'chem' && e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); e.target.blur(); }
+  });
+
   // ---- the panel
   function whoText(){ var me = DATA.me || WHO; return 'Saved as<br>' + esc(firstName(me)); }
   function testBody(t){
@@ -4357,6 +4649,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (mode === 'vols') return;
     if (!busy) save.textContent = editing ? 'Save changes' : KIND[mode][2];
     if (mode === 'note') { save.disabled = busy || !$('eNote').value.trim(); return; }
+    if (mode === 'chem') { chemRefresh(); return; }
     if (mode === 'pump') {
       var pv = pumpVals(), rOdd = pv.readRaw !== '' && !isFinite(pv.reading), tOdd = pv.tank !== '' && !(pv.tank >= 0 && pv.tank <= TANK_GAL * 1.1);
       $('epReadT').classList.toggle('odd', rOdd); $('epTankT').classList.toggle('odd', tOdd);
@@ -4410,12 +4703,13 @@ document.addEventListener('DOMContentLoaded', function(){
     mode = kind; editing = item; fromEl = from || fab;
     $('eIcon').style.setProperty('--c', KIND[kind][1]);
     $('eIcon').innerHTML = ICON[kind];
-    $('eTitle').textContent = kind === 'vols' ? 'Volunteers' : (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
+    $('eTitle').textContent = kind === 'vols' ? 'Volunteers' : kind === 'chem' ? (item ? 'Edit chemical' : 'Add chemical') : (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
     grow.classList.toggle('nofoot', kind === 'vols');
     save.textContent = item ? 'Save changes' : KIND[kind][2];
     $('eWho').innerHTML = item ? 'Entered by<br>' + esc(firstName(item.by)) : whoText();
-    body.innerHTML = kind === 'vols' ? '<div class="vlist" id="vList">Loading…</div>' : kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : noteBody(item);
+    body.innerHTML = kind === 'vols' ? '<div class="vlist" id="vList">Loading…</div>' : kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : kind === 'chem' ? chemBody(item) : noteBody(item);
     if (kind === 'vols') volLoad('');
+    if (kind === 'chem') chemDraw();
     body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
     if (kind === 'pump') {
       body.querySelectorAll('[data-pt]').forEach(function(b){ b.addEventListener('click', function(){
@@ -4530,7 +4824,19 @@ document.addEventListener('DOMContentLoaded', function(){
     if (w.ms > Date.now() + 5 * 60000) { say('The date and time can\'t be in the future.', 'err'); return; }
     var fn, payload, label;
     if (mode === 'pump') { savePump(w); return; }
-    if (mode === 'test') {
+    if (mode === 'chem') {
+      var ck = chemCheck();
+      if (ck) { say(ck, 'err'); return; }
+      if (!dupOk) {
+        var dup = chemDup(w.ms);
+        if (dup) { dupOk = true; save.textContent = 'Save anyway'; say('Already logged: ' + dup.summary + ' at ' + dup.time + (dup.day !== w.s.slice(0, 10) ? ' on ' + fmtDayRel(dup.day) : '') + (dup.src === 'Dashboard' ? '' : ' (from Pool Math)') + '. Is this a different addition?', 'warn'); return; }
+      }
+      payload = {id: editing ? editing.id : '', when: w.s, items: chem.items.map(function(it){
+        return {product: it.name, amount: chemAmt(it), unit: it.unit, strength: it.info.sMode === 'entry' ? chemPct(it) : '', slow: !!it.slow};
+      })};
+      if (!editing) payload.note = $('eNote').value;
+      fn = 'saveChems'; label = chem.items.length > 1 ? 'Chemicals' : 'Chemical';
+    } else if (mode === 'test') {
       var r = vals();
       if (r.bad.length) { say('One of the numbers isn\'t a number. Check the yellow box.', 'err'); return; }
       if (!editing && !dupOk) {
@@ -4549,12 +4855,12 @@ document.addEventListener('DOMContentLoaded', function(){
     serverCall(fn, [CODE, payload], function(res){
       busy = false;
       if (res && res.ok === false && res.why && res.why !== 'level') { shut(); handleDenied(res); return; }
-      if (!res || !res.ok) { save.disabled = false; save.textContent = editing ? 'Save changes' : 'Save ' + label.toLowerCase(); say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
+      if (!res || !res.ok) { save.disabled = false; save.textContent = editing ? 'Save changes' : KIND[mode][2]; say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
       DATA = res.data; renderAll();
       closePanel();
       bgSet(label + ' saved.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
     }, function(err){
-      busy = false; save.disabled = false; save.textContent = editing ? 'Save changes' : 'Save ' + label.toLowerCase();
+      busy = false; save.disabled = false; save.textContent = editing ? 'Save changes' : KIND[mode][2];
       say('Not saved: could not reach the server. Check the connection and tap Save again.', 'err');
     });
   });
@@ -4587,15 +4893,16 @@ document.addEventListener('DOMContentLoaded', function(){
   window.entryCanFix = mine;
   window.entryEdit = function(kind, id){ var it = findEntry(kind, id); if (it) openPanel(kind, it, fab); };
   window.entryDel = function(kind, id){ menu(kind, id, true); };
-  function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
+  function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : kind === 'chem' ? DATA.chems : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
+  var ENTRY_WORD = {test: 'test', note: 'note', chem: 'addition'};
   var menuFor = null;
   function menu(kind, id, confirmDel, err){
     var it = findEntry(kind, id); if (!it) return;
     menuFor = {kind: kind, id: id};
-    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
+    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'chem' ? 'Added ' + esc(it.summary) : kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
       (it.w && wxFull(it.w) ? '<p class="emsub">' + esc(wxFull(it.w)) + '</p>' : '') +
       (it.by ? '<p class="emsub">Entered by ' + esc(fullName(it.by)) + '</p>' : '') +
-      (confirmDel ? '<p>Delete this ' + kind + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
+      (confirmDel ? '<p>Delete this ' + ENTRY_WORD[kind] + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
         : '<div class="row"><button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button></div>' +
           '<div class="row"><button type="button" class="btn" data-em="cancel">Close</button></div>') +
       (err ? '<p style="color:var(--red)">' + esc(err) + '</p>' : '');
@@ -4616,7 +4923,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (res && res.ok === false && res.why && res.why !== 'level') { closeDlg('entryMenu'); handleDenied(res); return; }
         if (!res || !res.ok) { menu(kind, id, false, (res && res.message) || 'Not deleted. Try again.'); return; }
         closeDlg('entryMenu'); DATA = res.data; renderAll();
-        bgSet((kind === 'test' ? 'Test' : 'Note') + ' deleted.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
+        bgSet((kind === 'test' ? 'Test' : kind === 'chem' ? 'Addition' : 'Note') + ' deleted.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
       }, function(){ menu(kind, id, false, 'Could not reach the server. Try again.'); });
     }
   });
