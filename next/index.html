@@ -9,7 +9,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","volunteerList","volunteerAction","accessNameCheck"];
+  var API = 'https://script.google.com/macros/s/AKfycbywGYJQBb5hk5dVoUE6bCQ_FwaSUun_pYGMAinYy0VgBIFaDwOoEXwdHP48EzFSmWy97A/exec', FNS = ["whoAmI","getRulesInfo","uploadRulesPdf","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","saveSiteText","getSiteText","uploadMembershipForm","accessChangePassword","volunteerSignUp","volunteerList","volunteerAction","accessNameCheck","accessAliases"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
@@ -247,6 +247,17 @@ a.give-btn{text-decoration:none;display:inline-block}
 .mem-bar{display:flex;align-items:baseline;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;margin:14px 2px 0}
 .mem-bar .whotxt{font-size:.88rem;color:var(--paper)}
 .mem-actions{display:flex;gap:16px}
+.mem-menu-btn{display:none;position:relative;background:none;border:1px solid var(--glass-line);border-radius:10px;color:var(--paper);font:600 .9rem var(--font);padding:8px 14px;cursor:pointer}
+.mem-dot{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#e2836b;color:#fff;font-size:.72rem;text-align:center;padding:0 5px;margin-left:6px;vertical-align:1px}
+.mem-dot[hidden]{display:none}
+/* phones: the signed-in links go behind one Menu button (one big row each when open) */
+@media (max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px){
+  .mem-menu-btn{display:inline-block}
+  .mem-bar .mem-actions{display:none;flex:1 1 100%;flex-direction:column;gap:0;border:1px solid var(--glass-line);border-radius:12px;overflow:hidden}
+  .mem-bar.menu-open .mem-actions{display:flex}
+  .mem-bar .mem-actions .lockbtn{display:block;width:100%;text-align:left;font-size:1rem;text-decoration:none;color:var(--paper);padding:14px 16px;border-bottom:1px solid var(--glass-line)}
+  .mem-bar .mem-actions .lockbtn:last-child{border-bottom:0}
+}
 .mem-panel.open .mem-text p, .mem-panel.open #signInBtn{display:none}
 .mem-form{flex:1 1 100%;display:flex;flex-direction:column;gap:8px}
 .mem-label{color:var(--paper-2);font-size:.88rem;line-height:1.4}
@@ -822,11 +833,12 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     </nav>
       <div class="mem-bar">
         <span class="whotxt" id="whoTxt"></span>
-        <span class="mem-actions">
+        <button type="button" class="mem-menu-btn" id="memMenuBtn" aria-expanded="false" aria-controls="memActions">Menu<span class="mem-dot" id="memMenuDot" hidden></span></button>
+        <span class="mem-actions" id="memActions">
           <button type="button" class="lockbtn si-mgr" id="editTextBtn">Edit page text</button>
           <button type="button" class="lockbtn si-brd" id="importOpenBtn">Update Rules PDF</button>
           <button type="button" class="lockbtn si-mgr" id="volBtn">Volunteers</button>
-          <button type="button" class="lockbtn si-vol" id="chgPwBtn">Change my password</button>
+          <button type="button" class="lockbtn si-vol" id="chgPwBtn">My login</button>
           <button type="button" class="lockbtn" id="chemRelockBtn">Sign out</button>
         </span>
       </div>
@@ -949,6 +961,8 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   <form id="joinVolForm" autocomplete="off">
     <label for="jvName">First and last name</label>
     <input type="text" class="plain" id="jvName" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+    <label for="jvAka">Also goes by (optional)</label>
+    <input type="text" class="plain" id="jvAka" placeholder="Other first names, like Kayti" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
     <label for="jvEmail">Email</label>
     <input type="email" class="plain" id="jvEmail" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false">
     <label for="jvPw">Choose a password (at least 8 characters)</label>
@@ -974,7 +988,14 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 </dialog>
 
 <dialog id="chgDlg" class="pwdlg">
-  <h3>Change my password</h3>
+  <h3>My login</h3>
+  <label for="akaIn">Also goes by (other first names)</label>
+  <input type="text" class="plain" id="akaIn" placeholder="Like Kayti, Kat" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+  <p style="margin:6px 0 0;font-size:.82rem">You can sign in with any of these and your last name.</p>
+  <div class="row" style="margin-top:8px"><button type="button" id="akaSave">Save names</button></div>
+  <div class="err" id="akaErr" role="alert"></div>
+  <div class="ok" id="akaOk"></div>
+  <h3 style="margin-top:18px">Change password</h3>
   <p>At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
   <form id="chgForm" autocomplete="off">
     <label for="chgCur">Current password</label>
@@ -1037,13 +1058,18 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     if (window.rocFitDash) setTimeout(window.rocFitDash, 0);
     $('whoTxt').textContent = on ? 'Signed in as: ' + NAMES[level] + (who && who !== NAMES[level] ? ' (' + who + ')' : '') : '';
   }
-  function signOut(){ CODE = ''; forgetCode(); setLevel('public'); document.body.classList.remove('is-vol'); }
+  function signOut(){
+    CODE = ''; forgetCode(); setLevel('public'); document.body.classList.remove('is-vol');
+    if (window.rocSetWaiting) rocSetWaiting(0);
+    var bar = document.querySelector('.mem-bar'); if (bar) bar.classList.remove('menu-open');
+  }
   /** how: 'wrap' (from the wrapper), 'saved' (this device), 'typed' (the dialog). */
   function check(code, how, done){
     if (!code || !(window.google && google.script && google.script.run)) return;
     google.script.run.withSuccessHandler(function(r){
       if (r && r.ok){ var keep = r.pass || code; CODE = keep; saveCode(keep, r.level, r.who); setLevel(r.level, r.who); }
-      if (r && r.ok){ document.body.classList.toggle('is-vol', !!r.vol); volName = r.vol ? r.who : ''; }   // own login: Change my password
+      if (r && r.ok){ document.body.classList.toggle('is-vol', !!r.vol); volName = r.vol ? r.who : ''; }   // own login: My login
+      if (r && r.ok && window.rocSetWaiting){ rocSetWaiting(r.level === 'manager' ? r.pending : 0); rocVolunteersWanted(r.level); }
       else if (how === 'wrap'){
         if (r && r.why === 'wrong'){ wrapSend({roc: 'forget'}); if (CODE === code){ CODE = ''; setLevel('public'); } }  // shown early, then turned out wrong
         if (CODE) wrapSend({roc: 'save', code: CODE});
@@ -1404,7 +1430,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // Sign up to volunteer (public): volunteerSignUp in Code.gs puts a Pending row on the Volunteers tab and emails the manager.
   var joinVolDlg = $('joinVolDlg');
   $('signUpBtn').addEventListener('click', function(){
-    ['jvName', 'jvEmail', 'jvPw', 'jvPw2'].forEach(function(id){ $(id).value = ''; });
+    ['jvName', 'jvAka', 'jvEmail', 'jvPw', 'jvPw2'].forEach(function(id){ $(id).value = ''; });
     $('jvName').value = nameIn.value.trim();
     pwShow($('jvPw'), false); pwShow($('jvPw2'), false);
     $('jvErr').textContent = ''; $('jvOk').textContent = ''; $('jvGo').disabled = false; $('jvGo').hidden = false; $('jvCancel').textContent = 'Cancel';
@@ -1439,7 +1465,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     }).withFailureHandler(function(x){
       $('jvGo').disabled = false;
       err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). If no one contacts you in a few days, please let a board member know.';
-    }).volunteerSignUp(name, email, p1);
+    }).volunteerSignUp(name, email, p1, $('jvAka').value.trim());
   });
 
   // Manager: the Volunteers screen (volunteerList / volunteerAction in Code.gs). Names come from the public sign-up,
@@ -1453,7 +1479,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
       if (!r || !r.ok){ $('volErr').textContent = (r && r.message) || 'Could not load the list.'; return; }
       if (r.managers > r.maxManagers) list.appendChild(el('div', 'vol-warn', r.managers + ' people have Manager level (more than ' + r.maxManagers + '). If that is not on purpose, change the extra ones on the ROC Access sheet.'));
       var pend = r.people.filter(function(p){ return p.level === 'pending'; }), rest = r.people.filter(function(p){ return p.level !== 'pending'; });
-      if (r.notify) list.appendChild(el('div', 'vol-sub', 'Sign-up emails go to ' + r.notify + '.'));
+      setWaiting(pend.length);
       list.appendChild(el('div', 'vol-h', 'Waiting for approval'));
       if (!pend.length) list.appendChild(el('div', 'vol-empty', 'No one is waiting.'));
       pend.forEach(function(p){ list.appendChild(volCard(p)); });
@@ -1480,8 +1506,8 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     }
     if (p.level === 'manager'){ card.appendChild(el('div', 'vol-sub', 'Change Manager rows on the ROC Access sheet.')); return card; }
     if (p.level === 'pending'){
-      b('Approve as Member', function(){ act({action: 'approve', level: 'member'}, function(r){ return p.name + ' approved as Member.' + (r.mailed ? ' Email sent.' : ' (No email sent.)'); }); }, true);
-      b('Approve as Board', function(){ act({action: 'approve', level: 'board'}, function(r){ return p.name + ' approved as Board.' + (r.mailed ? ' Email sent.' : ' (No email sent.)'); }); }, true);
+      b('Approve as Member', function(){ act({action: 'approve', level: 'member'}, function(){ return p.name + ' approved as Member. Let them know they can sign in.'; }); }, true);
+      b('Approve as Board', function(){ act({action: 'approve', level: 'board'}, function(){ return p.name + ' approved as Board. Let them know they can sign in.'; }); }, true);
       b('Delete', function(){ act({action: 'remove'}, function(){ return p.name + ' deleted.'; }, 'Delete the sign-up from ' + p.name + '?'); });
     } else {
       if (p.level === 'paused'){
@@ -1512,7 +1538,27 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     card.appendChild(btns);
     return card;
   }
-  $('volBtn').addEventListener('click', function(){ $('volList').textContent = 'Loading…'; volDlg.showModal(); volLoad(''); });
+  function openVolunteers(){ $('volList').textContent = 'Loading…'; volDlg.showModal(); volLoad(''); }
+  $('volBtn').addEventListener('click', openVolunteers);
+  // the Manager's notice: "Volunteers (2 waiting)" and a number on the phone Menu button
+  function setWaiting(n){
+    n = Number(n) || 0;
+    $('volBtn').textContent = n ? 'Volunteers (' + n + ' waiting)' : 'Volunteers';
+    $('memMenuDot').textContent = n; $('memMenuDot').hidden = !n || !document.body.classList.contains('lvl-manager');
+  }
+  window.rocSetWaiting = setWaiting;
+  $('memActions').addEventListener('click', function(e){   // a menu item was tapped: close the phone menu behind it
+    if (e.target.closest('.lockbtn')){ $('memMenuBtn').parentNode.classList.remove('menu-open'); $('memMenuBtn').setAttribute('aria-expanded', 'false'); }
+  });
+  $('memMenuBtn').addEventListener('click', function(){
+    var open = !$('memMenuBtn').parentNode.classList.contains('menu-open');
+    $('memMenuBtn').parentNode.classList.toggle('menu-open', open);
+    $('memMenuBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // ?volunteers (from the Volunteers item in the dashboards' menu): open the screen once the Manager sign-in is confirmed
+  var wantVolunteers = /[?&]volunteers\b/.test(location.search);
+  if (wantVolunteers) { try { history.replaceState(null, '', location.pathname); } catch(x){} }
+  window.rocVolunteersWanted = function(level){ if (wantVolunteers && level === 'manager'){ wantVolunteers = false; setTimeout(openVolunteers, 300); } };
   $('volClose').addEventListener('click', function(){ volDlg.close(); });
 
   // Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
@@ -1521,7 +1567,20 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   $('chgPwBtn').addEventListener('click', function(){
     ['chgCur', 'chgNew', 'chgNew2'].forEach(function(id){ $(id).value = ''; pwShow($(id), false); });
     $('chgErr').textContent = ''; $('chgOk').textContent = ''; $('chgGo').disabled = false;
-    chgDlg.showModal(); $('chgCur').focus();
+    $('akaIn').value = ''; $('akaErr').textContent = ''; $('akaOk').textContent = ''; $('akaSave').disabled = true;
+    chgDlg.showModal();
+    google.script.run.withSuccessHandler(function(r){
+      $('akaSave').disabled = false;
+      if (r && r.ok) $('akaIn').value = r.aliases || ''; else $('akaErr').textContent = (r && r.message) || '';
+    }).withFailureHandler(function(){ $('akaSave').disabled = false; }).accessAliases(CODE);
+  });
+  $('akaSave').addEventListener('click', function(){
+    $('akaErr').textContent = ''; $('akaOk').textContent = ''; $('akaSave').disabled = true;
+    google.script.run.withSuccessHandler(function(r){
+      $('akaSave').disabled = false;
+      if (r && r.ok){ $('akaIn').value = r.aliases || ''; $('akaOk').textContent = r.aliases ? 'Saved.' : 'Saved (no other names).'; }
+      else $('akaErr').textContent = (r && r.message) || 'Could not save.';
+    }).withFailureHandler(function(x){ $('akaSave').disabled = false; $('akaErr').textContent = 'Something went wrong (' + ((x && x.message) || x) + ').'; }).accessAliases(CODE, $('akaIn').value);
   });
   $('chgCancel').addEventListener('click', function(){ chgDlg.close(); });
   $('chgForm').addEventListener('submit', function(e){
