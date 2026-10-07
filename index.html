@@ -562,6 +562,11 @@ html{overflow-x:clip}
 .bg-move{left:0;top:0;width:100%;height:100%}
 .bg-sky{background-repeat:no-repeat;background-size:100% 100%}
 .bg-tint{left:0;right:0;bottom:-600px}
+/* below the photo, the bottom half of its pool repeats to the bottom of the page, every other copy upside down so each
+   joins the one above without a seam (2026-10-07; before, the page faded to plain water colour, .bg-tint, now unused) */
+.bg-ext{left:0;top:0;width:100%;height:100%}
+.bg-ext div{background-repeat:no-repeat}
+.bg-ext .up{transform:scaleY(-1)}
 .bg-shade{inset:0}
 /* the beams (with their share of the darkening), drawn IN FRONT of the hanging sign (the only copy; hidden with the
    flat-photo fallback, whose photo has the beams in it): the tops of the hangers go up behind the beam, and when the sign is smacked the sign flies up behind the beam and its bottom peeks over the top, between the beam and the tree.
@@ -579,6 +584,19 @@ html{overflow-x:clip}
 html{scrollbar-width:none}
 html::-webkit-scrollbar{display:none;width:0;height:0}
 .ripples{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 260px);mask-image:linear-gradient(180deg,transparent 0,#000 260px)}
+/* Real ripples (2026-10-07): a short looping film of our own pool (pool-ripples.mp4, white light lines on black, slowed to
+   40%), laid over the photo's water and lightening it (screen), so the ripples get smaller into the distance like the
+   photo. Below it, copies of the film's bottom half (the closest, biggest ripples) repeat to the bottom of the page, each
+   blended into the one above, every other one mirrored and started at a different point so the repeat doesn't show.
+   Placed by the script "Background". Shown only once it is actually playing (not with "reduce motion", Low Power Mode or
+   Save-Data); until then, or without it, the drawn ripples (.ripples) cover the water as before. */
+.bg-vids{left:0;top:0;width:100%;height:100%}
+.bg-vids .vw{overflow:hidden;mix-blend-mode:screen;opacity:0;transition:opacity 1.5s}
+.bg-vids video{position:absolute;display:block;pointer-events:none}
+.bg-vids .vw.flip video{transform:scaleX(-1)}
+/* --fade (set per copy by the script) makes the copies fainter the further down the page they are */
+html.vid .bg-vids .vw{opacity:calc(var(--vid-strength,.32) * var(--fade,1))}
+html.vid .ripples{display:none}
 /* desktop: a shorter photo section (80% of the window, at least 540px), so the beam and board card sit higher,
    less roof shows, and the page reaches the pool sooner */
 @media (min-aspect-ratio: 9/10) and (min-width: 561px), (min-width: 700px){ .splash{min-height:max(540px, 80vh);min-height:max(540px, 80svh)} }
@@ -647,7 +665,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 </style>
 </head>
 <body>
-<div class="bgstack" aria-hidden="true"><div class="bg-move"><div class="bg-sky"></div><div class="bg-tint"></div></div><div class="bg-shade"></div></div>
+<div class="bgstack" aria-hidden="true"><div class="bg-move"><div class="bg-sky"></div><div class="bg-ext"></div><div class="bg-tint"></div><div class="bg-vids"></div></div><div class="bg-shade"></div></div>
 
 <main class="splash">
   <div class="photo" role="img" aria-label="A metal oak tree silhouette under a timber pavilion roof, with the inscription: Designed and built by your neighbors for the love of community"></div>
@@ -2136,7 +2154,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var mq = window.matchMedia('(max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px)');
   var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky');
   var tint = stack.querySelector('.bg-tint'), shade = stack.querySelector('.bg-shade'), root = document.documentElement;
-  var heroH = 0, fbeams = document.querySelector('.bf-beams');
+  var heroH = 0, fbeams = document.querySelector('.bf-beams'), ext = stack.querySelector('.bg-ext'), POOL_HALF = (1 + WATER) / 2, vids = stack.querySelector('.bg-vids'), VID = BASE + 'pool-ripples.mp4', vidOn = false, vidSrc = '';
   // the darkening at the top of the page, for a box whose top is `top` px down the page
   // starts solid in the page colour (#16110B, the browser bar's colour at the top) so the photo fades into the bar, under the title
   function shadeAt(top){ return 'linear-gradient(180deg, rgba(22,17,11,1) ' + (0 - top) + 'px, rgba(22,17,11,.82) ' + (40 - top) + 'px, rgba(20,15,9,.5) ' + (110 - top) + 'px, rgba(20,15,9,.22) ' + (190 - top) + 'px, rgba(20,15,9,0) ' + (330 - top) + 'px)'; }
@@ -2159,9 +2177,18 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     sky.style.backgroundImage = 'url("' + (layered ? SKY : FLAT) + '")';
     px(sky, x, y, w, h);
     fbeams.parentNode.hidden = !layered;
-    // past the picture's bottom the page fades into the pool's colour
-    tint.style.top = Math.round(y + h - 380) + 'px';
-    tint.style.background = 'linear-gradient(180deg, rgba(' + TINT + ',0) 0, rgba(' + TINT + ',1) 378px)';
+    // past the picture's bottom: the bottom half of its pool again and again, every other copy upside down
+    var band = h * (1 - POOL_HALF), n = Math.max(0, Math.ceil((stack.offsetHeight + 200 - (y + h)) / band));
+    while (ext.children.length < n) ext.appendChild(document.createElement('div'));
+    Array.prototype.forEach.call(ext.children, function(d, k){
+      d.hidden = k >= n; if (d.hidden) return;
+      d.className = k % 2 ? '' : 'up';
+      px(d, x, Math.round(y) + Math.round(h) + Math.round(k * band) - 1, w, band + 2);  // 1px overlap each side: no hairline gap
+      d.style.backgroundImage = sky.style.backgroundImage;
+      d.style.backgroundSize = Math.round(w) + 'px ' + Math.round(h) + 'px';
+      d.style.backgroundPosition = '0 100%';  // the bottom of the picture, flush with the box's bottom edge
+    });
+    tint.style.display = 'none';
     shade.style.background = shadeAt(0) + ',' +
       'linear-gradient(180deg, rgba(8,12,14,0) ' + Math.round(heroH - 60) + 'px, rgba(8,12,14,.32) ' + Math.round(heroH + 220) + 'px, rgba(8,12,14,.42) 100%)';
     // the beams, in front of the sign: same place as the sky picture, with the top darkening shifted to match
@@ -2175,7 +2202,9 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     var driftEnd = Math.max(1, Math.min(DRIFT_FOR * heroH, document.documentElement.scrollHeight - window.innerHeight));
     root.style.setProperty('--drift-end', Math.round(driftEnd) + 'px');
     root.style.setProperty('--drift', (layered ? Math.round(DEPTH * driftEnd) : 0) + 'px');
-    if (scen && lower) scen.style.top = Math.max(0, Math.round(y + h * WATER - lower.offsetTop)) + 'px';
+    var scenTop = Math.max(0, Math.round(y + h * WATER - lower.offsetTop));
+    if (scen && lower) scen.style.top = scenTop + 'px';
+    if (vids) placeVids(W, y + h * WATER, h * (1 - WATER));
     low();
   }
   // page colour (see the CSS): teal-slate once the top section has scrolled away. Only a class flips; nothing is redrawn.
@@ -2191,6 +2220,59 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var prev = window.rocReflowPhoto;
   window.rocReflowPhoto = function(){ if (prev) prev(); place(); };
   window.addEventListener('resize', place);
+  // The pool film (see the CSS ".bg-vids"): one full copy from where the water starts (at least as tall as the photo's
+  // water), then copies of its bottom half down to the page bottom, each overlapping the one above by BLEND of its height.
+  var VW = 540, VH = 960, BLEND = .3, seen = window.IntersectionObserver ? new IntersectionObserver(function(es){
+    es.forEach(function(e){ var v = e.target.firstChild; if (!vidOn) return; if (e.isIntersecting) play(v); else v.pause(); });
+  }, { rootMargin: '200px 0px' }) : null;
+  function play(v){ var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+  function mask(el, top, bottom){
+    var m = 'linear-gradient(180deg,transparent 0,#000 ' + top + 'px,#000 calc(100% - ' + bottom + 'px),transparent 100%)';
+    el.style.webkitMaskImage = el.style.maskImage = m;
+  }
+  function placeVids(W, top, water){
+    var s = Math.max(W / VW, water / VH), fw = VW * s, fh = VH * s, half = fh / 2, blend = Math.round(half * BLEND);
+    var pageH = stack.offsetHeight, boxes = [{ t: top, h: fh, from: 0 }], t = top + fh - blend;
+    while (t < pageH && boxes.length < 12){ boxes.push({ t: t, h: half, from: half }); t += half - blend; }
+    while (vids.children.length < boxes.length){
+      var k = vids.children.length, w = document.createElement('div'), v = document.createElement('video');
+      w.className = 'vw' + (k % 2 ? ' flip' : '');
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'none';
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('disablepictureinpicture', '');
+      // each copy starts at a different point of the loop
+      v.addEventListener('loadedmetadata', function(){ var n = Array.prototype.indexOf.call(vids.children, this.parentNode); if (n > 0) this.currentTime = (n * 4.3) % (this.duration || 13); });
+      v.addEventListener('playing', function(){ root.classList.add('vid'); });
+      w.appendChild(v); vids.appendChild(w);
+      if (vidSrc){ v.src = vidSrc; if (seen) seen.observe(w); else play(v); }
+    }
+    Array.prototype.forEach.call(vids.children, function(w, k){
+      var b = boxes[k];
+      if (!b){ w.style.display = 'none'; return; }
+      w.style.display = '';
+      if (vidSrc && !w.firstChild.getAttribute('src')){ w.firstChild.src = vidSrc; if (seen) seen.observe(w); else play(w.firstChild); }
+      px(w, 0, b.t, W, b.h);
+      px(w.firstChild, (W - fw) / 2, -b.from, fw, fh);
+      mask(w, k ? blend : 140, k < boxes.length - 1 ? blend : 0);
+      // the full film at full strength; the copies below fade to 70% by the bottom of the page
+      w.style.setProperty('--fade', k ? (1 - .3 * Math.min(1, (b.t - top) / Math.max(1, pageH - top))).toFixed(2) : 1);
+    });
+  }
+  // start the pool film after the page has loaded (~4 MB); show it, and hand the water over to it, only once it plays
+  function startVid(){
+    var quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.connection && navigator.connection.saveData);
+    if (!vids || quiet || vidOn) return;
+    vidOn = true;
+    // downloaded once and shared by all the copies (each <video> would otherwise fetch it again)
+    fetch(VID).then(function(r){ if (!r.ok) throw 0; return r.blob(); }).then(function(b){ return URL.createObjectURL(b); }, function(){ return VID; }).then(function(src){
+      vidSrc = src;
+      Array.prototype.forEach.call(vids.children, function(w){ if (w.style.display === 'none') return; w.firstChild.src = src; if (seen) seen.observe(w); else play(w.firstChild); });
+    });
+    // if the browser holds them back (page not in view yet), try again when the page is shown or first touched
+    function again(){ Array.prototype.forEach.call(vids.children, function(w){ var v = w.firstChild, r = w.getBoundingClientRect(); if (v.paused && r.bottom > -200 && r.top < innerHeight + 200) play(v); }); }
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) again(); });
+    ['pointerdown', 'scroll'].forEach(function(e){ window.addEventListener(e, again, { passive: true, once: true }); });
+  }
+  if (document.readyState === 'complete') setTimeout(startVid, 300); else window.addEventListener('load', function(){ setTimeout(startVid, 300); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
   if (window.ResizeObserver) new ResizeObserver(place).observe(document.body);
   place();
