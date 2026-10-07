@@ -330,7 +330,12 @@ dialog .chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-siz
 dialog .chk input{margin-top:3px}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
-#codeIn{font-size:16px}
+#codeIn,#nameIn{font-size:16px}
+#nameIn,#codeIn:not(.secret){width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px}
+#unlockDlg .si-q{margin:0 0 12px;font-size:18px;font-weight:600}
+#unlockDlg .si-big{display:block;width:100%;text-align:left;margin-bottom:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font-weight:600;font-size:17px;font-family:inherit;cursor:pointer}
+#unlockDlg .si-big span{display:block;margin-top:2px;font-size:13px;font-weight:400;color:var(--muted)}
+#unlockDlg .si-back{background:none;border:0;padding:0 0 10px;color:var(--accent);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer}
 /* sign-in box: a masked TEXT field, not type=password, so phones don't offer to save it as a website login */
 .secret{-webkit-text-security:disc;text-security:disc}
 .secret.shown{-webkit-text-security:none;text-security:none}
@@ -1259,12 +1264,21 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 </dialog>
 
 <dialog id="unlockDlg">
-  <h2>Sign in</h2>
-  <p class="hint" style="margin:0 0 10px">Members: your pool key number (letter and number).<br>Board and manager: your password.<br>This device stays signed in until you tap Sign out.</p>
-  <form id="unlockForm" autocomplete="off">
-    <label for="codeIn">Key number or password</label>
+  <div id="siPick">
+    <h2 class="si-q">Who's signing in?</h2>
+    <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
+    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>I sign in with my name and password</span></button>
+    <div class="row"><button class="btn" type="button" id="pickCancel">Cancel</button></div>
+  </div>
+  <form id="unlockForm" autocomplete="off" hidden>
+    <button type="button" class="si-back" id="siBack">&larr; Back</button>
+    <h2 class="si-q" id="siTitle">Pool member</h2>
+    <div id="nameRow" hidden><label for="nameIn">First and last name</label><input type="text" id="nameIn" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" data-1p-ignore data-lpignore="true" data-form-type="other"></div>
+    <label for="codeIn" id="codeLbl">Your pool key number</label>
     <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="codeIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="codeIn">Show</button></span>
+    <p class="hint" id="siHint"></p>
     <div class="err" id="unlockErr" role="alert"></div>
+    <p class="hint">This device stays signed in until you tap Sign out.</p>
     <div class="row">
       <button class="btn" type="button" id="unlockCancel">Cancel</button>
       <button class="btn primary" type="submit" id="unlockGo">Sign in</button>
@@ -2859,18 +2873,44 @@ function pwShow(inp, on){
   var b = inp.parentNode.querySelector('.pw-show');
   inp.classList.toggle('shown', on); b.textContent = on ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
 }
+// Sign in: first "Who's signing in?" (three big buttons), then one simple box for that choice. The choice is
+// remembered on this device (rocSignAs; on the website shared by all pages), so next time it opens straight on step 2.
+// Volunteers and Board type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
+var SIGN_AS = {
+  member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
+  vol: {title: 'Volunteer or board', label: 'Your password', hint: 'Board: your name and the board password.', secret: true}
+};
+var signAs = '';
+function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
+function showPick(){ signAs = ''; $('siPick').hidden = false; $('unlockForm').hidden = true; $('unlockErr').textContent = ''; }
+function showStep(as){
+  var c = SIGN_AS[as], inp = $('codeIn'); signAs = as;
+  $('siPick').hidden = true; $('unlockForm').hidden = false;
+  $('siTitle').textContent = c.title; $('codeLbl').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
+  $('nameRow').hidden = as !== 'vol';
+  inp.value = ''; $('unlockErr').textContent = ''; pwShow(inp, false);
+  inp.classList.toggle('secret', c.secret);
+  inp.parentNode.querySelector('.pw-show').hidden = !c.secret;
+  inp.setAttribute('autocapitalize', as === 'member' ? 'characters' : 'off');
+  if (as === 'vol' && !$('nameIn').value) $('nameIn').value = stored('rocLoginName');
+  setTimeout(function(){ try { (as === 'vol' && !$('nameIn').value ? $('nameIn') : inp).focus(); } catch(e){} }, 50);
+}
 function openUnlock(){
-  $('codeIn').value = ''; $('unlockErr').textContent = ''; pwShow($('codeIn'), false);
+  var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
+  if (SIGN_AS[as]) showStep(as); else showPick();
   openDlg('unlockDlg');
-  setTimeout(function(){ try { $('codeIn').focus(); } catch(e){} }, 50);
 }
 function submitUnlock(e){
   if (e) e.preventDefault();
-  var code = $('codeIn').value;
-  if (!code){ $('unlockErr').textContent = 'Enter your key number or password.'; return; }
+  var code = $('codeIn').value.trim(), as = signAs;
+  var name = as === 'vol' ? $('nameIn').value.trim().replace(/\s+/g, ' ') : '';
+  if (as === 'vol' && name.indexOf(' ') < 0){ $('unlockErr').textContent = 'Enter your first and last name.'; $('nameIn').focus(); return; }
+  if (!code){ $('unlockErr').textContent = as === 'member' ? 'Enter your pool key number.' : 'Enter your password.'; return; }
+  if (name) code = name + '\n' + code;
   var b = $('unlockGo'); b.disabled = true; b.textContent = 'Checking…'; $('unlockErr').textContent = '';
   serverCall('unlock', [code], function(res){
     b.disabled = false; b.textContent = 'Sign in';
+    if (res && res.ok){ try { localStorage.setItem('rocSignAs', as); if (name) localStorage.setItem('rocLoginName', name); } catch(e){} }
     if (res && res.ok){ var keep = res.pass || code; saveCode(keep, res); applyUnlocked(res.data, keep, res); closeDlg('unlockDlg'); showStatus('', false); }
     else $('unlockErr').textContent = (res && res.message) || 'Could not sign in.';
   }, function(err){
@@ -3599,6 +3639,12 @@ document.addEventListener('DOMContentLoaded', function(){
   $('unlockBtn').addEventListener('click', openUnlock);
   $('gateBtn').addEventListener('click', openUnlock);
   $('unlockForm').addEventListener('submit', submitUnlock);
+  Array.prototype.forEach.call(document.querySelectorAll('#unlockDlg .si-big'), function(b){
+    b.addEventListener('click', function(){ showStep(b.getAttribute('data-as')); });
+  });
+  $('siBack').addEventListener('click', showPick);
+  $('pickCancel').addEventListener('click', function(){ closeDlg('unlockDlg'); });
+  $('nameIn').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); $('codeIn').focus(); } });
   document.querySelectorAll('.pw-show').forEach(function(b){
     var inp = b.parentNode.querySelector('input');
     b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
