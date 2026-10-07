@@ -695,7 +695,8 @@
   :is(#signDlg, #chgDlg) .si-hint { margin: 6px 0 0; font-size: 13px; color: var(--ink-muted); }
   :is(#signDlg, #chgDlg) #nameRow { margin-bottom: 10px; }
   #moreBtn{position:relative}
-  #moreBtn.has-dot::after{content:'';position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#d9534f;border:2px solid var(--surface)}
+  #moreBtn.has-dot{overflow:visible}
+#moreBtn.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--surface);pointer-events:none}
   #chgDlg #akaIn { width: 100%; box-sizing: border-box; font-size: 16px; padding: 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--page); color: var(--ink-1); }
   #signDlg .si-msg { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-top: 10px; font-size: 15px; }
   #signDlg .si-msg p { margin: 0 0 10px; }
@@ -2212,7 +2213,7 @@ window.rocStartPump = function (DATA) {
   // The Manager's notice: a dot on the ··· button and "Volunteers (2 waiting)" in its menu (opens the screen on Home)
   function setWaiting(n, show){
     n = Number(n) || 0;
-    $('moreBtn').classList.toggle('has-dot', n > 0);
+    $('moreBtn').classList.toggle('has-dot', n > 0); $('moreBtn').setAttribute('data-count', n > 9 ? '9+' : String(n));
     $('mnVols').hidden = !show;
     $('mnVols').innerHTML = 'Volunteers' + (n ? '&nbsp;<span style="color:var(--bad);font-weight:600">(' + n + ' waiting)</span>' : '');
   }
