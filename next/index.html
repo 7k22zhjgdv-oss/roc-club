@@ -242,8 +242,13 @@ a.give-btn{text-decoration:none;display:inline-block}
 .mem-in{flex:1 1 220px;min-width:0;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:10px;padding:10px 12px;color:var(--paper);font:16px var(--font)}
 .mem-in:focus{outline:none;border-color:var(--oak);box-shadow:0 0 0 3px rgba(214,154,74,.25)}
 .mem-in::placeholder{color:rgba(255,248,236,.5)}
-.mem-name-tog{align-self:flex-start;background:none;border:none;color:var(--paper-2);font:.85rem var(--font);text-decoration:underline;cursor:pointer;padding:2px 0;text-align:left}
-.mem-name{box-sizing:border-box;width:100%}
+.si-q{margin:0!important;color:var(--paper)!important;font-size:1.15rem!important;font-weight:600}
+.si-big{display:block;width:100%;text-align:left;background:rgba(255,248,236,.08);border:1px solid var(--glass-line);border-radius:12px;padding:14px 16px;color:var(--paper);font:600 1.1rem var(--font);cursor:pointer}
+.si-big span{display:block;margin-top:2px;color:var(--paper-2);font-weight:400;font-size:.92rem}
+.si-big:hover,.si-big:focus-visible{border-color:var(--oak);outline:none}
+.si-back{align-self:flex-start;background:none;border:none;color:var(--oak);font:600 .95rem var(--font);cursor:pointer;padding:4px 0}
+.si-pick,.si-step{display:flex;flex-direction:column;gap:10px}
+.si-pick[hidden],.si-step[hidden]{display:none}
 .mem-cancel{background:none;border:none;color:var(--paper-2);font:.9rem var(--font);text-decoration:underline;cursor:pointer;padding:8px 4px}
 .mem-btn:disabled{opacity:.6;cursor:default}
 .mem-err{color:#e2836b;font-size:.88rem;min-height:1.2em}
@@ -731,20 +736,33 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     <div class="mem-panel si-out" id="memPanel">
       <div class="mem-text">
         <h2 class="mem-h">Members &amp; Board</h2>
-        <p data-edit="membersText">Sign in with your pool key number or password.</p>
       </div>
       <button type="button" class="mem-btn" id="signInBtn" aria-expanded="false" aria-controls="pwForm">Sign in</button>
       <form id="pwForm" class="mem-form" autocomplete="off" hidden>
-        <label class="mem-label" for="pwIn" id="pwLabel">Members: your pool key number (letter and number). Board and manager: your password.</label>
-        <button type="button" class="mem-name-tog" id="nameTog" aria-expanded="false" aria-controls="nameIn">Volunteer with your own login? Sign in with your name</button>
-        <input type="text" class="mem-in mem-name" id="nameIn" placeholder="First and last name" aria-label="Your first and last name" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" data-1p-ignore data-lpignore="true" data-form-type="other" hidden>
-        <div class="mem-row">
-          <span class="pw-wrap"><input type="text" class="secret mem-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other" id="pwIn" placeholder="Key number or password"><button type="button" class="pw-show" aria-pressed="false" aria-controls="pwIn">Show</button></span>
-          <button type="submit" class="mem-btn" id="pwSubmit">Sign in</button>
-          <button type="button" class="mem-cancel" id="pwCancel">Cancel</button>
+        <div class="si-pick" id="siPick">
+          <p class="si-q">Who's signing in?</p>
+          <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
+          <button type="button" class="si-big" data-as="vol">Volunteer<span>I have my own password</span></button>
+          <button type="button" class="si-big" data-as="board">Board or manager<span>Shared board password</span></button>
+          <button type="button" class="mem-cancel" id="pickCancel" style="align-self:flex-start">Cancel</button>
         </div>
-        <div class="mem-err" id="pwErr" role="alert"></div>
-        <p class="mem-note">This device stays signed in until you tap Sign out.</p>
+        <div class="si-step" id="siStep" hidden>
+          <button type="button" class="si-back" id="siBack">&larr; Back</button>
+          <p class="si-q" id="siTitle">Pool member</p>
+          <div class="si-step" id="nameRow" hidden>
+            <label class="mem-label" for="nameIn">First and last name</label>
+            <input type="text" class="mem-in" id="nameIn" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" data-1p-ignore data-lpignore="true" data-form-type="other">
+          </div>
+          <label class="mem-label" for="pwIn" id="pwLabel">Your pool key number</label>
+          <div class="mem-row">
+            <span class="pw-wrap"><input type="text" class="secret mem-in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other" id="pwIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="pwIn">Show</button></span>
+            <button type="submit" class="mem-btn" id="pwSubmit">Sign in</button>
+            <button type="button" class="mem-cancel" id="pwCancel">Cancel</button>
+          </div>
+          <p class="mem-note" id="siHint"></p>
+          <div class="mem-err" id="pwErr" role="alert"></div>
+          <p class="mem-note">This device stays signed in until you tap Sign out.</p>
+        </div>
       </form>
     </div>
     <div class="si-in">
@@ -1188,33 +1206,51 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
     b.addEventListener('click', function(){ pwShow(inp, !inp.classList.contains('shown')); inp.focus(); });
   });
 
-  // Volunteers with their own login sign in with first + last name and password (sent as "name\npassword").
-  // The name is remembered on this device (rocLoginName, shared by all pages on the website); the password never is.
-  var nameIn = $('nameIn'), nameTog = $('nameTog');
-  function loginName(){ try { return localStorage.getItem('rocLoginName') || ''; } catch(e){ return ''; } }
-  function nameMode(on){
-    nameIn.hidden = !on;
-    nameTog.setAttribute('aria-expanded', on ? 'true' : 'false');
-    nameTog.textContent = on ? 'Member or Board? Use your key number or password' : 'Volunteer with your own login? Sign in with your name';
-    $('pwLabel').textContent = on ? 'Volunteers: your first and last name, then your password.' : 'Members: your pool key number (letter and number). Board and manager: your password.';
-    pwIn.placeholder = on ? 'Password' : 'Key number or password';
+  // Sign in: first "Who's signing in?" (three big buttons), then one simple box for that choice. The choice is
+  // remembered on this device (rocSignAs; on the website shared by all pages), so next time it opens straight on step 2.
+  // Volunteers type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
+  var SIGN_AS = {
+    member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
+    vol: {title: 'Volunteer', label: 'Your password', hint: '', secret: true},
+    board: {title: 'Board or manager', label: 'Board or manager password', hint: '', secret: true}
+  };
+  var signAs = '', nameIn = $('nameIn');
+  function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
+  function focusEl(el){ try { el.focus({preventScroll: true}); } catch(x){ el.focus(); } }
+  function showPick(){
+    signAs = ''; $('siPick').hidden = false; $('siStep').hidden = true; pwErr.textContent = '';
+    var first = $('siPick').querySelector('.si-big'); if (first) focusEl(first);
   }
-  nameTog.addEventListener('mousedown', function(e){ e.preventDefault(); });
-  nameTog.addEventListener('click', function(){
-    var on = nameIn.hidden;
-    nameMode(on); pwErr.textContent = '';
-    if (!on){ nameIn.value = ''; try { localStorage.removeItem('rocLoginName'); } catch(e){} }
-    (on && !nameIn.value ? nameIn : pwIn).focus();
+  function showStep(as){
+    var c = SIGN_AS[as]; signAs = as;
+    $('siPick').hidden = true; $('siStep').hidden = false;
+    $('siTitle').textContent = c.title; $('pwLabel').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
+    $('nameRow').hidden = as !== 'vol';
+    pwIn.value = ''; pwErr.textContent = ''; pwShow(pwIn, false);
+    pwIn.classList.toggle('secret', c.secret);
+    pwIn.parentNode.querySelector('.pw-show').hidden = !c.secret;
+    pwIn.setAttribute('autocapitalize', as === 'member' ? 'characters' : 'off');
+    if (as === 'vol' && !nameIn.value) nameIn.value = stored('rocLoginName');
+    focusEl(as === 'vol' && !nameIn.value ? nameIn : pwIn);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.si-big'), function(b){
+    b.addEventListener('click', function(){ showStep(b.getAttribute('data-as')); });
   });
-  // Sign in opens a field right in the Members & Board panel (no popup)
+  $('siBack').addEventListener('click', showPick);
+  $('pickCancel').addEventListener('click', function(){ openSignIn(false); });
+  nameIn.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') openSignIn(false);
+    else if (e.key === 'Enter'){ e.preventDefault(); pwIn.focus(); }
+  });
+  // Sign in opens right in the Members & Board panel (no popup)
   function openSignIn(open){
     memPanel.classList.toggle('open', open);
     pwForm.hidden = !open;
     $('signInBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
     pwErr.textContent = ''; pwIn.value = ''; pwShow(pwIn, false);
-    nameIn.value = loginName(); nameMode(!!nameIn.value);
     if (open){
-      try { pwIn.focus({preventScroll: true}); } catch(x){ pwIn.focus(); }
+      var as = stored('rocSignAs');
+      if (SIGN_AS[as]) showStep(as); else showPick();
       // put the top of the panel near the top of the screen, so the whole panel stays above the phone keyboard
       // (again once the keyboard is up, since the phone scrolls on its own when it opens)
       var toTop = function(){ window.scrollTo({top: memPanel.getBoundingClientRect().top + window.pageYOffset - 16, behavior: 'smooth'}); };
@@ -1225,24 +1261,19 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   $('signInBtn').addEventListener('click', function(){ openSignIn(true); });
   $('pwCancel').addEventListener('click', function(){ openSignIn(false); });
   pwIn.addEventListener('keydown', function(e){ if (e.key === 'Escape') openSignIn(false); });
-  nameIn.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') openSignIn(false);
-    else if (e.key === 'Enter'){ e.preventDefault(); pwIn.focus(); }
-  });
   pwForm.addEventListener('submit', function(e){
     e.preventDefault();
-    var code = pwIn.value;
+    var code = String(pwIn.value || '').trim(), as = signAs;
+    var name = as === 'vol' ? nameIn.value.trim().replace(/\s+/g, ' ') : '';
     pwErr.textContent = '';
-    $('pwSubmit').disabled = true;
-    code = String(code || '').trim();
-    var name = nameIn.hidden ? '' : nameIn.value.trim().replace(/\s+/g, ' ');
-    if (!nameIn.hidden && name.indexOf(' ') < 0) { $('pwSubmit').disabled = false; pwErr.textContent = 'Enter your first and last name.'; nameIn.focus(); return; }
-    if (!code) { $('pwSubmit').disabled = false; pwErr.textContent = name ? 'Enter your password.' : 'Enter your key number or password.'; return; }
+    if (as === 'vol' && name.indexOf(' ') < 0) { pwErr.textContent = 'Enter your first and last name.'; nameIn.focus(); return; }
+    if (!code) { pwErr.textContent = as === 'member' ? 'Enter your pool key number.' : 'Enter your password.'; pwIn.focus(); return; }
     if (name) code = name + '\n' + code;
+    $('pwSubmit').disabled = true;
     check(code, 'typed', function(r){
       $('pwSubmit').disabled = false;
-      if (r && r.ok && name){ try { localStorage.setItem('rocLoginName', name); } catch(e){} }
-      if (r && r.ok){ pwIn.value = ''; pwIn.blur(); memPanel.classList.remove('open'); pwForm.hidden = true; $('signInBtn').setAttribute('aria-expanded', 'false'); }
+      if (r && r.ok){
+        try { localStorage.setItem('rocSignAs', as); if (name) localStorage.setItem('rocLoginName', name); } catch(e){} pwIn.value = ''; pwIn.blur(); memPanel.classList.remove('open'); pwForm.hidden = true; $('signInBtn').setAttribute('aria-expanded', 'false'); }
       else pwErr.textContent = (r && r.message) || 'That key number or password is not right.';
     });
   });
