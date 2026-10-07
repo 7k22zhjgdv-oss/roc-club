@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword"];
   function call(fn, args, ok, fail){
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
@@ -402,6 +402,7 @@ body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 /* sign-in levels (body.lvl-member / lvl-board / lvl-manager): .brd = Board and Manager, .mgr = Manager only */
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
+body:not(.is-vol) .volonly{display:none !important}
 /* members: test readings only - no date picker, view switcher, predictions or tracker cards */
 body.lvl-member .mchips,body.lvl-member .controls,body.lvl-member #trk{display:none !important}
 /* signed out: no readings at all, just the sign-in screen */
@@ -1205,6 +1206,7 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
+  <button type="button" class="mrow priv volonly" id="mnChgPw">Change my password</button>
   <button type="button" class="mrow priv" id="mnLock" style="border-bottom:0">Sign out</button>
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
@@ -1261,6 +1263,24 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
     <button class="btn" type="button" id="pCancel">Cancel</button>
     <button class="btn primary" type="button" id="pGo">Print</button>
   </div>
+</dialog>
+
+<dialog id="chgDlg">
+  <h2>Change my password</h2>
+  <p class="hint" style="margin:0 0 6px">At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
+  <form id="chgForm" autocomplete="off">
+    <label for="chgCur">Current password</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="chgCur" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgCur">Show</button></span>
+    <label for="chgNew">New password</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="chgNew" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew">Show</button></span>
+    <label for="chgNew2">New password again</label>
+    <span class="pw-wrap"><input type="text" class="secret" id="chgNew2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew2">Show</button></span>
+    <div class="err" id="chgErr" role="alert"></div>
+    <div class="row">
+      <button class="btn" type="button" id="chgCancel">Cancel</button>
+      <button class="btn primary" type="submit" id="chgGo">Change password</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="unlockDlg">
@@ -2844,9 +2864,10 @@ function setUnlocked(on, level, who){
 function applyUnlocked(data, code, res){
   DATA = data; CODE = code; setUnlocked(true, (res && res.level) || data.level, res && res.who); renderAll();
   try { localStorage.setItem('rocChemData', JSON.stringify({ level: LEVEL, who: WHO, data: data })); } catch(e){}
+  document.body.classList.toggle('is-vol', !!(res && res.vol));   // own login: Change my password
 }
 function lockNow(msg){
-  CODE = ''; forgetCode();
+  CODE = ''; forgetCode(); document.body.classList.remove('is-vol');
   closePop();
   DATA.tests = []; DATA.chems = []; DATA.trackers = []; DATA.stock = {}; DATA.hasPrices = false; DATA.priceRows = []; DATA.chemicals = []; DATA.priceWarnings = []; DATA.noteIssues = []; DATA.calc = null; DATA.locked = true;
   $('printView').innerHTML = '';
@@ -2894,6 +2915,34 @@ function showStep(as){
   inp.setAttribute('autocapitalize', as === 'member' ? 'characters' : 'off');
   if (as === 'vol' && !$('nameIn').value) $('nameIn').value = stored('rocLoginName');
   setTimeout(function(){ try { (as === 'vol' && !$('nameIn').value ? $('nameIn') : inp).focus(); } catch(e){} }, 50);
+}
+// Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
+// hands back a new pass, kept in place of the old one (the old pass stops working: their other devices sign out).
+function openChgPw(){
+  ['chgCur', 'chgNew', 'chgNew2'].forEach(function(id){ $(id).value = ''; pwShow($(id), false); });
+  $('chgErr').textContent = ''; $('chgErr').style.color = ''; $('chgGo').disabled = false;
+  openDlg('chgDlg');
+  setTimeout(function(){ try { $('chgCur').focus(); } catch(e){} }, 50);
+}
+function submitChgPw(e){
+  if (e) e.preventDefault();
+  var cur = $('chgCur').value.trim(), n1 = $('chgNew').value.trim(), n2 = $('chgNew2').value.trim(), err = $('chgErr');
+  err.textContent = ''; err.style.color = '';
+  if (!cur){ err.textContent = 'Enter your current password.'; $('chgCur').focus(); return; }
+  if (n1.length < 8){ err.textContent = 'The new password needs at least 8 characters.'; $('chgNew').focus(); return; }
+  if (n1 !== n2){ err.textContent = 'The two new passwords don\'t match.'; $('chgNew2').focus(); return; }
+  var b = $('chgGo'); b.disabled = true;
+  serverCall('accessChangePassword', [CODE, cur, n1], function(r){
+    if (!r || !r.ok){
+      b.disabled = false;
+      if (r && r.why === 'wrong'){ closeDlg('chgDlg'); lockNow(''); return; }
+      err.textContent = (r && r.message) || 'Could not change the password.';
+      return;
+    }
+    if (r.pass){ CODE = r.pass; saveCode(r.pass, r); }
+    err.style.color = 'var(--green)'; err.textContent = 'Password changed.';
+    setTimeout(function(){ closeDlg('chgDlg'); }, 1500);
+  }, function(x){ b.disabled = false; err.textContent = 'Could not reach the server: ' + (x && x.message || x); });
 }
 function openUnlock(){
   var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
@@ -3612,6 +3661,9 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrint').addEventListener('click', function(){ closeDlg('menuDlg'); openPrint(); });
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
+  $('mnChgPw').addEventListener('click', function(){ closeDlg('menuDlg'); openChgPw(); });
+  $('chgCancel').addEventListener('click', function(){ closeDlg('chgDlg'); });
+  $('chgForm').addEventListener('submit', submitChgPw);
   $('upDet').addEventListener('click', function(e){
     var b = e.target.closest && e.target.closest('#upFullBtn');
     if (!b) return;
