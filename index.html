@@ -455,6 +455,8 @@ dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-
 .cal-tip .tip-desc { margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9.5em; overflow: hidden; }
 .cal-msg { grid-column: 1 / -1; text-align: center; padding: 28px 16px; color: var(--paper-2); font-size: .9rem; }
 @media (max-width: 560px) { .cal-day { min-height: 62px; padding: 4px 3px; } .cal-evt { font-size: .6rem; } }
+/* computers: taller days, so the page runs further down into the pool (2026-10-07) */
+@media (min-width: 900px) { .cal-day { min-height: 124px; } .wk-day { min-height: 300px; } }
 /* section titles (Pool Calendar, Support, Membership): one style, oak spaced capitals */
 .sec-eyebrow { margin: 0 0 10px 2px; color: var(--paper); font-size: 1.25rem; font-weight: 600; letter-spacing: .18em; line-height: 1.2; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,.6), 0 0 14px rgba(20,15,9,.65); }
 /* next board meeting: a desk-calendar page - oak date tile, warm wood-tinted panel (sets it apart from the grey glass) */
@@ -1813,12 +1815,14 @@ html.vid .ripples{display:none}
       var ks = run.slice(), f = ks[0].split('-'), gen = calGen;
       ks.forEach(function(k){ inflight[k] = true; });
       google.script.run.withSuccessHandler(function(r){
+        window.rocCalDone = true; window.dispatchEvent(new Event('roc-cal'));  // the ripple film waits for this (Background)
         if (gen !== calGen) return;
         var got = (r && r.ok && r.months) || {};
         ks.forEach(function(k){ delete inflight[k]; if (r && r.ok) monthCache[k] = got[k] || []; });
         if (!(r && r.ok)) { ks.forEach(function(k){ delete pending[k]; }); showErr((r && r.message) || 'Could not load the calendar.'); return; }
         ks.forEach(function(k){ var cbs = pending[k] || []; delete pending[k]; cbs.forEach(function(fn){ fn(); }); });
       }).withFailureHandler(function(){
+        window.rocCalDone = true; window.dispatchEvent(new Event('roc-cal'));
         if (gen !== calGen) return;
         ks.forEach(function(k){ delete inflight[k]; delete pending[k]; });
         showErr('Could not load the calendar.');
@@ -2154,7 +2158,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var mq = window.matchMedia('(max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px)');
   var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky');
   var tint = stack.querySelector('.bg-tint'), shade = stack.querySelector('.bg-shade'), root = document.documentElement;
-  var heroH = 0, fbeams = document.querySelector('.bf-beams'), ext = stack.querySelector('.bg-ext'), POOL_HALF = (1 + WATER) / 2, vids = stack.querySelector('.bg-vids'), VID = BASE + 'pool-ripples.mp4', vidOn = false, vidSrc = '';
+  var heroH = 0, fbeams = document.querySelector('.bf-beams'), ext = stack.querySelector('.bg-ext'), POOL_HALF = (1 + WATER) / 2, vids = stack.querySelector('.bg-vids'), VID = BASE + 'pool-ripples.mp4', VID_HD = BASE + 'pool-ripples-hd.mp4', vidOn = false, vidSrc = '', filmW = 0;
   // the darkening at the top of the page, for a box whose top is `top` px down the page
   // starts solid in the page colour (#16110B, the browser bar's colour at the top) so the photo fades into the bar, under the title
   function shadeAt(top){ return 'linear-gradient(180deg, rgba(22,17,11,1) ' + (0 - top) + 'px, rgba(22,17,11,.82) ' + (40 - top) + 'px, rgba(20,15,9,.5) ' + (110 - top) + 'px, rgba(20,15,9,.22) ' + (190 - top) + 'px, rgba(20,15,9,0) ' + (330 - top) + 'px)'; }
@@ -2231,7 +2235,9 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
     el.style.webkitMaskImage = el.style.maskImage = m;
   }
   function placeVids(W, top, water){
-    var s = Math.max(W / VW, water / VH), fw = VW * s, fh = VH * s, half = fh / 2, blend = Math.round(half * BLEND);
+    var s = Math.max(W / VW, water / VH), fw = VW * s, fh = VH * s;
+    filmW = fw;
+    var half = fh / 2, blend = Math.round(half * BLEND);
     var pageH = stack.offsetHeight, boxes = [{ t: top, h: fh, from: 0 }], t = top + fh - blend;
     while (t < pageH && boxes.length < 12){ boxes.push({ t: t, h: half, from: half }); t += half - blend; }
     while (vids.children.length < boxes.length){
@@ -2257,22 +2263,37 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
       w.style.setProperty('--fade', k ? (1 - .3 * Math.min(1, (b.t - top) / Math.max(1, pageH - top))).toFixed(2) : 1);
     });
   }
-  // start the pool film after the page has loaded (~4 MB); show it, and hand the water over to it, only once it plays
+  // start the pool film (2.4 MB phones / 4 MB computers); show it, and hand the water over to it, only once it plays
   function startVid(){
     var quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.connection && navigator.connection.saveData);
     if (!vids || quiet || vidOn) return;
     vidOn = true;
-    // downloaded once and shared by all the copies (each <video> would otherwise fetch it again)
-    fetch(VID).then(function(r){ if (!r.ok) throw 0; return r.blob(); }).then(function(b){ return URL.createObjectURL(b); }, function(){ return VID; }).then(function(src){
-      vidSrc = src;
-      Array.prototype.forEach.call(vids.children, function(w){ if (w.style.display === 'none') return; w.firstChild.src = src; if (seen) seen.observe(w); else play(w.firstChild); });
-    });
+    // the top film plays as it downloads (ripples within a second or so); the copies below get it once it is all in, so
+    // they come from the browser's saved copy instead of downloading it again
+    var top = vids.firstChild && vids.firstChild.firstChild;
+    function all(){ vidSrc = VID; Array.prototype.forEach.call(vids.children, function(w, k){ if (!k || w.style.display === 'none') return; w.firstChild.src = VID; if (seen) seen.observe(w); else play(w.firstChild); }); }
+    function full(){ var b = top.buffered; return top.duration > 0 && b.length && b.end(b.length - 1) >= top.duration - .2; }
+    function check(){ if (!vidSrc && full()){ top.removeEventListener('progress', check); all(); } }
+    if (!top) return;
+    // phones get the small film (432 px wide, 2.4 MB); computers, where it is shown far wider, the sharper one (540 px, 4 MB)
+    if (filmW > 760) VID = VID_HD;
+    top.preload = 'auto'; top.src = VID;
+    if (seen) seen.observe(vids.firstChild);
+    play(top);  // also starts the download while it is still below the screen
+    top.addEventListener('progress', check); top.addEventListener('canplaythrough', check);
+    setTimeout(function(){ if (!vidSrc) all(); }, 20000);  // just in case the browser never reports it complete
     // if the browser holds them back (page not in view yet), try again when the page is shown or first touched
     function again(){ Array.prototype.forEach.call(vids.children, function(w){ var v = w.firstChild, r = w.getBoundingClientRect(); if (v.paused && r.bottom > -200 && r.top < innerHeight + 200) play(v); }); }
     document.addEventListener('visibilitychange', function(){ if (!document.hidden) again(); });
     ['pointerdown', 'scroll'].forEach(function(e){ window.addEventListener(e, again, { passive: true, once: true }); });
   }
-  if (document.readyState === 'complete') setTimeout(startVid, 300); else window.addEventListener('load', function(){ setTimeout(startVid, 300); });
+  // start after the page has loaded and the calendar's first answer is in (at most 2.5 s after load), so the film never
+  // holds up the page or the calendar
+  function afterLoad(){
+    if (window.rocCalDone) return startVid();
+    window.addEventListener('roc-cal', startVid, { once: true }); setTimeout(startVid, 2500);
+  }
+  if (document.readyState === 'complete') afterLoad(); else window.addEventListener('load', afterLoad);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
   if (window.ResizeObserver) new ResizeObserver(place).observe(document.body);
   place();
