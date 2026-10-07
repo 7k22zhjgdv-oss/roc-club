@@ -9,11 +9,22 @@
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
   var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword"];
-  function call(fn, args, ok, fail){
+  // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
+  // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  function call(fn, args, ok, fail, tries){
+    tries = tries || 0;
+    var got = false;
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply'); })
-      .catch(function(e){ if (fail) fail(e); });
+      .then(function(j){
+        got = true;
+        if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply');
+      })
+      .catch(function(e){
+        if (!got && tries < 2 && SAFE.indexOf(fn) >= 0) return setTimeout(function(){ call(fn, args, ok, fail, tries + 1); }, 1000 * (tries + 1));
+        if (fail) fail(e);
+      });
   }
   function runner(ok, fail){
     var r = { withSuccessHandler: function(f){ return runner(f, fail); }, withFailureHandler: function(f){ return runner(ok, f); } };
@@ -2932,6 +2943,7 @@ function submitChgPw(e){
   if (n1.length < 8){ err.textContent = 'The new password needs at least 8 characters.'; $('chgNew').focus(); return; }
   if (n1 !== n2){ err.textContent = 'The two new passwords don\'t match.'; $('chgNew2').focus(); return; }
   var b = $('chgGo'); b.disabled = true;
+  var done = function(){ err.style.color = 'var(--green)'; err.textContent = 'Password changed.'; setTimeout(function(){ closeDlg('chgDlg'); }, 1500); };
   serverCall('accessChangePassword', [CODE, cur, n1], function(r){
     if (!r || !r.ok){
       b.disabled = false;
@@ -2941,9 +2953,16 @@ function submitChgPw(e){
     }
     if (!r.pass){ err.style.color = 'var(--green)'; err.textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ closeDlg('chgDlg'); lockNow(''); }, 2500); return; }
     CODE = r.pass; saveCode(r.pass, r);
-    err.style.color = 'var(--green)'; err.textContent = 'Password changed.';
-    setTimeout(function(){ closeDlg('chgDlg'); }, 1500);
-  }, function(x){ b.disabled = false; err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'; });
+    done();
+  }, function(x){
+    var lost = function(){ b.disabled = false; err.textContent = 'Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'; };
+    // the reply may have been lost after the change was saved: sign in with the new password to find out
+    if (!WHO || !document.body.classList.contains('is-vol')) return lost();
+    serverCall('unlock', [WHO + '\n' + n1], function(v){
+      if (!(v && v.ok && v.pass)) return lost();
+      saveCode(v.pass, v); applyUnlocked(v.data, v.pass, v); done();
+    }, lost);
+  });
 }
 function openUnlock(){
   var as = stored('rocSignAs'); if (as === 'board') as = 'vol';
