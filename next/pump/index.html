@@ -10,11 +10,22 @@
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
   var API = 'https://script.google.com/macros/s/AKfycbyT2vJWAEfvHBqsMxAdcuO4xUCuDDVUZ6Uw-0xbxJSfFM0rsj0oJNRX53gclWo-hWMRQg/exec', FNS = ["unlock","whoAmI","saveEventSelection","savePoolFillSchedule","accessChangePassword"];
-  function call(fn, args, ok, fail){
+  // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
+  // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  function call(fn, args, ok, fail, tries){
+    tries = tries || 0;
+    var got = false;
     fetch(API, { method: 'POST', body: JSON.stringify({ fn: fn, args: args }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
       .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply'); })
-      .catch(function(e){ if (fail) fail(e); });
+      .then(function(j){
+        got = true;
+        if (j && 'value' in j){ if (ok) ok(j.value); } else throw new Error((j && j.error) || 'No reply');
+      })
+      .catch(function(e){
+        if (!got && tries < 2 && SAFE.indexOf(fn) >= 0) return setTimeout(function(){ call(fn, args, ok, fail, tries + 1); }, 1000 * (tries + 1));
+        if (fail) fail(e);
+      });
   }
   function runner(ok, fail){
     var r = { withSuccessHandler: function(f){ return runner(f, fail); }, withFailureHandler: function(f){ return runner(ok, f); } };
@@ -2213,7 +2224,7 @@ window.rocStartPump = function (DATA) {
       } else if (how === 'saved' && res && res.why === 'wrong' && !CODE){
         try { localStorage.removeItem(KEY); } catch(e){}
       }
-      if (res && res.ok) $('mnChgPw').hidden = !res.vol;   // own login: Change my password
+      if (res && res.ok){ $('mnChgPw').hidden = !res.vol; volName = res.vol ? res.who : ''; }   // own login: Change my password
       if (!(res && res.ok) && !started && how !== 'typed') gate('in');
       if (done) done(res);
     }).withFailureHandler(function(err){ if (!started && how !== 'typed') gate('in'); if (done) done({ok: false, message: 'Could not reach the server.'}); }).unlock(code);
@@ -2287,7 +2298,7 @@ window.rocStartPump = function (DATA) {
   $('mnSignOut').addEventListener('click', function(){ menu.close(); signOut(); });
   // Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
   // hands back a new pass, kept in place of the old one (the old pass stops working: their other devices sign out).
-  var chg = $('chgDlg');
+  var chg = $('chgDlg'), volName = '';
   $('mnChgPw').addEventListener('click', function(){
     menu.close();
     ['chgCur', 'chgNew', 'chgNew2'].forEach(function(id){ $(id).value = ''; pwShow($(id), false); });
@@ -2306,20 +2317,26 @@ window.rocStartPump = function (DATA) {
     if (!run()){ err.textContent = 'Only works in the live dashboard.'; return; }
     $('chgGo').disabled = true;
     var fail = function(m){ $('chgGo').disabled = false; err.textContent = m || 'Could not reach the server.'; };
+    var keep = function(r){   // r: {pass, level, who} - keep the new pass in place of the old one
+      CODE = r.pass;
+      try { localStorage.setItem(KEY, r.pass); } catch(x){}
+      wrapSend({roc: 'save', code: r.pass, level: r.level, who: r.who});
+      err.style.color = 'var(--good, #2e7d32)'; err.textContent = 'Password changed.';
+      setTimeout(function(){ chg.close(); }, 1500);
+    };
     google.script.run.withSuccessHandler(function(r){
       if (!r || !r.ok){
         if (r && r.why === 'wrong'){ chg.close(); signOut(); return; }
         return fail(r && r.message);
       }
       if (!r.pass){ err.style.color = 'var(--good, #2e7d32)'; err.textContent = 'Password changed. Please sign in again with the new password.'; setTimeout(function(){ chg.close(); signOut(); }, 2500); return; }
-      if (r.pass){
-        CODE = r.pass;
-        try { localStorage.setItem(KEY, r.pass); } catch(x){}
-        wrapSend({roc: 'save', code: r.pass, level: r.level, who: r.who});
-      }
-      err.style.color = 'var(--good, #2e7d32)'; err.textContent = 'Password changed.';
-      setTimeout(function(){ chg.close(); }, 1500);
-    }).withFailureHandler(function(x){ fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); }).accessChangePassword(CODE, cur, n1);
+      keep(r);
+    }).withFailureHandler(function(x){
+      // the reply may have been lost after the change was saved: sign in with the new password to find out
+      if (!volName) return fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.');
+      google.script.run.withSuccessHandler(function(v){ if (v && v.ok && v.pass) keep(v); else fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); })
+        .withFailureHandler(function(){ fail('Something went wrong (' + ((x && x.message) || x) + '). Your password may have changed: check by signing in again.'); }).whoAmI(volName + '\n' + n1);
+    }).accessChangePassword(CODE, cur, n1);
   });
   $('signCancel').addEventListener('click', function(){ dlg.close(); });
   $('signForm').addEventListener('submit', function(e){
