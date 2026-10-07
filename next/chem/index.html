@@ -8,10 +8,10 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck","accessAliases"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
@@ -234,6 +234,8 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .chipPop .poptrend{color:var(--ink2);margin:4px 0}
 .chipPop .popspark{margin-top:8px}
 .chipPop .spark{width:100%;display:block}
+.chipPop .spark .sparktick{stroke:var(--line);stroke-width:1}
+.chipPop .spark .sparkdate{fill:var(--muted);font-size:10px}
 .chipPop .sparkband{opacity:.18}
 .chipPop .sparkband.green{fill:var(--green)}
 .chipPop .sparkband.yellow{fill:var(--yellow)}
@@ -418,9 +420,10 @@ body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
 body:not(.is-vol) .volonly{display:none !important}
-#moreBtn{position:relative}
-#moreBtn.has-dot{overflow:visible}
-#moreBtn.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--card);pointer-events:none}
+#moreBtn,#eMore{position:relative}
+#moreBtn.has-dot,#eMore.has-dot{overflow:visible}
+#moreBtn.has-dot::after,#eMore.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--card);pointer-events:none}
+#eMore.has-dot::after{top:-2px;right:-2px;min-width:22px;height:22px;line-height:22px;font-size:13px;border-radius:11px}
 #akaIn{width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font-size:16px}
 /* members: test readings only - no date picker, view switcher, predictions or tracker cards */
 body.lvl-member .mchips,body.lvl-member .controls,body.lvl-member #trk{display:none !important}
@@ -880,6 +883,27 @@ html.app .mrow.appOnly{display:flex}
 #entryUi.open .eact{opacity:1;transform:none;pointer-events:auto}
 #entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s}
 .eact.hold{opacity:0!important;transition:none}
+/* home-screen app: the ⋯ opens the menu as bubbles, like the + (2026-10-07). Built from the menu's rows (buildMenuBubbles). */
+.macts{display:none}
+html.app #entryUi.menu .macts{display:flex}
+#entryUi.menu .escrim{background:var(--escrim);visibility:visible;pointer-events:auto;transition:background-color .18s}
+html.app #entryUi.menu #eFab{display:none}
+#entryUi.menu .macts .eact{opacity:1;transform:none;pointer-events:auto;animation:mpop .2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mpop{from{opacity:0;transform:translateY(12px) scale(.96)}}
+.macts .mcap{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px;font-size:13px;line-height:1.5;color:var(--muted);text-align:right;box-shadow:var(--eshadow);animation:mpop .2s both}
+/* the Volunteers panel (Manager): the same growing panel as Log test, without the save row */
+.egrow.nofoot .gfoot{display:none}
+.vlist{padding:2px 2px 8px}
+.vlist .vh{margin:14px 2px 6px;font-size:15px;font-weight:600}
+.vlist .vwarn{background:var(--rTint);border:1px solid var(--red);border-radius:10px;padding:8px 12px;font-size:14px;margin-top:6px}
+.vlist .vempty{color:var(--muted);font-size:14px;margin:0 2px}
+.vlist .vcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.vlist .vname{font-weight:600;font-size:16px}
+.vlist .vsub{color:var(--muted);font-size:13px;margin-top:2px;word-break:break-word}
+.vlist .vbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vlist .vbtns button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.vlist .vbtns button.primary{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-weight:600}
+.vlist .vbtns input{flex:1 1 160px;min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px;font-size:16px}
 .eact.off{color:var(--muted);cursor:default;box-shadow:none;background:var(--soft)}
 .ei44{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,var(--card));color:var(--c)}
 .ei44 svg{width:22px;height:22px}
@@ -951,6 +975,27 @@ html.app .mrow.appOnly{display:flex}
 .erec .r b{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
 .erec .r .g{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink2)}
 .erec .none{padding:8px 4px;font-size:13px;color:var(--muted)}
+/* Add chemical panel (2026-10-07): chemical buttons, then one block per chemical (amount + unit, strength, slow feeder, estimate, stock) */
+.ecpick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ecpick button{min-height:52px;border:1.5px solid transparent;border-radius:14px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);font:inherit;font-size:15px;font-weight:600;text-align:left;padding:7px 12px;cursor:pointer;line-height:1.2;display:flex;align-items:center;gap:8px}
+.ecpick button i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.ecpick button.more{background:var(--glassFill);color:var(--ink2);font-weight:500;justify-content:center}
+.eci{border-radius:14px;background:color-mix(in srgb,var(--c) 10%,transparent);border:1.5px solid color-mix(in srgb,var(--c) 30%,transparent);padding:8px 10px 10px;margin-bottom:8px}
+.eci .ech{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;color:var(--ink)}
+.eci .ech i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.eci .ech span{flex:1;min-width:0}
+.eci .ech button{flex:none;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:4px 6px}
+.eci .ecr{display:flex;gap:6px;margin-top:6px;align-items:stretch}
+.eci .etile{flex:1;background:var(--card)}
+.eci .etile.pct{flex:0 0 96px}
+.eci .ecu{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--glassFill)}
+.eci .ecu button{min-width:48px;border:0;border-radius:10px;background:none;font:inherit;font-size:15px;font-weight:600;color:var(--ink2);cursor:pointer;padding:0 8px}
+.eci .ecu button[aria-pressed="true"]{background:var(--card);color:var(--c);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.eci .echk{margin-top:8px;font-size:14.5px}
+.eci .ecx{margin-top:7px;font-size:13.5px;color:var(--ink2);line-height:1.45}
+.eci .ecx:empty{display:none}
+.eci .ecx .low{color:var(--red)}
+.ecadd{width:100%;height:46px;border:1.5px dashed var(--glassEdge);border-radius:14px;background:none;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
 #entryMenu .emsub{margin:-6px 0 8px;color:var(--muted);font-size:13px}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
@@ -1620,7 +1665,11 @@ function mkBtn(kind, id){
   return '<button type="button" class="mk" data-mk="' + kind + '" data-mkid="' + esc(id) + '" aria-label="' + (kind === 'slow' ? 'Slow feed setting' : 'Test settings') + '">⋯</button>';
 }
 /** An addition row's right end: its ⋯, or (Manager) an empty slot the same width so the prices stay in one column. */
-function rowMk(c){ return c.canSlow ? mkBtn('slow', c.id) : (isMgr() ? '<span class="mkph" aria-hidden="true"></span>' : ''); }
+function rowMk(c){
+  if (c.canSlow && isMgr()) return mkBtn('slow', c.id);
+  var e = window.entryMk ? entryMk(c, 'chem') : '';     // a dashboard addition: its person (or the Manager) can edit / delete it
+  return e || (isMgr() ? '<span class="mkph" aria-hidden="true"></span>' : '');
+}
 var NOTE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>';
 var MAINT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg>';
 function noteCard(n){
@@ -1712,7 +1761,7 @@ function chemIcon(tone){ return '<span class="cic" aria-hidden="true">' + CHEM_I
 function chemCard(c){
   return '<div class="card chem r-' + toneOf(c) + '">' + chemIcon(toneOf(c)) + '<div class="cb">' +
     '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>' +
-    '<div class="head"><span class="lhs"><span class="time">' + esc(groupInfo(c).time) + '</span>' + catHtml(c.category) + tagHtml(c) + '</span></div></div></div>';
+    '<div class="head"><span class="lhs"><span class="time">' + esc(groupInfo(c).time) + '</span>' + whoHtml(c) + catHtml(c.category) + tagHtml(c) + '</span></div></div></div>';
 }
 /** Sums the calculations of several additions that change the same reading (one set of numbers for the block). */
 function blockCalc(items){
@@ -1745,7 +1794,7 @@ function groupCard(items){
     return '<div class="blk r-' + b.tone + '" style="--c:' + cur + '">' + chemIcon(b.tone) + '<div class="cb">' +
       b.items.map(function(c){ return '<div class="row">' + addedHtml(c) + costHtml(c) + rowMk(c) + '</div>'; }).join('') +
       '<div class="head"><span class="lhs"><span class="time">' + esc(gi.time) + '</span>' +
-      catHtml(b.category) + tagHtml(pseudo) + '</span></div></div></div>';
+      whoHtml(b.items.filter(function(c){ return c.src === 'Dashboard'; })[0]) + catHtml(b.category) + tagHtml(pseudo) + '</span></div></div></div>';
   }).join('');
   return '<div class="card chem chemg">' + html + '</div>';
 }
@@ -1776,8 +1825,12 @@ function predCard(p, day, gid){
 }
 
 /* ------------------------------------------------------------ chip popover (range / trend / history) */
-var POP_HIST_OPTIONS = [10, 20, 30];  // sparkline: how many past tests to show, and the choices offered
-var popHistN = POP_HIST_OPTIONS[0];
+// Sparkline (2026-10-07): spaced by date over a time span; the choices offered (days, button label). Members only get
+// the first (they only see the last 7 days of tests anyway). Default for everyone else: POP_HIST_DEFAULT.
+var POP_HIST_OPTIONS = [[7, '1 week'], [30, '1 month'], [120, '4 months']];
+var POP_HIST_DEFAULT = 30;
+function popHistStart(){ return LEVEL === 'member' ? POP_HIST_OPTIONS[0][0] : POP_HIST_DEFAULT; }
+var popHistN = POP_HIST_DEFAULT;   // days shown
 var popPinned = false, popEl = null, popCurChip = null, popShowT = null, popHideT = null;
 var isTouch = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
 // Which slow-feed products a still-ramping addition can belong to, per reading - mirrors rampAffects_ in Code.gs.
@@ -1802,8 +1855,8 @@ function popNode(){
       if (e.target.closest && e.target.closest('[data-mkrm]') && popCurChip && popCurChip.hasAttribute('data-mkid')){ mkRemove(popCurChip, e.target.closest('[data-mkrm]').getAttribute('data-mkrm')); return; }
       var ed = e.target.closest && e.target.closest('[data-mked]');
       if (ed && popCurChip && popCurChip.hasAttribute('data-mkid')){
-        var eid = popCurChip.getAttribute('data-mkid'); closePop();
-        if (ed.getAttribute('data-mked') === 'edit') { if (window.entryEdit) entryEdit('test', eid); } else if (window.entryDel) entryDel('test', eid);
+        var eid = popCurChip.getAttribute('data-mkid'), ek = popCurChip.getAttribute('data-mk') === 'slow' ? 'chem' : 'test'; closePop();
+        if (ed.getAttribute('data-mked') === 'edit') { if (window.entryEdit) entryEdit(ek, eid); } else if (window.entryDel) entryDel(ek, eid);
         return;
       }
       var te =e.target && e.target.closest && e.target.closest('[data-trkedit], [data-trkcancel]');
@@ -1851,9 +1904,12 @@ function positionPop(anchor){
  * outside them, not just what today's value is. Falls back to auto-scaling to the values themselves (no bands)
  * when there's no colored range for this reading (Salt, Borates, Temp).
  */
-function sparkSvg(vals, readingName, dom){
-  if (vals.length < 2) return '';
-  var w = 288, h = 84, pad = 5;
+/** The line graph: pts = [{v, ms}] oldest first, placed by time across t0..t1 (ms), with light week ticks and a date
+ *  at each end. Same-day tests sit close together; every test gets a dot. */
+function sparkSvg(pts0, readingName, dom, t0, t1){
+  if (pts0.length < 2) return '';
+  var vals = pts0.map(function(p){ return p.v; });
+  var w = 288, h = 84, pad = 5, foot = 16;
   var lo, hi;
   if (dom){ lo = dom.lo; hi = dom.hi; }
   else { lo = Math.min.apply(null, vals); hi = Math.max.apply(null, vals); }
@@ -1866,14 +1922,23 @@ function sparkSvg(vals, readingName, dom){
       return '<rect x="0" y="' + y1.toFixed(1) + '" width="' + w + '" height="' + Math.max(0, y2 - y1).toFixed(1) + '" class="sparkband ' + r.color + '"></rect>';
     }).join('');
   }
-  var pts = vals.map(function(v, i){
-    var x = pad + i * (w - pad * 2) / (vals.length - 1);
-    return x.toFixed(1) + ',' + y_(v).toFixed(1);
-  });
-  var last = pts[pts.length - 1].split(',');
-  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true">' + bg +
+  var span = Math.max(1, t1 - t0);
+  var x_ = function(ms){ return pad + (Math.max(t0, Math.min(t1, ms)) - t0) * (w - pad * 2) / span; };
+  var ticks = '';
+  for (var tk = t1 - 7 * 86400000; tk > t0; tk -= 7 * 86400000){   // a light line every week, counted back from the end
+    ticks += '<line x1="' + x_(tk).toFixed(1) + '" x2="' + x_(tk).toFixed(1) + '" y1="0" y2="' + h + '" class="sparktick"></line>';
+  }
+  var pts = pts0.map(function(p){ return x_(p.ms).toFixed(1) + ',' + y_(p.v).toFixed(1); });
+  var dots = pts.map(function(xy, i){
+    var c = xy.split(','), lastOne = i === pts.length - 1;
+    return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (lastOne ? 3.5 : 2.4) + '" fill="var(--accent)"' + (lastOne ? '' : ' opacity=".8"') + '></circle>';
+  }).join('');
+  var dl = function(ms){ return new Date(ms).toLocaleDateString('en-US', {timeZone: 'America/Chicago', month: 'short', day: 'numeric'}); };
+  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + (h + foot) + '" width="' + w + '" height="' + (h + foot) + '" aria-hidden="true">' + bg + ticks +
     '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round" stroke-linecap="round"></polyline>' +
-    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3" fill="var(--accent)"></circle></svg>';
+    dots +
+    '<text x="' + pad + '" y="' + (h + 12) + '" class="sparkdate">' + esc(dl(t0)) + '</text>' +
+    '<text x="' + (w - pad) + '" y="' + (h + 12) + '" class="sparkdate" text-anchor="end">' + esc(dl(t1)) + '</text></svg>';
 }
 // Full names for the popover title, where the short chip label is an abbreviation worth spelling out.
 var FULL_NAME = { fc: 'Free Chlorine', cc: 'Combined Chlorine', ta: 'Total Alkalinity', ch: 'Calcium Hardness',
@@ -1942,15 +2007,17 @@ function rangeBarHtml(readingName, curVal, dom){
   }
   return '<div class="popbarwrap"><div class="popbar">' + segs + mark + '</div></div>';
 }
-/** Chronological (oldest to newest) tests reporting `key` at or before ms, last popHistN of them. */
-function historyFor(key, ms){
-  var have = (DATA.tests || []).filter(function(t){ return isNum(t[key]) && t.ms <= ms; });
+/** Chronological (oldest to newest) tests reporting `key` at or before ms; with `days`, only those in the last `days` days up to ms. */
+function historyFor(key, ms, days){
+  var from = days ? ms - days * 86400000 : -Infinity;
+  var have = (DATA.tests || []).filter(function(t){ return isNum(t[key]) && t.ms <= ms && t.ms > from; });
   have.sort(function(a, b){ return a.ms - b.ms; });
-  return have.slice(-popHistN);
+  return have;
 }
 function histBtnsHtml(){
-  return '<div class="pophistbtns">' + POP_HIST_OPTIONS.map(function(n){
-    return '<button type="button" class="pophistbtn' + (n === popHistN ? ' on' : '') + '" data-histn="' + n + '">' + n + '</button>';
+  if (LEVEL === 'member') return '';   // members only have the last week
+  return '<div class="pophistbtns">' + POP_HIST_OPTIONS.map(function(o){
+    return '<button type="button" class="pophistbtn' + (o[0] === popHistN ? ' on' : '') + '" data-histn="' + o[0] + '">' + o[1] + '</button>';
   }).join('') + '</div>';
 }
 function trendHtml(key, hist){
@@ -1963,14 +2030,18 @@ function trendHtml(key, hist){
   return '<div class="poptrend">' + arrow + ' ' + (d > 0 ? '+' : '') + fmtNum(d) + ' since last test (' + esc(when) + ')</div>';
 }
 function popContentReal(rk, readingName, label, cur, ms){
-  var hist = historyFor(rk, ms);
-  var vals = hist.map(function(t){ return t[rk]; });
+  var all = historyFor(rk, ms);                       // the "since last test" line compares with the test before, however long ago
+  if (LEVEL === 'member') popHistN = POP_HIST_OPTIONS[0][0];
+  var hist = historyFor(rk, ms, popHistN);
   var dom = readingName ? bandDomain_(readingName) : null;
-  var spark = vals.length > 1 ? sparkSvg(vals, readingName, dom) : '';
+  var spark = hist.length > 1 ? sparkSvg(hist.map(function(t){ return {v: t[rk], ms: t.ms}; }), readingName, dom, ms - popHistN * 86400000, ms) : '';
+  var spanName = POP_HIST_OPTIONS.filter(function(o){ return o[0] === popHistN; }).map(function(o){ return o[1]; })[0] || (popHistN + ' days');
+  var footText = hist.length > 1 ? hist.length + ' tests' : (hist.length ? 'Only 1 test in the last ' + spanName : 'No tests in the last ' + spanName);
   return '<div class="poph"><b>' + popTitleHtml(rk, label) + '</b><span class="popv">' + numHtml(rk, cur) + '</span></div>' +
     rangeBarHtml(readingName, cur, dom) +
-    trendHtml(rk, hist) +
-    (spark ? '<div class="popspark">' + spark + '</div><div class="popsparkfoot"><span class="popsl">last ' + vals.length + ' tests</span>' + histBtnsHtml() + '</div>' : '');
+    trendHtml(rk, all) +
+    (all.length > 1 ? (spark ? '<div class="popspark">' + spark + '</div>' : '') +
+      '<div class="popsparkfoot"><span class="popsl">' + esc(footText) + '</span>' + histBtnsHtml() + '</div>' : '');
 }
 function popContentPred(rk, readingName, label, from, to, gid){
   var pred = DATA.preds && DATA.preds[gid];
@@ -2006,9 +2077,10 @@ function mkPopHtml(btn){
   return '<div class="poph"><b>' + esc(title) + '</b></div>' +
     '<div style="color:var(--muted)">' + esc(fmtDayRel(it.day) + ', ' + (kind === 'slow' ? groupInfo(it).time : it.time)) + '</div>' +
     (kind === 'store' && it.w && wxFull(it.w) ? '<div style="color:var(--muted)">' + esc(wxFull(it.w)) + '</div>' : '') +
-    (kind === 'store' && it.src === 'Dashboard' && it.by ? '<div style="color:var(--muted)">Entered by ' + esc(fullName(it.by)) + '</div>' : '') +
+    (it.src === 'Dashboard' && it.by ? '<div style="color:var(--muted)">Entered by ' + esc(fullName(it.by)) + '</div>' : '') +
     '<div class="mksw"><span>' + label + '</span><button type="button" class="tgl' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(label) + '" data-mktoggle="' + kind + '"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
     '<div class="trkhint">' + (mkBusy ? 'Saving…' : esc(hint)) + '</div>' +
+    (kind === 'slow' && it.src === 'Dashboard' ? '<div class="mkrm"><button type="button" class="btn" data-mked="edit">Edit</button><button type="button" class="btn danger" data-mked="del">Delete</button></div>' : '') +
     (kind === 'store' ? '<div class="mksw"><span>Hide from members</span><button type="button" class="tgl' + (it.hidden ? ' on' : '') + '" role="switch" aria-checked="' + !!it.hidden + '" aria-label="Hide from members" data-mktoggle="hide"' + (mkBusy ? ' disabled' : '') + '></button></div>' +
       '<div class="trkhint">' + esc(it.hidden ? 'Members do not see this test. Board and manager still do.' : 'Members see tests from the last ' + (DATA.memberDays || 7) + ' days.') + '</div>' +
       (it.src === 'Dashboard'
@@ -2075,7 +2147,7 @@ function renderPopHtml(chip){
   return popContentReal(rk, col[2], col[1], cur, ms);
 }
 function openPopFor(chip, pinned){
-  if (chip !== popCurChip){ popHistN = POP_HIST_OPTIONS[0]; if (!mkBusy) mkMsg = ''; if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== trkEdit){ trkEdit = -1; trkMsg = ''; } }   // switching to a different chip: back to the defaults
+  if (chip !== popCurChip){ popHistN = popHistStart(); if (!mkBusy) mkMsg = ''; if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== trkEdit){ trkEdit = -1; trkMsg = ''; } }   // switching to a different chip: back to the defaults
   popCurChip = chip;
   var html = renderPopHtml(chip);
   if (!html) return;
@@ -2988,7 +3060,10 @@ function saveAliases(){
 // The Manager's notice: a dot on the ··· button and "Volunteers (2 waiting)" in its menu (opens the screen on Home)
 function setWaiting(n){
   n = Number(n) || 0;
-  $('moreBtn').classList.toggle('has-dot', n > 0); $('moreBtn').setAttribute('data-count', n > 9 ? '9+' : String(n));
+  ['moreBtn', 'eMore'].forEach(function(id){   // the top bar's ··· and the round ··· of the home-screen app
+    var b = $(id); if (!b) return;
+    b.classList.toggle('has-dot', n > 0); b.setAttribute('data-count', n > 9 ? '9+' : String(n));
+  });
   $('mnVols').innerHTML = 'Volunteers' + (n ? '&nbsp;<span style="color:var(--red);font-weight:600">(' + n + ' waiting)</span>' : '');
 }
 function openChgPw(){
@@ -3758,7 +3833,11 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
   $('mnChgPw').addEventListener('click', function(){ closeDlg('menuDlg'); openChgPw(); });
   $('akaSave').addEventListener('click', saveAliases);
-  $('mnVols').addEventListener('click', function(){ closeDlg('menuDlg'); window.top.location.href = 'https://www.rollingoaksclub.org/?volunteers'; });
+  $('mnVols').addEventListener('click', function(){
+    closeDlg('menuDlg');
+    if (window.openVolunteersPanel && getComputedStyle($('entryUi')).display !== 'none') openVolunteersPanel($('moreBtn'));
+    else window.top.location.href = 'https://www.rollingoaksclub.org/?volunteers';   // only if the panel can't show here
+  });
   $('chgCancel').addEventListener('click', function(){ closeDlg('chgDlg'); });
   $('chgForm').addEventListener('submit', submitChgPw);
   $('upDet').addEventListener('click', function(e){
@@ -3983,9 +4062,9 @@ document.addEventListener('DOMContentLoaded', function(){
       <button type="button" class="eact" id="ePump">
         Log pump reading
         <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span></button>
-      <button type="button" class="eact off" aria-disabled="true" tabindex="-1">
+      <button type="button" class="eact" id="eChemBtn">
         Add chemical
-        <span class="ei44" style="--c:var(--muted)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span></button>
+        <span class="ei44" style="--c:var(--k-fc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg></span></button>
       <button type="button" class="eact" id="eNoteBtn">
         Add a note
         <span class="ei44" style="--c:var(--ink2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg></span></button>
@@ -3993,6 +4072,7 @@ document.addEventListener('DOMContentLoaded', function(){
         Log test
         <span class="ei44" style="--c:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg></span></button>
     </div>
+    <div class="eacts macts" id="mActs"></div>
     <button type="button" class="emore" id="eMore" aria-label="Menu"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
     <button type="button" class="efab" id="eFab" aria-label="Add a test or note" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -4022,10 +4102,15 @@ document.addEventListener('DOMContentLoaded', function(){
   var ICON = {
     test: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v13a3 3 0 0 0 6 0V3"/><path d="M8 3h8M9 10h6"/></svg>',
     note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h14v10l-6 6H5z"/><path d="M13 20v-6h6"/></svg>',
-    pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>'
+    pump: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>',
+    chem: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v4l-4 6v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6l-4-6V3"/><path d="M6 14h12"/></svg>'
   };
   var WHEN_ICO = '<svg class="wi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
-  var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading']};
+  var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
+    chem: ['chemical', 'var(--k-fc)', 'Save chemical'],
+    vols: ['Volunteers', 'var(--red)', '']};
+  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
+  ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
     ['Daily', 'tested every day', [['fc','FC','ppm',0,20], ['cc','CC','ppm',0,5], ['ph','pH','',6.4,8.6]]],
@@ -4043,15 +4128,42 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function setOpen(o){ ui.classList.toggle('open', o); fab.setAttribute('aria-expanded', o ? 'true' : 'false'); }
   fab.addEventListener('click', function(){ setOpen(!ui.classList.contains('open')); });
-  $('eMore').addEventListener('click', function(){ openMenu('menuDlg'); });          // home-screen app only (the bar's ⋯)
-  $('eScrim').addEventListener('click', function(){ if (grow.hidden) setOpen(false); });
+  $('eMore').addEventListener('click', function(){ setMenu(!ui.classList.contains('menu')); });   // home-screen app only (the bar's ⋯)
+  $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
+  // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
+  // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
+  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnVols', 'mnChgPw', 'mnLock'];
+  function setMenu(o){
+    if (o) buildMenuBubbles();
+    ui.classList.toggle('menu', o);
+    $('eMore').setAttribute('aria-expanded', o ? 'true' : 'false');
+  }
+  function buildMenuBubbles(){
+    var box = $('mActs'), ids = MENU_BOTTOM_UP.filter(function(id){ var b = $(id); return b && getComputedStyle(b).display !== 'none'; }).reverse();
+    box.textContent = '';
+    var cap = ['mnWho', 'mnAsof', 'mnUpd'].map(function(id){ return $(id) ? $(id).textContent.trim() : ''; }).filter(Boolean);
+    if (cap.length){ var c = document.createElement('div'); c.className = 'mcap'; cap.forEach(function(t, i){ if (i) c.appendChild(document.createElement('br')); c.appendChild(document.createTextNode(t)); }); box.appendChild(c); }
+    ids.forEach(function(id, i){
+      var row = $(id), pill = document.createElement('button');
+      pill.type = 'button'; pill.className = 'eact';
+      pill.style.animationDelay = ((ids.length - 1 - i) * 0.025) + 's';
+      pill.innerHTML = '<span>' + row.innerHTML + '</span><span class="ei44" style="--c:' + (id === 'mnVols' ? 'var(--red)' : id === 'mnLock' ? 'var(--muted)' : 'var(--accent)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + MENU_ICONS[id] + '</svg></span>';
+      pill.addEventListener('click', function(){
+        if (id === 'mnVols'){ openPanel('vols', null, pill); return; }
+        setMenu(false); row.click();
+      });
+      box.appendChild(pill);
+    });
+  }
+  window.openVolunteersPanel = function(from){ openPanel('vols', null, from); };
   $('eTestBtn').addEventListener('click', function(){ openPanel('test', null, $('eTestBtn')); });
   $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
   $('ePump').addEventListener('click', function(){ openPanel('pump', null, $('ePump')); });
+  $('eChemBtn').addEventListener('click', function(){ openPanel('chem', null, $('eChemBtn')); });
   $('eX').addEventListener('click', function(){ closePanel(); });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
-    if (!grow.hidden && !busy) closePanel(); else if (ui.classList.contains('open')) setOpen(false);
+    if (!grow.hidden && !busy) closePanel(); else if (ui.classList.contains('open')) setOpen(false); else if (ui.classList.contains('menu')) setMenu(false);
   });
 
   /** Called from renderAll: show the button only for those who may enter. */
@@ -4059,6 +4171,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var can = !!(unlocked && DATA && DATA.canEnter);
     document.body.classList.toggle('can-enter', can);
     $('ePump').style.display = isBrd() ? '' : 'none';               // the Pump Log needs Board or Manager
+    $('eChemBtn').style.display = isBrd() ? '' : 'none';            // so do chemicals (members don't see them at all)
     if (!can){ setOpen(false); if (!grow.hidden) shut(); }
   };
 
@@ -4231,6 +4344,195 @@ document.addEventListener('DOMContentLoaded', function(){
     return {reading: raw === '' ? NaN : Number(raw), readRaw: raw, tank: tr === '' ? '' : Number(tr)};
   }
 
+  // ---- Add chemical (Board and Manager who may enter): saveChems in Code.gs. Pick a chemical (most used in the last 4 months
+  // first), amount + unit (last used), strength for liquid chlorine (last used), slow feeder box where it applies; the estimate
+  // is worked out here the same way as effectFor_ / alsoFor_ in Code.gs, and the stock line from DATA.stock.
+  var chem = {items: [], picking: true, more: false};
+  var CHEM_PICK_TOP = 6, CHEM_MAX_ITEMS = 8;
+  var CHEM_MAX = {'gal': 50, 'fl oz': 2000, 'lb': 200, 'oz': 3200, 'unit': 100};            // same as CHEM_ENTRY_MAX
+  var EST_L = 48000 * 3.785411784, EST_BASE = {'gal': 3785.411784, 'fl oz': 29.5735295625, 'lb': 453.59237, 'oz': 28.349523125, 'unit': 1};
+  var STOCK_BASE = {gal: 3785.411784, oz: 29.5735295625, lbs: 453.59237, boxes: 65 * 28.349523125, units: 1};
+  var STOCK_KIND = {gal: 'Liquid', oz: 'Liquid', lbs: 'Dry', boxes: 'Dry', units: 'Count'};
+  var UNIT_KIND = {'gal': 'Liquid', 'fl oz': 'Liquid', 'lb': 'Dry', 'oz': 'Dry', 'unit': 'Count'};
+  function chemList(){
+    var used = {}, cut = Date.now() - 120 * 86400000;
+    (DATA.chems || []).forEach(function(c){ if (c.ms >= cut){ var k = String(c.product || '').toLowerCase(); used[k] = (used[k] || 0) + 1; } });
+    return (DATA.chemicals || []).filter(function(c){ return !isInactive(c) && !c.unrec && !/^cal-?hypo puck$/i.test(c.name); })
+      .sort(function(a, b){ return (used[b.name.toLowerCase()] || 0) - (used[a.name.toLowerCase()] || 0) || a.name.localeCompare(b.name); });
+  }
+  function chemInfo(name){ var low = String(name || '').toLowerCase(); return (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === low; })[0] || {name: name, kind: ''}; }
+  function lastChem(name){
+    var low = String(name || '').toLowerCase(), best = null;
+    (DATA.chems || []).forEach(function(c){ if (!c.fromNote && String(c.product || '').toLowerCase() === low && (!best || c.ms > best.ms)) best = c; });
+    return best;
+  }
+  function chemItem(info, from){
+    var units = UNIT_BY_KIND[info.kind] || ['gal', 'fl oz', 'lb', 'oz'], last = lastChem(info.name);
+    var unit = from ? from.unit : last && units.indexOf(last.unit) >= 0 ? last.unit : /orenda/i.test(info.name) && info.kind === 'Liquid' ? 'fl oz' : units[0];
+    if (units.indexOf(unit) < 0) units = units.concat([unit]);
+    var pct = from && isNum(from.strength) ? from.strength : last && isNum(last.strength) ? last.strength : '';
+    return {name: info.name, info: info, units: units, unit: unit, amount: from ? fmtNum(from.amount) : '', pct: pct === '' ? '' : fmtNum(pct), slow: from ? !!from.slow : false};
+  }
+  function slowKind(it){ return /tri-?chlor/i.test(it.name) ? 'tri' : /cal-?hypo/i.test(it.name) ? 'puck' : it.info.affects === 'ph' && it.info.dir === 'down' ? 'feeder' : ''; }
+  function chemBody(c){
+    var n = c ? {day: c.day, time: to24(c.time)} : nowLocal();
+    chem.items = c ? [chemItem(chemInfo(c.product), c)] : []; chem.picking = !c; chem.more = false;
+    return '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
+      '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
+      '<div id="ecItems"></div><div id="ecPick"></div>' +
+      (c ? '' : '<div class="egrp"><b>Note</b><span>optional</span></div><textarea class="etext" id="eNote" maxlength="1000" placeholder="Anything worth noting"></textarea>');
+  }
+  function chemDraw(focusI){
+    $('ecItems').innerHTML = chem.items.map(function(it, i){
+      var sk = slowKind(it), uw = it.unit === 'unit' ? 'units' : it.unit;
+      return '<div class="eci" style="--c:var(--k-' + priceTone(it.info) + ')"><div class="ech"><i></i><span>' + esc(it.name) + '</span>' +
+          (editing ? '' : '<button type="button" data-crm="' + i + '">Remove</button>') + '</div>' +
+        '<div class="ecr"><label class="etile"><span class="nm">Amount<i>' + esc(uw) + '</i></span><input data-camt="' + i + '" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off" value="' + esc(it.amount) + '"></label>' +
+          (it.units.length > 1 ? '<div class="ecu" role="group" aria-label="Unit">' + it.units.map(function(u){
+            return '<button type="button" data-cu="' + i + '" data-u="' + esc(u) + '" aria-pressed="' + (u === it.unit) + '">' + esc(u) + '</button>'; }).join('') + '</div>' : '') +
+          (it.info.sMode === 'entry' ? '<label class="etile pct"><span class="nm">Strength<i>%</i></span><input data-cpct="' + i + '" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off" value="' + esc(it.pct) + '"></label>' : '') +
+        '</div>' +
+        (sk === 'puck' || sk === 'feeder' ? '<label class="echk"><input type="checkbox" data-cslow="' + i + '"' + (it.slow ? ' checked' : '') + '> ' + (sk === 'puck' ? 'Pucks in the feeder (slow feed)' : 'Through the slow feeder') + '</label>' : '') +
+        '<div class="ecx" id="ecx_' + i + '"></div></div>';
+    }).join('');
+    var h = '';
+    if (!editing && chem.items.length < CHEM_MAX_ITEMS) {
+      if (chem.picking) {
+        var list = chemList(), shown = chem.more ? list : list.slice(0, CHEM_PICK_TOP);
+        h = '<div class="egrp"><b>' + (chem.items.length ? 'Another chemical' : 'Chemical') + '</b><span>tap to choose</span></div><div class="ecpick">' +
+          shown.map(function(c){ return '<button type="button" data-cpick="' + esc(c.name) + '" style="--c:var(--k-' + priceTone(c) + ')"><i></i>' + esc(shortProduct(c.name) || c.name) + '</button>'; }).join('') +
+          (list.length > shown.length ? '<button type="button" class="more" data-cmore="1">More chemicals…</button>' : '') + '</div>';
+      } else h = '<button type="button" class="ecadd" data-cadd="1">+ Add another chemical</button>';
+    }
+    $('ecPick').innerHTML = h;
+    if (focusI !== undefined) { var f = body.querySelector('[data-camt="' + focusI + '"]'); if (f) try { f.focus({preventScroll: true}); f.scrollIntoView({block: 'nearest'}); } catch(e){} }
+    refresh();
+  }
+  function numIn(v){ v = String(v == null ? '' : v).trim().replace(',', '.'); return v === '' ? NaN : Number(v); }
+  function chemAmt(it){ return numIn(it.amount); }
+  function chemPct(it){ return numIn(it.pct); }
+  function chemCheck(){
+    if (!chem.items.length) return 'Choose a chemical first.';
+    for (var i = 0; i < chem.items.length; i++) {
+      var it = chem.items[i], a = chemAmt(it), p = chemPct(it);
+      if (!(a > 0)) return 'Enter how much ' + it.name + ' was added.';
+      if (a > CHEM_MAX[it.unit]) return 'Check the amount of ' + it.name + ' - ' + fmtNum(a) + ' ' + it.unit + ' can\'t be right.';
+      if (it.info.sMode === 'entry' && !(p >= 1 && p <= 40)) return 'Enter the strength (%) of the ' + it.name + '.';
+    }
+    return '';
+  }
+  /** An addition of the same chemical already logged within 30 minutes (Pool Math or dashboard), else null. */
+  function chemDup(ms){
+    var names = chem.items.map(function(it){ return it.name.toLowerCase(); });
+    return (DATA.chems || []).filter(function(c){
+      return !c.fromNote && (!editing || c.id !== editing.id) && Math.abs(c.ms - ms) <= DUP_MS && names.indexOf(String(c.product || '').toLowerCase()) >= 0;
+    })[0] || null;
+  }
+  // -- estimates: the same chemistry as Code.gs (fcPpm_, acidTaPpm_, chPpm_, cyaPpm_, borax, phDrop_, phAfter_)
+  function estLast(f, ms, age){
+    var b = null;
+    (DATA.tests || []).forEach(function(t){ if (t.ms <= ms && ms - t.ms <= (age || 14 * 86400000) && isNum(t[f]) && (!b || t.ms > b.ms)) b = t; });
+    return b ? Number(b[f]) : null;
+  }
+  function cyaAlk(cya, pH){ return cya * (50 / 129) / (1 + Math.pow(10, 6.88 - pH)); }
+  function borAlk(b, pH){ return (b / 61.83) * 50 / (1 + Math.pow(10, 9.24 - pH)); }
+  function carbFrac(p){ var K1 = Math.pow(10, -6.35), K2 = Math.pow(10, -10.33), h = Math.pow(10, -p); return (K1 * h + 2 * K1 * K2) / (h * h + K1 * h + K1 * K2); }
+  function phDrop(pH, ta, cya, ppm){
+    var c0 = cya || 0, carb = ta - cyaAlk(c0, pH); if (carb <= 0) return null;
+    var dic = carb / carbFrac(pH), target = ta - ppm, lo = 3, hi = pH;
+    if (target <= dic * carbFrac(lo) + cyaAlk(c0, lo)) return null;
+    for (var i = 0; i < 60; i++) { var m = (lo + hi) / 2; if (dic * carbFrac(m) + cyaAlk(c0, m) > target) hi = m; else lo = m; }
+    return pH - (lo + hi) / 2;
+  }
+  function phAfter(pH, ta, cya, b0, dAlk, dBor){
+    var c0 = cya || 0; b0 = b0 || 0;
+    var carb = ta - cyaAlk(c0, pH) - borAlk(b0, pH); if (carb <= 0) return null;
+    var dic = carb / carbFrac(pH), target = ta + dAlk, f = function(p){ return dic * carbFrac(p) + cyaAlk(c0, p) + borAlk(b0 + dBor, p); };
+    var lo = 3, hi = 11; if (target <= f(lo) || target >= f(hi)) return null;
+    for (var i = 0; i < 60; i++) { var m = (lo + hi) / 2; if (f(m) > target) hi = m; else lo = m; }
+    return (lo + hi) / 2;
+  }
+  function estimate(c){
+    var b = EST_BASE[c.unit], pct = isNum(c.strength) && c.strength > 0 ? Number(c.strength) : /tri-?chlor/i.test(c.product) ? 90 : /di-?chlor/i.test(c.product) ? 56 : null;
+    var fc = b && pct !== null && c.kind !== 'Count' ? c.amount * b * pct * 10 / EST_L : null, out = {main: '', also: [], why: ''};
+    var r1 = function(x){ return Math.round(x * 10) / 10; };
+    if (c.affects === 'fc' && c.dir !== 'down' && fc !== null) out.main = 'FC ' + effNum(r1(fc), 'FC') + ' ppm';
+    var borax = c.kind !== 'Liquid' && /borax/i.test(c.product) && (c.unit === 'lb' || c.unit === 'oz');
+    if (borax) {
+      var mol = c.amount * b / 381.37, bor = mol * 4 * 61.83 * 1000 / EST_L, bta = mol * 2 * 50000 / EST_L;
+      if (c.affects === 'bor') out.main = 'Borates ' + effNum(r1(bor), 'BOR') + ' ppm';
+      var ph0 = estLast('ph', c.ms), ta0 = estLast('ta', c.ms);
+      if (ph0 !== null && ta0 !== null) { var p2 = phAfter(ph0, ta0, estLast('cya', c.ms, 45 * 86400000), estLast('bor', c.ms, 45 * 86400000), bta, bor); if (p2 !== null && p2 > ph0) out.also.push('pH ' + effNum(Math.round((p2 - ph0) * 100) / 100, 'pH')); }
+      if (bta > 0) out.also.push('TA ' + effNum(r1(bta), 'TA'));
+    }
+    if (c.affects === 'ph' && c.dir === 'down' && c.kind === 'Liquid' && pct !== null && b) {
+      var ta = c.amount * b * (1 + 0.005 * pct) * pct / 100 / 36.46 * 50000 / EST_L;
+      var ph = estLast('ph', c.ms), ta1 = estLast('ta', c.ms);
+      var d = ph !== null && ta1 !== null ? phDrop(ph, ta1, estLast('cya', c.ms), ta) : null;
+      if (d !== null) out.main = 'pH ' + effNum(-r1(d), 'pH').replace(/0$/, '');
+      else out.why = 'No pH estimate: it needs a pH and TA test from the last 14 days.';
+      out.also.push('TA ' + effNum(-r1(ta), 'TA'));
+    }
+    if (fc !== null && c.kind !== 'Liquid' && /cal-?hypo/i.test(c.product)) out.also.push('CH ' + effNum(r1(fc * 100 / 141.8), 'CH'));
+    if (fc !== null && c.kind !== 'Liquid' && /tri-?chlor/i.test(c.product)) out.also.push('CYA ' + effNum(r1(fc * 129 / 212.7), 'CYA'));
+    else if (fc !== null && c.kind !== 'Liquid' && /di-?chlor/i.test(c.product)) out.also.push('CYA ' + effNum(r1(fc * 129 / 141.8), 'CYA'));
+    return out;
+  }
+  function chemLine(it, ms){
+    var a = chemAmt(it); if (!(a > 0)) return '';
+    var kind = it.info.kind || UNIT_KIND[it.unit], lines = [], sk = slowKind(it);
+    var c = {product: it.name, amount: a, unit: it.unit, kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
+      strength: it.info.sMode === 'entry' ? chemPct(it) : it.info.sMode === 'fixed' ? Number(it.info.strength) : ''};
+    if (sk === 'tri' || it.slow) lines.push('Slow feed: reaches the pool over several days, so no instant estimate.');
+    else {
+      var e = estimate(c), parts = (e.main ? ['<b>' + esc(e.main) + '</b>'] : []).concat(e.also.map(esc));
+      if (parts.length) lines.push('Estimate ' + parts.join(' · ') + ' <span style="color:var(--muted)">(right after mixing)</span>');
+      if (e.why) lines.push(esc(e.why));
+      if (!parts.length && !e.why) { var w = (DATA.chems || []).filter(function(x){ return x.what && String(x.product).toLowerCase() === it.name.toLowerCase(); })[0]; if (w) lines.push(esc(w.what)); }
+    }
+    var key = it.slow && /cal-?hypo/i.test(it.name) ? 'cal-hypo puck' : it.name.toLowerCase(), st = (DATA.stock || {})[key];
+    if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[it.unit]) {
+      var back = 0;
+      if (editing && editing.product && String(editing.product).toLowerCase() === it.name.toLowerCase() && EST_BASE[editing.unit] && !!editing.slow === !!it.slow) back = editing.amount * EST_BASE[editing.unit];
+      var left = (st.base + back) / STOCK_BASE[st.unit], after = (st.base + back - a * EST_BASE[it.unit]) / STOCK_BASE[st.unit];
+      var rnd = function(x){ return st.unit === 'oz' || st.unit === 'units' ? String(Math.round(x)) : fmtNum(Math.round(x * 10) / 10); };
+      lines.push(after < -0.05 ? '<span class="low">More than the ' + rnd(Math.max(left, 0)) + ' ' + st.unit + ' in stock. Check the amount (or Adjust stock in Prices).</span>'
+        : 'Stock after this: about ' + rnd(Math.max(after, 0)) + ' ' + st.unit);
+    }
+    return lines.join('<br>');
+  }
+  function chemRefresh(){
+    var w = when(), ms = w ? w.ms : Date.now();
+    chem.items.forEach(function(it, i){ var el = $('ecx_' + i); if (el) el.innerHTML = chemLine(it, ms); });
+    if (!busy && !editing) save.textContent = chem.items.length > 1 ? 'Save ' + chem.items.length + ' chemicals' : KIND.chem[2];
+    save.disabled = busy || !chem.items.length || chem.items.some(function(it){ return !(chemAmt(it) > 0); });
+  }
+  body.addEventListener('click', function(e){
+    if (mode !== 'chem' || !e.target.closest) return;
+    var b = e.target.closest('[data-cpick],[data-cmore],[data-crm],[data-cu],[data-cadd]'); if (!b) return;
+    if (b.hasAttribute('data-cpick')) { chem.items.push(chemItem(chemInfo(b.getAttribute('data-cpick')))); chem.picking = false; chem.more = false; chemDraw(chem.items.length - 1); }
+    else if (b.hasAttribute('data-cmore')) { chem.more = true; chemDraw(); }
+    else if (b.hasAttribute('data-cadd')) { chem.picking = true; chemDraw(); var pk = $('ecPick'); if (pk) try { pk.scrollIntoView({block: 'nearest', behavior: 'smooth'}); } catch(x){} }
+    else if (b.hasAttribute('data-crm')) { chem.items.splice(+b.getAttribute('data-crm'), 1); if (!chem.items.length) chem.picking = true; chemDraw(); }
+    else { chem.items[+b.getAttribute('data-cu')].unit = b.getAttribute('data-u'); chemDraw(); }
+  });
+  body.addEventListener('input', function(e){
+    if (mode !== 'chem') return;
+    var t = e.target, i;
+    if ((i = t.getAttribute('data-camt')) !== null) chem.items[+i].amount = t.value;
+    else if ((i = t.getAttribute('data-cpct')) !== null) chem.items[+i].pct = t.value;
+    else return;
+    refresh();
+  });
+  body.addEventListener('change', function(e){
+    if (mode !== 'chem') return;
+    var i = e.target.getAttribute('data-cslow');
+    if (i !== null) { chem.items[+i].slow = e.target.checked; refresh(); }
+  });
+  body.addEventListener('keydown', function(e){
+    if (mode === 'chem' && e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); e.target.blur(); }
+  });
+
   // ---- the panel
   function whoText(){ var me = DATA.me || WHO; return 'Saved as<br>' + esc(firstName(me)); }
   function testBody(t){
@@ -4271,8 +4573,10 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function refresh(){
     msg.textContent = ''; msg.className = 'emsg'; dupOk = false;
+    if (mode === 'vols') return;
     if (!busy) save.textContent = editing ? 'Save changes' : KIND[mode][2];
     if (mode === 'note') { save.disabled = busy || !$('eNote').value.trim(); return; }
+    if (mode === 'chem') { chemRefresh(); return; }
     if (mode === 'pump') {
       var pv = pumpVals(), rOdd = pv.readRaw !== '' && !isFinite(pv.reading), tOdd = pv.tank !== '' && !(pv.tank >= 0 && pv.tank <= TANK_GAL * 1.1);
       $('epReadT').classList.toggle('odd', rOdd); $('epTankT').classList.toggle('odd', tOdd);
@@ -4326,10 +4630,13 @@ document.addEventListener('DOMContentLoaded', function(){
     mode = kind; editing = item; fromEl = from || fab;
     $('eIcon').style.setProperty('--c', KIND[kind][1]);
     $('eIcon').innerHTML = ICON[kind];
-    $('eTitle').textContent = (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
+    $('eTitle').textContent = kind === 'vols' ? 'Volunteers' : kind === 'chem' ? (item ? 'Edit chemical' : 'Add chemical') : (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
+    grow.classList.toggle('nofoot', kind === 'vols');
     save.textContent = item ? 'Save changes' : KIND[kind][2];
     $('eWho').innerHTML = item ? 'Entered by<br>' + esc(firstName(item.by)) : whoText();
-    body.innerHTML = kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : noteBody(item);
+    body.innerHTML = kind === 'vols' ? '<div class="vlist" id="vList">Loading…</div>' : kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : kind === 'chem' ? chemBody(item) : noteBody(item);
+    if (kind === 'vols') volLoad('');
+    if (kind === 'chem') chemDraw();
     body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
     if (kind === 'pump') {
       body.querySelectorAll('[data-pt]').forEach(function(b){ b.addEventListener('click', function(){
@@ -4355,7 +4662,80 @@ document.addEventListener('DOMContentLoaded', function(){
     requestAnimationFrame(function(){ place(full(), panelRad()); grow.classList.add('big'); body.scrollTop = 0; });
     setTimeout(function(){ try { $('eX').focus({preventScroll: true}); } catch(e){} }, reduce ? 0 : 340);
   }
-  function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); }
+  function shut(){ grow.hidden = true; document.querySelectorAll('.eact.hold').forEach(function(b){ b.classList.remove('hold'); }); setOpen(false); setMenu(false); }
+
+  // ---- the Volunteers panel (Manager): accessVolunteerList / accessVolunteerAction in Access. Names come from the public
+  // sign-up, so everything goes on the page as text, never as HTML.
+  var LVN = {member: 'Member', board: 'Board', manager: 'Manager', pending: 'Waiting for approval', paused: 'Paused'};
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function volLoad(note){
+    serverCall('accessVolunteerList', [CODE], function(r){
+      var list = $('vList'); if (!list) return;
+      list.textContent = '';
+      if (note){ var m = el('div', 'emsg', note); list.appendChild(m); }
+      if (!r || !r.ok){ list.appendChild(el('div', 'emsg err', (r && r.message) || 'Could not load the list.')); return; }
+      if (r.managers > r.maxManagers) list.appendChild(el('div', 'vwarn', r.managers + ' people have Manager level (more than ' + r.maxManagers + '). If that is not on purpose, change the extra ones on the ROC Access sheet.'));
+      var pend = r.people.filter(function(p){ return p.level === 'pending'; }), rest = r.people.filter(function(p){ return p.level !== 'pending'; });
+      if (window.setWaiting) setWaiting(pend.length);
+      list.appendChild(el('div', 'vh', 'Waiting for approval'));
+      if (!pend.length) list.appendChild(el('div', 'vempty', 'No one is waiting.'));
+      pend.forEach(function(p){ list.appendChild(volCard(p)); });
+      list.appendChild(el('div', 'vh', 'Volunteers'));
+      if (!rest.length) list.appendChild(el('div', 'vempty', 'No volunteers yet.'));
+      rest.forEach(function(p){ list.appendChild(volCard(p)); });
+    }, function(x){ var list = $('vList'); if (list) list.textContent = 'Could not load the list (' + ((x && x.message) || x) + ').'; });
+  }
+  function volCard(p){
+    var card = el('div', 'vcard'), btns = el('div', 'vbtns');
+    card.appendChild(el('div', 'vname', p.name));
+    var sub = (LVN[p.level] || 'Member') + (p.level !== 'pending' && p.level !== 'manager' ? ' · ' + (p.edit ? 'can add readings and notes' : 'view only') : '') + (p.email ? ' · ' + p.email : '');
+    if (p.status && p.status !== 'OK' && p.level !== 'pending' && p.level !== 'paused') sub += ' · ' + p.status;
+    card.appendChild(el('div', 'vsub', sub));
+    function b(label, fn, primary){ var x = el('button', primary ? 'primary' : '', label); x.type = 'button'; x.addEventListener('click', fn); btns.appendChild(x); }
+    function act(req, done, ask){
+      if (ask && !confirm(ask)) return;
+      req.row = p.row; req.name = p.name;
+      Array.prototype.forEach.call(card.querySelectorAll('button'), function(x){ x.disabled = true; });
+      serverCall('accessVolunteerAction', [CODE, req], function(r){
+        if (!r || !r.ok){ Array.prototype.forEach.call(card.querySelectorAll('button'), function(x){ x.disabled = false; }); alert((r && r.message) || 'That did not work.'); return; }
+        if (window.setWaiting) setWaiting(r.pending);
+        volLoad(done());
+      }, function(x){ alert('Something went wrong (' + ((x && x.message) || x) + '). Close and open the list to see what happened.'); });
+    }
+    if (p.level === 'manager'){ card.appendChild(el('div', 'vsub', 'Change Manager rows on the ROC Access sheet.')); return card; }
+    if (p.level === 'pending'){
+      b('Approve as Member', function(){ act({action: 'approve', level: 'member'}, function(){ return p.name + ' approved as Member. Let them know they can sign in.'; }); }, true);
+      b('Approve as Board', function(){ act({action: 'approve', level: 'board'}, function(){ return p.name + ' approved as Board. Let them know they can sign in.'; }); }, true);
+      b('Delete', function(){ act({action: 'remove'}, function(){ return p.name + ' deleted.'; }, 'Delete the sign-up from ' + p.name + '?'); });
+    } else {
+      if (p.level === 'paused'){
+        b('Unpause as Member', function(){ act({action: 'unpause', level: 'member'}, function(){ return p.name + ' can sign in again (Member).'; }); });
+        b('Unpause as Board', function(){ act({action: 'unpause', level: 'board'}, function(){ return p.name + ' can sign in again (Board).'; }); });
+      } else {
+        var other = p.level === 'board' ? 'member' : 'board';
+        b('Make ' + LVN[other], function(){ act({action: 'level', level: other}, function(){ return p.name + ' is now ' + LVN[other] + '.'; }); });
+        b(p.edit ? 'Make view only' : 'Allow adding readings', function(){
+          act({action: 'edit', edit: !p.edit}, function(){ return p.edit ? p.name + ' can now only view.' : p.name + ' can add readings and notes again.'; });
+        });
+        b('Pause', function(){ act({action: 'pause'}, function(){ return p.name + ' is paused and signed out.'; }, 'Pause ' + p.name + '? They are signed out and can\'t sign in until you unpause them.'); });
+      }
+      b('Reset password', function(){
+        var row = el('div', 'vbtns'), inp = el('input'), save = el('button', 'primary', 'Save'), cancel = el('button', '', 'Cancel');
+        inp.type = 'text'; inp.placeholder = 'New password (8+ characters)'; inp.setAttribute('autocomplete', 'off'); inp.setAttribute('autocapitalize', 'off');
+        save.type = 'button'; cancel.type = 'button';
+        row.appendChild(inp); row.appendChild(save); row.appendChild(cancel); card.appendChild(row); inp.focus();
+        cancel.addEventListener('click', function(){ card.removeChild(row); });
+        save.addEventListener('click', function(){
+          var pw = inp.value.trim();
+          if (pw.length < 8){ alert('The password needs at least 8 characters.'); inp.focus(); return; }
+          act({action: 'reset', password: pw}, function(){ return p.name + '\'s password is changed. Tell them the new one; their devices are signed out.'; });
+        });
+      });
+      b('Remove', function(){ act({action: 'remove'}, function(){ return p.name + ' removed.'; }, 'Remove ' + p.name + '? They are signed out and their row is deleted from the Volunteers tab.'); });
+    }
+    card.appendChild(btns);
+    return card;
+  }
   function closePanel(){
     grow.classList.remove('big');
     var r = originRect(); place(r, Math.min(30, r.height / 2));
@@ -4371,7 +4751,19 @@ document.addEventListener('DOMContentLoaded', function(){
     if (w.ms > Date.now() + 5 * 60000) { say('The date and time can\'t be in the future.', 'err'); return; }
     var fn, payload, label;
     if (mode === 'pump') { savePump(w); return; }
-    if (mode === 'test') {
+    if (mode === 'chem') {
+      var ck = chemCheck();
+      if (ck) { say(ck, 'err'); return; }
+      if (!dupOk) {
+        var dup = chemDup(w.ms);
+        if (dup) { dupOk = true; save.textContent = 'Save anyway'; say('Already logged: ' + dup.summary + ' at ' + dup.time + (dup.day !== w.s.slice(0, 10) ? ' on ' + fmtDayRel(dup.day) : '') + (dup.src === 'Dashboard' ? '' : ' (from Pool Math)') + '. Is this a different addition?', 'warn'); return; }
+      }
+      payload = {id: editing ? editing.id : '', when: w.s, items: chem.items.map(function(it){
+        return {product: it.name, amount: chemAmt(it), unit: it.unit, strength: it.info.sMode === 'entry' ? chemPct(it) : '', slow: !!it.slow};
+      })};
+      if (!editing) payload.note = $('eNote').value;
+      fn = 'saveChems'; label = chem.items.length > 1 ? 'Chemicals' : 'Chemical';
+    } else if (mode === 'test') {
       var r = vals();
       if (r.bad.length) { say('One of the numbers isn\'t a number. Check the yellow box.', 'err'); return; }
       if (!editing && !dupOk) {
@@ -4390,12 +4782,12 @@ document.addEventListener('DOMContentLoaded', function(){
     serverCall(fn, [CODE, payload], function(res){
       busy = false;
       if (res && res.ok === false && res.why && res.why !== 'level') { shut(); handleDenied(res); return; }
-      if (!res || !res.ok) { save.disabled = false; save.textContent = editing ? 'Save changes' : 'Save ' + label.toLowerCase(); say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
+      if (!res || !res.ok) { save.disabled = false; save.textContent = editing ? 'Save changes' : KIND[mode][2]; say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
       DATA = res.data; renderAll();
       closePanel();
       bgSet(label + ' saved.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
     }, function(err){
-      busy = false; save.disabled = false; save.textContent = editing ? 'Save changes' : 'Save ' + label.toLowerCase();
+      busy = false; save.disabled = false; save.textContent = editing ? 'Save changes' : KIND[mode][2];
       say('Not saved: could not reach the server. Check the connection and tap Save again.', 'err');
     });
   });
@@ -4428,15 +4820,16 @@ document.addEventListener('DOMContentLoaded', function(){
   window.entryCanFix = mine;
   window.entryEdit = function(kind, id){ var it = findEntry(kind, id); if (it) openPanel(kind, it, fab); };
   window.entryDel = function(kind, id){ menu(kind, id, true); };
-  function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
+  function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : kind === 'chem' ? DATA.chems : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
+  var ENTRY_WORD = {test: 'test', note: 'note', chem: 'addition'};
   var menuFor = null;
   function menu(kind, id, confirmDel, err){
     var it = findEntry(kind, id); if (!it) return;
     menuFor = {kind: kind, id: id};
-    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
+    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'chem' ? 'Added ' + esc(it.summary) : kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
       (it.w && wxFull(it.w) ? '<p class="emsub">' + esc(wxFull(it.w)) + '</p>' : '') +
       (it.by ? '<p class="emsub">Entered by ' + esc(fullName(it.by)) + '</p>' : '') +
-      (confirmDel ? '<p>Delete this ' + kind + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
+      (confirmDel ? '<p>Delete this ' + ENTRY_WORD[kind] + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
         : '<div class="row"><button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button></div>' +
           '<div class="row"><button type="button" class="btn" data-em="cancel">Close</button></div>') +
       (err ? '<p style="color:var(--red)">' + esc(err) + '</p>' : '');
@@ -4457,7 +4850,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (res && res.ok === false && res.why && res.why !== 'level') { closeDlg('entryMenu'); handleDenied(res); return; }
         if (!res || !res.ok) { menu(kind, id, false, (res && res.message) || 'Not deleted. Try again.'); return; }
         closeDlg('entryMenu'); DATA = res.data; renderAll();
-        bgSet((kind === 'test' ? 'Test' : 'Note') + ' deleted.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
+        bgSet((kind === 'test' ? 'Test' : kind === 'chem' ? 'Addition' : 'Note') + ' deleted.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
       }, function(){ menu(kind, id, false, 'Could not reach the server. Try again.'); });
     }
   });
