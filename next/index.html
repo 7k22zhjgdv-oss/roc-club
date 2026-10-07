@@ -250,6 +250,7 @@ a.give-btn{text-decoration:none;display:inline-block}
 .mem-menu-btn{display:none;position:relative;background:none;border:1px solid var(--glass-line);border-radius:10px;color:var(--paper);font:600 .9rem var(--font);padding:8px 14px;cursor:pointer}
 .mem-dot{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#e2836b;color:#fff;font-size:.72rem;text-align:center;padding:0 5px;margin-left:6px;vertical-align:1px}
 .mem-dot[hidden]{display:none}
+.vol-wait{color:#ff8a70;font-weight:600}
 /* phones: the signed-in links go behind one Menu button (one big row each when open) */
 @media (max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px){
   .mem-menu-btn{display:inline-block}
@@ -1543,7 +1544,7 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
   // the Manager's notice: "Volunteers (2 waiting)" and a number on the phone Menu button
   function setWaiting(n){
     n = Number(n) || 0;
-    $('volBtn').textContent = n ? 'Volunteers (' + n + ' waiting)' : 'Volunteers';
+    $('volBtn').innerHTML = 'Volunteers' + (n ? ' <span class="vol-wait">(' + n + ' waiting)</span>' : '');
     $('memMenuDot').textContent = n; $('memMenuDot').hidden = !n || !document.body.classList.contains('lvl-manager');
   }
   window.rocSetWaiting = setWaiting;
