@@ -8,10 +8,10 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","deleteEntry","accessChangePassword","accessNameCheck","accessAliases"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList","accessNameCheck"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
@@ -346,6 +346,10 @@ dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 #unlockDlg .si-q{margin:0 0 12px;font-size:18px;font-weight:600}
 #unlockDlg .si-big{display:block;width:100%;text-align:left;margin-bottom:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font-weight:600;font-size:17px;font-family:inherit;cursor:pointer}
 #unlockDlg .si-big span{display:block;margin-top:2px;font-size:13px;font-weight:400;color:var(--muted)}
+#unlockDlg .si-msg{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:15px}
+#unlockDlg .si-msg[hidden],#unlockDlg .pw-wrap[hidden],#unlockDlg label[hidden],#unlockDlg .btn[hidden]{display:none}
+#unlockDlg .si-msg p{margin:0 0 10px}
+#unlockDlg .si-link{display:block;background:none;border:0;padding:6px 0;color:var(--accent);font-size:14px;font-family:inherit;text-decoration:underline;text-align:left;cursor:pointer}
 #unlockDlg .si-back{background:none;border:0;padding:0 0 10px;color:var(--accent);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer}
 /* sign-in box: a masked TEXT field, not type=password, so phones don't offer to save it as a website login */
 .secret{-webkit-text-security:disc;text-security:disc}
@@ -414,6 +418,9 @@ body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
 body:not(.is-vol) .volonly{display:none !important}
+#moreBtn{position:relative}
+#moreBtn.has-dot::after{content:'';position:absolute;top:5px;right:5px;width:10px;height:10px;border-radius:50%;background:#d9534f;border:2px solid var(--card)}
+#akaIn{width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font-size:16px}
 /* members: test readings only - no date picker, view switcher, predictions or tracker cards */
 body.lvl-member .mchips,body.lvl-member .controls,body.lvl-member #trk{display:none !important}
 /* signed out: no readings at all, just the sign-in screen */
@@ -1217,7 +1224,8 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
-  <button type="button" class="mrow priv volonly" id="mnChgPw">Change my password</button>
+  <button type="button" class="mrow priv mgr" id="mnVols">Volunteers</button>
+  <button type="button" class="mrow priv volonly" id="mnChgPw">My login</button>
   <button type="button" class="mrow priv" id="mnLock" style="border-bottom:0">Sign out</button>
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
@@ -1277,7 +1285,13 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 </dialog>
 
 <dialog id="chgDlg">
-  <h2>Change my password</h2>
+  <h2>My login</h2>
+  <label for="akaIn">Also goes by (other first names)</label>
+  <input type="text" id="akaIn" placeholder="Like Kayti, Kat" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+  <p class="hint" style="margin:6px 0 0">You can sign in with any of these and your last name.</p>
+  <div class="row" style="margin-top:8px"><button class="btn" type="button" id="akaSave">Save names</button></div>
+  <div class="err" id="akaErr" role="alert"></div>
+  <h2 style="margin-top:18px">Change password</h2>
   <p class="hint" style="margin:0 0 6px">At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
   <form id="chgForm" autocomplete="off">
     <label for="chgCur">Current password</label>
@@ -1308,6 +1322,16 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
     <label for="codeIn" id="codeLbl">Your pool key number</label>
     <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="codeIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="codeIn">Show</button></span>
     <p class="hint" id="siHint"></p>
+    <div class="si-msg" id="siNew" hidden>
+      <p>Looks like you're a new volunteer! Would you like to sign up?</p>
+      <button class="btn primary" type="button" id="signUpBtn">Sign up</button>
+      <button class="si-link" type="button" id="siRetry">Back</button>
+      <button class="si-link" type="button" id="siShared">I'm on the board: use the board password</button>
+    </div>
+    <div class="si-msg" id="siPending" hidden>
+      <p>Your sign-up is waiting for approval. Someone on the board will contact you.</p>
+      <button class="si-link" type="button" id="siRetry2">Back</button>
+    </div>
     <div class="err" id="unlockErr" role="alert"></div>
     <p class="hint">This device stays signed in until you tap Sign out.</p>
     <div class="row">
@@ -2875,10 +2899,11 @@ function setUnlocked(on, level, who){
 function applyUnlocked(data, code, res){
   DATA = data; CODE = code; setUnlocked(true, (res && res.level) || data.level, res && res.who); renderAll();
   try { localStorage.setItem('rocChemData', JSON.stringify({ level: LEVEL, who: WHO, data: data })); } catch(e){}
-  document.body.classList.toggle('is-vol', !!(res && res.vol));   // own login: Change my password
+  document.body.classList.toggle('is-vol', !!(res && res.vol));   // own login: My login
+  setWaiting(res && (res.level || data.level) === 'manager' ? res.pending : 0);
 }
 function lockNow(msg){
-  CODE = ''; forgetCode(); document.body.classList.remove('is-vol');
+  CODE = ''; forgetCode(); document.body.classList.remove('is-vol'); setWaiting(0);
   closePop();
   DATA.tests = []; DATA.chems = []; DATA.trackers = []; DATA.stock = {}; DATA.hasPrices = false; DATA.priceRows = []; DATA.chemicals = []; DATA.priceWarnings = []; DATA.noteIssues = []; DATA.calc = null; DATA.locked = true;
   $('printView').innerHTML = '';
@@ -2910,9 +2935,29 @@ function pwShow(inp, on){
 // Volunteers and Board type first + last name and password (sent as "name\npassword"); the name is remembered (rocLoginName).
 var SIGN_AS = {
   member: {title: 'Pool member', label: 'Your pool key number', hint: 'The letter and number on your key, like A56.', secret: false},
-  vol: {title: 'Volunteer or board', label: 'Your password', hint: 'Board: your name and the board password.', secret: true}
+  vol: {title: 'Volunteer or board', label: 'Your password', hint: '', secret: true}
 };
-var signAs = '';
+// Volunteer or board asks the name first (accessNameCheck): known -> password, pending -> waiting note, new -> offer the
+// sign-up on Home (and, while a shared password still works with any name, "use the board password"). A remembered name
+// (rocLoginName, from a sign-in that worked) goes straight to the password.
+var signAs = '', volPhase = 'pw', sharedOk = '';
+function setPhase(ph){
+  var vol = signAs === 'vol', showPw = !vol || ph === 'pw' || ph === 'shared';
+  volPhase = ph;
+  $('codeLbl').hidden = !showPw; $('codeIn').parentNode.hidden = !showPw;
+  $('unlockGo').hidden = vol && (ph === 'new' || ph === 'pending');
+  $('unlockGo').textContent = vol && ph === 'name' ? 'Next' : 'Sign in';
+  $('siNew').hidden = !(vol && ph === 'new'); $('siPending').hidden = !(vol && ph === 'pending');
+  $('codeLbl').textContent = !vol ? SIGN_AS[signAs].label : ph === 'shared' ? (sharedOk === 'board' ? 'Board or manager password' : 'Manager password') : 'Your password';
+  $('siShared').hidden = !sharedOk;
+  $('siShared').textContent = sharedOk === 'board' ? 'I\'m on the board: use the board password' : 'I\'m the manager: use the manager password';
+  $('nameIn').setAttribute('enterkeyhint', ph === 'name' ? 'go' : 'next');
+}
+function retryName(){ $('unlockErr').textContent = ''; setPhase('name'); $('nameIn').focus(); }
+function goSignUp(){   // the sign-up form is on Home; the name goes along on this device (never in the address)
+  try { localStorage.setItem('rocSignUpName', $('nameIn').value.trim()); } catch(e){}
+  window.top.location.href = 'https://www.rollingoaksclub.org/?signup';
+}
 function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
 function showPick(){ signAs = ''; $('siPick').hidden = false; $('unlockForm').hidden = true; $('unlockErr').textContent = ''; }
 function showStep(as){
@@ -2925,11 +2970,28 @@ function showStep(as){
   inp.parentNode.querySelector('.pw-show').hidden = !c.secret;
   inp.setAttribute('autocapitalize', as === 'member' ? 'characters' : 'off');
   if (as === 'vol' && !$('nameIn').value) $('nameIn').value = stored('rocLoginName');
+  setPhase(as === 'vol' && !$('nameIn').value ? 'name' : 'pw');
   setTimeout(function(){ try { (as === 'vol' && !$('nameIn').value ? $('nameIn') : inp).focus(); } catch(e){} }, 50);
 }
 // Change my password (volunteers with their own login): accessChangePassword in Access writes it to their row and
 // hands back a new pass, kept in place of the old one (the old pass stops working: their other devices sign out).
+// My login: "Also goes by" names (accessAliases in Access), then Change password below
+function loadAliases(){
+  $('akaIn').value = ''; $('akaErr').textContent = ''; $('akaErr').style.color = ''; $('akaSave').disabled = true;
+  serverCall('accessAliases', [CODE], function(r){ $('akaSave').disabled = false; if (r && r.ok) $('akaIn').value = r.aliases || ''; else $('akaErr').textContent = (r && r.message) || ''; }, function(){ $('akaSave').disabled = false; });
+}
+function saveAliases(){
+  $('akaErr').textContent = ''; $('akaErr').style.color = ''; $('akaSave').disabled = true;
+  serverCall('accessAliases', [CODE, $('akaIn').value], function(r){ $('akaSave').disabled = false; if (r && r.ok){ $('akaIn').value = r.aliases || ''; $('akaErr').style.color = 'var(--green)'; $('akaErr').textContent = 'Saved.'; } else $('akaErr').textContent = (r && r.message) || 'Could not save.'; }, function(x){ $('akaSave').disabled = false; $('akaErr').textContent = 'Something went wrong (' + ((x && x.message) || x) + ').'; });
+}
+// The Manager's notice: a dot on the ··· button and "Volunteers (2 waiting)" in its menu (opens the screen on Home)
+function setWaiting(n){
+  n = Number(n) || 0;
+  $('moreBtn').classList.toggle('has-dot', n > 0);
+  $('mnVols').innerHTML = 'Volunteers' + (n ? '&nbsp;<span style="color:var(--red);font-weight:600">(' + n + ' waiting)</span>' : '');
+}
 function openChgPw(){
+  loadAliases();
   ['chgCur', 'chgNew', 'chgNew2'].forEach(function(id){ $(id).value = ''; pwShow($(id), false); });
   $('chgErr').textContent = ''; $('chgErr').style.color = ''; $('chgGo').disabled = false;
   openDlg('chgDlg');
@@ -2974,6 +3036,18 @@ function submitUnlock(e){
   var code = $('codeIn').value.trim(), as = signAs;
   var name = as === 'vol' ? $('nameIn').value.trim().replace(/\s+/g, ' ') : '';
   if (as === 'vol' && name.indexOf(' ') < 0){ $('unlockErr').textContent = 'Enter your first and last name.'; $('nameIn').focus(); return; }
+  if (as === 'vol' && (volPhase === 'new' || volPhase === 'pending')) return;
+  if (as === 'vol' && volPhase === 'name'){
+    var nb = $('unlockGo'); nb.disabled = true; $('unlockErr').textContent = '';
+    serverCall('accessNameCheck', [name], function(r){
+      nb.disabled = false;
+      if (!r || !r.ok){ $('unlockErr').textContent = (r && r.message) || 'Something went wrong. Try again.'; return; }
+      sharedOk = r.shared || '';
+      setPhase(r.state === 'known' ? 'pw' : r.state === 'pending' ? 'pending' : 'new');
+      if (r.state === 'known') $('codeIn').focus();
+    }, function(){ nb.disabled = false; setPhase('pw'); $('codeIn').focus(); });
+    return;
+  }
   if (!code){ $('unlockErr').textContent = as === 'member' ? 'Enter your pool key number.' : 'Enter your password.'; return; }
   if (name) code = name + '\n' + code;
   var b = $('unlockGo'); b.disabled = true; b.textContent = 'Checking…'; $('unlockErr').textContent = '';
@@ -3682,6 +3756,8 @@ document.addEventListener('DOMContentLoaded', function(){
   $('mnPrices').addEventListener('click', function(){ closeDlg('menuDlg'); openPrices(); });
   $('mnLock').addEventListener('click', function(){ closeDlg('menuDlg'); lockNow(''); });
   $('mnChgPw').addEventListener('click', function(){ closeDlg('menuDlg'); openChgPw(); });
+  $('akaSave').addEventListener('click', saveAliases);
+  $('mnVols').addEventListener('click', function(){ closeDlg('menuDlg'); window.top.location.href = 'https://www.rollingoaksclub.org/?volunteers'; });
   $('chgCancel').addEventListener('click', function(){ closeDlg('chgDlg'); });
   $('chgForm').addEventListener('submit', submitChgPw);
   $('upDet').addEventListener('click', function(e){
@@ -3716,7 +3792,12 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   $('siBack').addEventListener('click', showPick);
   $('pickCancel').addEventListener('click', function(){ closeDlg('unlockDlg'); });
-  $('nameIn').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); $('codeIn').focus(); } });
+  $('nameIn').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); if (volPhase === 'name') submitUnlock(); else $('codeIn').focus(); } });
+  $('nameIn').addEventListener('input', function(){ if (signAs === 'vol' && volPhase !== 'name'){ setPhase('name'); $('unlockErr').textContent = ''; } });
+  $('siRetry').addEventListener('click', retryName);
+  $('siRetry2').addEventListener('click', retryName);
+  $('siShared').addEventListener('click', function(){ setPhase('shared'); $('codeIn').value = ''; $('codeIn').focus(); });
+  $('signUpBtn').addEventListener('click', goSignUp);
   document.querySelectorAll('.pw-show').forEach(function(b){
     var inp = b.parentNode.querySelector('input');
     b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
