@@ -12,7 +12,7 @@
   var API = 'https://script.google.com/macros/s/AKfycbyT2vJWAEfvHBqsMxAdcuO4xUCuDDVUZ6Uw-0xbxJSfFM0rsj0oJNRX53gclWo-hWMRQg/exec', FNS = ["unlock","whoAmI","saveEventSelection","savePoolFillSchedule","accessChangePassword"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
-  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText"];
+  var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","volunteerList"];
   function call(fn, args, ok, fail, tries){
     tries = tries || 0;
     var got = false;
