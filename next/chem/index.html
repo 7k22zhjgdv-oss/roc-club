@@ -4348,35 +4348,57 @@ document.addEventListener('DOMContentLoaded', function(){
   // first), amount + unit (last used), strength for liquid chlorine (last used), slow feeder box where it applies; the estimate
   // is worked out here the same way as effectFor_ / alsoFor_ in Code.gs, and the stock line from DATA.stock.
   var chem = {items: [], picking: true, more: false};
-  var CHEM_PICK_TOP = 6, CHEM_MAX_ITEMS = 8;
+  var CHEM_MAX_ITEMS = 8;
   var CHEM_MAX = {'gal': 50, 'fl oz': 2000, 'lb': 200, 'oz': 3200, 'unit': 100};            // same as CHEM_ENTRY_MAX
   var EST_L = 48000 * 3.785411784, EST_BASE = {'gal': 3785.411784, 'fl oz': 29.5735295625, 'lb': 453.59237, 'oz': 28.349523125, 'unit': 1};
   var STOCK_BASE = {gal: 3785.411784, oz: 29.5735295625, lbs: 453.59237, boxes: 65 * 28.349523125, units: 1};
   var STOCK_KIND = {gal: 'Liquid', oz: 'Liquid', lbs: 'Dry', boxes: 'Dry', units: 'Count'};
   var UNIT_KIND = {'gal': 'Liquid', 'fl oz': 'Liquid', 'lb': 'Dry', 'oz': 'Dry', 'unit': 'Count'};
+  // The pool manager's list and order (2026-10-07). [label, product match, slow: true = always pucks / false = never / undefined = box].
+  // Cal-hypo is one product: "Pucks" saves it as slow feed (priced from the Cal-Hypo Puck line), "Granular" as straight in.
+  var CHEM_PICKS = [
+    ['Cal-Hypo - Granular', /^70% cal-?hypo$/i, false],
+    ['Cal-Hypo - Pucks', /^70% cal-?hypo$/i, true],
+    ['Liquid Chlorine', /^liquid chlorine$/i],
+    ['Trichlor - Pucks', /^tri-?chlor$/i, true],
+    ['Muriatic Acid', /muriatic/i],
+    ['Borax', /^borax/i],
+    ['CV-600', /cv-?600/i],
+    ['PR-10000', /pr-?10000/i],
+    ['SC-1000', /sc-?1000/i, undefined, 'more'],
+    ['Dichlor', /^di-?chlor$/i, undefined, 'more']
+  ];
+  /** The picks whose product exists on the sheet: [{label, name, slow, more}]. */
   function chemList(){
-    var used = {}, cut = Date.now() - 120 * 86400000;
-    (DATA.chems || []).forEach(function(c){ if (c.ms >= cut){ var k = String(c.product || '').toLowerCase(); used[k] = (used[k] || 0) + 1; } });
-    return (DATA.chemicals || []).filter(function(c){ return !isInactive(c) && !c.unrec && !/^cal-?hypo puck$/i.test(c.name); })
-      .sort(function(a, b){ return (used[b.name.toLowerCase()] || 0) - (used[a.name.toLowerCase()] || 0) || a.name.localeCompare(b.name); });
+    var out = [];
+    CHEM_PICKS.forEach(function(p){
+      var c = (DATA.chemicals || []).filter(function(x){ return p[1].test(x.name); })[0];
+      if (c) out.push({label: p[0], name: c.name, slow: p[2], more: p[3] === 'more'});
+    });
+    return out;
+  }
+  /** The pick an existing addition belongs to (for Edit). */
+  function pickFor(c){
+    return chemList().filter(function(p){ return p.name === c.product && (p.slow === undefined || p.slow === !!c.slow || !/cal-?hypo/i.test(p.name)); })[0] || {label: c.product, name: c.product};
   }
   function chemInfo(name){ var low = String(name || '').toLowerCase(); return (DATA.chemicals || []).filter(function(c){ return c.name.toLowerCase() === low; })[0] || {name: name, kind: ''}; }
-  function lastChem(name){
+  function lastChem(name, slow){
     var low = String(name || '').toLowerCase(), best = null;
-    (DATA.chems || []).forEach(function(c){ if (!c.fromNote && String(c.product || '').toLowerCase() === low && (!best || c.ms > best.ms)) best = c; });
+    (DATA.chems || []).forEach(function(c){ if (!c.fromNote && String(c.product || '').toLowerCase() === low && (slow === undefined || !!c.slow === slow) && (!best || c.ms > best.ms)) best = c; });
     return best;
   }
-  function chemItem(info, from){
-    var units = UNIT_BY_KIND[info.kind] || ['gal', 'fl oz', 'lb', 'oz'], last = lastChem(info.name);
+  function chemItem(pick, from){
+    var info = chemInfo(pick.name), units = UNIT_BY_KIND[info.kind] || ['gal', 'fl oz', 'lb', 'oz'], last = lastChem(info.name, pick.slow);
     var unit = from ? from.unit : last && units.indexOf(last.unit) >= 0 ? last.unit : /orenda/i.test(info.name) && info.kind === 'Liquid' ? 'fl oz' : units[0];
     if (units.indexOf(unit) < 0) units = units.concat([unit]);
     var pct = from && isNum(from.strength) ? from.strength : last && isNum(last.strength) ? last.strength : '';
-    return {name: info.name, info: info, units: units, unit: unit, amount: from ? fmtNum(from.amount) : '', pct: pct === '' ? '' : fmtNum(pct), slow: from ? !!from.slow : false};
+    return {name: info.name, label: pick.label, fixed: pick.slow !== undefined, info: info, units: units, unit: unit, amount: from ? fmtNum(from.amount) : '', pct: pct === '' ? '' : fmtNum(pct),
+      slow: pick.slow !== undefined ? pick.slow : from ? !!from.slow : false};
   }
-  function slowKind(it){ return /tri-?chlor/i.test(it.name) ? 'tri' : /cal-?hypo/i.test(it.name) ? 'puck' : it.info.affects === 'ph' && it.info.dir === 'down' ? 'feeder' : ''; }
+  function slowKind(it){ return /tri-?chlor/i.test(it.name) ? 'tri' : it.fixed ? '' : /cal-?hypo/i.test(it.name) ? 'puck' : it.info.affects === 'ph' && it.info.dir === 'down' ? 'feeder' : ''; }
   function chemBody(c){
     var n = c ? {day: c.day, time: to24(c.time)} : nowLocal();
-    chem.items = c ? [chemItem(chemInfo(c.product), c)] : []; chem.picking = !c; chem.more = false;
+    chem.items = c ? [chemItem(pickFor(c), c)] : []; chem.picking = !c; chem.more = false;
     return '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
       '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
       '<div id="ecItems"></div><div id="ecPick"></div>' +
@@ -4385,7 +4407,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function chemDraw(focusI){
     $('ecItems').innerHTML = chem.items.map(function(it, i){
       var sk = slowKind(it), uw = it.unit === 'unit' ? 'units' : it.unit;
-      return '<div class="eci" style="--c:var(--k-' + priceTone(it.info) + ')"><div class="ech"><i></i><span>' + esc(it.name) + '</span>' +
+      return '<div class="eci" style="--c:var(--k-' + priceTone(it.info) + ')"><div class="ech"><i></i><span>' + esc(it.label) + '</span>' +
           (editing ? '' : '<button type="button" data-crm="' + i + '">Remove</button>') + '</div>' +
         '<div class="ecr"><label class="etile"><span class="nm">Amount<i>' + esc(uw) + '</i></span><input data-camt="' + i + '" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off" value="' + esc(it.amount) + '"></label>' +
           (it.units.length > 1 ? '<div class="ecu" role="group" aria-label="Unit">' + it.units.map(function(u){
@@ -4398,9 +4420,9 @@ document.addEventListener('DOMContentLoaded', function(){
     var h = '';
     if (!editing && chem.items.length < CHEM_MAX_ITEMS) {
       if (chem.picking) {
-        var list = chemList(), shown = chem.more ? list : list.slice(0, CHEM_PICK_TOP);
+        var list = chemList(), shown = list.filter(function(p){ return chem.more || !p.more; });
         h = '<div class="egrp"><b>' + (chem.items.length ? 'Another chemical' : 'Chemical') + '</b><span>tap to choose</span></div><div class="ecpick">' +
-          shown.map(function(c){ return '<button type="button" data-cpick="' + esc(c.name) + '" style="--c:var(--k-' + priceTone(c) + ')"><i></i>' + esc(shortProduct(c.name) || c.name) + '</button>'; }).join('') +
+          shown.map(function(c){ return '<button type="button" data-cpick="' + list.indexOf(c) + '" style="--c:var(--k-' + priceTone(c) + ')"><i></i>' + esc(c.label) + '</button>'; }).join('') +
           (list.length > shown.length ? '<button type="button" class="more" data-cmore="1">More chemicals…</button>' : '') + '</div>';
       } else h = '<button type="button" class="ecadd" data-cadd="1">+ Add another chemical</button>';
     }
@@ -4510,7 +4532,7 @@ document.addEventListener('DOMContentLoaded', function(){
   body.addEventListener('click', function(e){
     if (mode !== 'chem' || !e.target.closest) return;
     var b = e.target.closest('[data-cpick],[data-cmore],[data-crm],[data-cu],[data-cadd]'); if (!b) return;
-    if (b.hasAttribute('data-cpick')) { chem.items.push(chemItem(chemInfo(b.getAttribute('data-cpick')))); chem.picking = false; chem.more = false; chemDraw(chem.items.length - 1); }
+    if (b.hasAttribute('data-cpick')) { chem.items.push(chemItem(chemList()[+b.getAttribute('data-cpick')])); chem.picking = false; chem.more = false; chemDraw(chem.items.length - 1); }
     else if (b.hasAttribute('data-cmore')) { chem.more = true; chemDraw(); }
     else if (b.hasAttribute('data-cadd')) { chem.picking = true; chemDraw(); var pk = $('ecPick'); if (pk) try { pk.scrollIntoView({block: 'nearest', behavior: 'smooth'}); } catch(x){} }
     else if (b.hasAttribute('data-crm')) { chem.items.splice(+b.getAttribute('data-crm'), 1); if (!chem.items.length) chem.picking = true; chemDraw(); }
