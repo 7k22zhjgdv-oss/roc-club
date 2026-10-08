@@ -861,9 +861,11 @@ body.can-enter #entryUi{display:block}
 /* iPhone: low in the corner beside Safari's address bar (it rides down with it when the bar shrinks), and see-through until tapped */
 @media (max-width:720px){
   .efab{background:color-mix(in srgb,var(--accent) 55%,transparent);-webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%);
-    box-shadow:0 4px 14px rgba(0,0,0,.12);transition:background .18s,box-shadow .18s}
-  #entryUi.open .efab{background:var(--accent);box-shadow:var(--eshadow)}
+    box-shadow:0 4px 14px rgba(0,0,0,.12),var(--glassEdgeFx);transition:background .18s,box-shadow .18s}
+  #entryUi.open .efab{background:var(--accent);box-shadow:var(--eshadow),var(--glassEdgeFx)}
 }
+/* glass edge shared by the + with the History / Now switch and the ⋯: bright top line, light rim, hairline outline (2026-10-08) */
+:root{--glassEdgeFx:inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px color-mix(in srgb,var(--card) 55%,transparent),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}
 /* home-screen app (html.app, set in <head>): no top bar; the bar's menu is a grey ⋯ circle above the + (for everyone, the +
    only for those who may enter); both sit on the screen's rounded corner, --cornerGap from the side and the bottom */
 .emore{display:none}
