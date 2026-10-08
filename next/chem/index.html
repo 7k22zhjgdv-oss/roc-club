@@ -43,8 +43,9 @@
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <script>
-// Top-card trial (2026-10-08, PREVIEW): ?top=wash = tinted summary card; anything else = summary sits on the page, no card.
-(function(){ try { var t = /[?&]top=wash\b/.test(location.search) ? 'wash' : 'page'; document.documentElement.classList.add('top-' + t); var f = /[?&]st=([gyr])\b/.exec(location.search); if (f) document.documentElement.setAttribute('data-force-st', f[1]); } catch (e) {} })();
+// Top cards (2026-10-08): Coming up and Pool right now are faintly tinted by how things stand (class top-wash).
+// ?top=page shows the other trial (no card); ?st=g|y|r forces a tint, to look at the colors.
+(function(){ try { var t = /[?&]top=page\b/.test(location.search) ? 'page' : 'wash'; document.documentElement.classList.add('top-' + t); var f = /[?&]st=([gyr])\b/.exec(location.search); if (f) document.documentElement.setAttribute('data-force-st', f[1]); } catch (e) {} })();
 </script>
 <script>
 // Home-screen app (opened from the icon, no Safari bars): class "app" on <html> - no top bar; its menu is the grey ⋯ circle
@@ -879,12 +880,18 @@ html.app .day{top:calc(var(--barTop) + 12px)}
 html.app #entryUi{display:block}
 html.app body:not(.can-enter) #eFab{display:none}
 html.app .efab-zone{right:var(--cornerGap,24px);bottom:var(--cornerGap,24px)}
-html.app .emore{display:grid;pointer-events:auto;width:60px;height:60px;border-radius:50%;border:0;place-items:center;cursor:pointer;color:var(--accentInk);
-  background:color-mix(in srgb,var(--muted) 55%,transparent);-webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%);box-shadow:0 4px 14px rgba(0,0,0,.12)}
-html.app .emore svg{width:26px;height:26px}
+/* ⋯: quiet - the same height and see-through glass as the History / Now switch (.nowsw .sg), dark dots (2026-10-08) */
+html.app .emore{display:grid;pointer-events:auto;width:var(--moreD,45px);height:var(--moreD,45px);border-radius:50%;border:0;place-items:center;cursor:pointer;color:var(--ink);
+  background:color-mix(in srgb,var(--card) 34%,transparent);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);
+  box-shadow:0 6px 20px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px color-mix(in srgb,var(--card) 55%,transparent),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}
+html.app .emore svg{width:22px;height:22px}
 html.app #entryUi.open .emore{display:none}
-html.app #menuDlg{top:auto;bottom:calc(var(--cornerGap,24px) + 72px);right:var(--cornerGap,24px)}   /* just above the ⋯ */
-html.app body.can-enter #menuDlg{bottom:calc(var(--cornerGap,24px) + 144px)}                         /* ⋯ sits on the + */
+html.app #eMore{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + (60px - var(--moreD,45px)) / 2)}   /* centered on the + (60) */            /* ⋯ in the left corner, in line with the switch and the + (2026-10-08) */
+html.app #mActs{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + 72px);align-items:flex-start}
+html.app #mActs .eact{flex-direction:row-reverse;padding:0 20px 0 8px}   /* on the left: icon first, by the ⋯ */
+html.app #mActs .mcap{text-align:left}
+html.app #menuDlg{top:auto;bottom:calc(var(--cornerGap,24px) + 72px);left:var(--cornerGap,24px);right:auto}   /* just above the ⋯ */
+body.can-enter #mnPrices{display:none !important}   /* those with a + find Prices & stock there; everyone else keeps it in the ⋯ menu */
 .mrow.appOnly{display:none}
 html.app .mrow.appOnly{display:flex}
 /* wide screens: just outside the right edge of the 900 px column, where there is spare room */
@@ -1238,11 +1245,12 @@ body.can-enter #legend{margin-bottom:84px}
 html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 
 /* ---- Right now view (2026-10-08): switch History / Right now (Board+), summary with CSI, one tile per test */
-.nowsw{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(12px,calc(env(safe-area-inset-bottom,0px) - 6px)) + 8px);z-index:55;display:flex}
-html.app .nowsw{bottom:calc(var(--cornerGap,24px) + 8px)}
-@media (min-width:1100px){ .nowsw{bottom:32px} }
+.nowsw{position:fixed;left:50%;transform:translateX(-50%);bottom:max(12px,calc(env(safe-area-inset-bottom,0px) - 6px));height:60px;align-items:center;z-index:55;display:flex}   /* same bottom and height as the + : centers line up */
+html.app .nowsw{bottom:var(--cornerGap,24px)}
+@media (min-width:1100px){ .nowsw{bottom:24px} }
 .nowsw.priv{display:flex}
-.nowsw .sg{display:inline-flex;border-radius:999px;padding:4px;gap:2px;background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:blur(14px) saturate(170%);backdrop-filter:blur(14px) saturate(170%);box-shadow:0 4px 18px rgba(0,0,0,.16),0 0 0 1px color-mix(in srgb,var(--line) 70%,transparent)}
+.nowsw .sg{display:inline-flex;border-radius:999px;padding:4px;gap:2px;background:color-mix(in srgb,var(--card) 34%,transparent);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);box-shadow:0 6px 20px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px color-mix(in srgb,var(--card) 55%,transparent),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}   /* glassy: mostly see-through, the chosen side solid */
+.nowsw button:not(.on){color:var(--ink);text-shadow:0 0 6px color-mix(in srgb,var(--card) 80%,transparent)}
 .nowsw button{font:inherit;font-size:15px;border:0;background:none;color:var(--ink2);padding:8px 20px;border-radius:999px;cursor:pointer}
 .nowsw button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 body.v-now.unlocked:is(.lvl-board,.lvl-manager) :is(#up,#histRow,#opts,#list,#legend){display:none !important}
@@ -1332,7 +1340,7 @@ html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nmini .nn{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums}
 .nlegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:2px}
 .nlegend svg{vertical-align:-1px;margin-right:5px}
-/* ---- Health look (2026-10-08, PREVIEW): like the iPhone Health app. Grey page, white rounded cards with no borders or shadows,
+/* ---- Health look (2026-10-08, live for a trial): like the iPhone Health app. Grey page, white rounded cards with no borders or shadows,
    wider gaps; the same on History and Now so the two views feel alike. Remove this block (and NOW_ICO) to go back. */
 :root{--bg:#f2f2f7; --soft:#f2f2f7; --panel:#ffffff; --sum:#ffffff; --line:#e3e3e8}
 @media (prefers-color-scheme: dark){ :root{--bg:#000000; --card:#1c1c1e; --soft:#2c2c2e; --panel:#1c1c1e; --sum:#1c1c1e; --line:#38383a} }
@@ -1348,7 +1356,7 @@ html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nnm b{display:inline-flex;align-items:center;gap:6px}
 .nico{width:17px;height:17px;flex:0 0 17px;color:var(--k)}
 
-/* ---- top-card trial (PREVIEW). top-page: the summary sits on the grey page with no card; its inner boxes turn white.
+/* ---- top cards (2026-10-08, live for a trial; top-wash is the default). top-page: the summary sits on the grey page with no card; its inner boxes turn white.
    top-wash: the summary card is faintly tinted by how things stand; everything inside it is white so no tone repeats. */
 html.top-page .upbox,html.top-page .nsum{background:transparent;padding-left:4px;padding-right:4px}
 html.top-page .nsum{padding-top:4px}
@@ -3066,7 +3074,6 @@ var NOW_SPAN = {fc:4, cc:4, ph:4, ta:25, ch:25, cya:25, csi:25, tempF:12};      
 /** Calcium hardness of our well water, which refill water brings in: one number for everyone, set on the CH tile (server saveWellCh). */
 function nowWellCh(){ return isNum(DATA.wellCh) ? DATA.wellCh : 200; }
 var nowEditW = false, nowWDraft = 200, nowWMsg = '', nowWBusy = false;
-var NOW_FC_WARN_H = 3;          // the top card turns yellow this many hours before FC is expected to drop low
 var NOW_QUIET = {ch: 900};       // Pool right now box: not mentioned in the sentence until above this (our CH always runs high); its tag keeps its color
 var NOW_SPAN_BIG = {fc:30, cc:30, ph:30, ta:120, ch:120, cya:120, csi:120, tempF:60};  // opened tile
 var NOW_BACK = {fc:90, cc:90, ph:90, ta:365, ch:365, cya:365, csi:365, tempF:88};         // days a chart can scroll back
@@ -3649,10 +3656,10 @@ function nowSummary(M){
     var unsure = (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]], st = unsure ? {cls: 'u'} : nowStatus(d[3], r.v);
     return '<span class="ntag ' + st.cls + '">' + d[3] + ' ' + (unsure ? '?' : nowFmt(d[0], r.v)) + '</span>';
   }).join('');
-  var say = [], fc = M.r.fc, gfc = nowGreen('FC'), fcSoon = false, fcLow = false;
+  var say = [], fc = M.r.fc, gfc = nowGreen('FC'), fcLow = false;
   if (fc && gfc && (M.now - fc.last.ms) / HR <= NOW_SURE_H.fc) {
     if (fc.v < gfc.lo) { say.push('FC is low now.'); fcLow = true; }
-    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x && x.ms - M.now <= NOW_FC_WARN_H * HR) fcSoon = true; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
+    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
   }
   var bad = [], unsure = [];
   NOW_TILES.forEach(function(d){
@@ -3667,7 +3674,7 @@ function nowSummary(M){
   var stTop = 'g';                                               // top-card trial: r if anything is red, y if anything needs attention
   NOW_TILES.forEach(function(d){ var r = M.r[d[0]]; if (!r || (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]] || (NOW_QUIET[d[0]] && r.v <= NOW_QUIET[d[0]])) return;
     var c = colorOf(d[3], r.v); if (c === 'red') stTop = 'r'; else if ((c === 'yellow' || c === 'purple') && stTop === 'g') stTop = 'y'; });
-  if (stTop === 'g' && (unsure.length || bad.length || fcLow || fcSoon)) stTop = 'y';
+  if (stTop === 'g' && (unsure.length || bad.length || fcLow)) stTop = 'y';      // the FC forecast alone never tints it: only once FC is low
   var c = M.r.csi, csi = '';
   if (c) {
     var cs = nowStatus('CSI', c.v), dom = [-0.6, 0.6], gb = nowGreen('CSI') || {lo: -0.1, hi: 0.3};
@@ -5139,6 +5146,9 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="escrim" id="eScrim"></div>
   <div class="efab-zone">
     <div class="eacts">
+      <button type="button" class="eact" id="ePrices">
+        Prices &amp; stock
+        <span class="ei44" style="--c:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4"/></svg></span></button>
       <button type="button" class="eact" id="ePump">
         Log pump reading
         <span class="ei44" style="--c:var(--water)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg></span></button>
@@ -5240,6 +5250,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eNoteBtn').addEventListener('click', function(){ openPanel('note', null, $('eNoteBtn')); });
   $('ePump').addEventListener('click', function(){ openPanel('pump', null, $('ePump')); });
   $('eChemBtn').addEventListener('click', function(){ openPanel('chem', null, $('eChemBtn')); });
+  $('ePrices').addEventListener('click', function(){ setOpen(false); openPrices(); });
   $('eX').addEventListener('click', function(){ closePanel(); });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
@@ -5252,6 +5263,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.body.classList.toggle('can-enter', can);
     $('ePump').style.display = isBrd() ? '' : 'none';               // the Pump Log needs Board or Manager
     $('eChemBtn').style.display = isBrd() ? '' : 'none';            // so do chemicals (members don't see them at all)
+    $('ePrices').style.display = isBrd() ? '' : 'none';             // Prices & stock: Board and Manager (was in the ⋯ menu)
     if (!can){ setOpen(false); if (!grow.hidden) shut(); }
   };
 
