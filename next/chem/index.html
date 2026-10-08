@@ -43,6 +43,10 @@
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <script>
+// Top-card trial (2026-10-08, PREVIEW): ?top=wash = tinted summary card; anything else = summary sits on the page, no card.
+(function(){ try { var t = /[?&]top=wash\b/.test(location.search) ? 'wash' : 'page'; document.documentElement.classList.add('top-' + t); } catch (e) {} })();
+</script>
+<script>
 // Home-screen app (opened from the icon, no Safari bars): class "app" on <html> - no top bar; its menu is the grey ⋯ circle
 // above the + (styles: "home-screen app" block). --cornerGap puts the buttons on the screen's rounded corner: same gap from
 // the side and the bottom = the screen's corner radius minus the button's (30), by iPhone screen width.
@@ -1343,6 +1347,18 @@ html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nmini{border-radius:20px}
 .nnm b{display:inline-flex;align-items:center;gap:6px}
 .nico{width:17px;height:17px;flex:0 0 17px;color:var(--k)}
+
+/* ---- top-card trial (PREVIEW). top-page: the summary sits on the grey page with no card; its inner boxes turn white.
+   top-wash: the summary card is faintly tinted by how things stand; everything inside it is white so no tone repeats. */
+html.top-page .upbox,html.top-page .nsum{background:transparent;padding-left:4px;padding-right:4px}
+html.top-page .nsum{padding-top:4px}
+html.top-page .ncsi,html.top-page .jobs,html.top-page .ntag:not(.g):not(.y):not(.r):not(.p){background:var(--card)}
+html.top-wash .upbox[data-st=g],html.top-wash .nsum[data-st=g]{background:color-mix(in srgb,var(--green) 8%,var(--card))}
+html.top-wash .upbox[data-st=y],html.top-wash .nsum[data-st=y]{background:color-mix(in srgb,var(--yellow) 13%,var(--card))}
+html.top-wash .upbox[data-st=r],html.top-wash .nsum[data-st=r]{background:color-mix(in srgb,var(--red) 9%,var(--card))}
+html.top-wash .ncsi,html.top-wash .jobs,html.top-wash .ntag{background:var(--card)}
+html.top-wash .ncsi .ns{background:var(--card);box-shadow:inset 0 0 0 1.5px currentColor}
+html.top-wash .upbox .tdc.lv-yellow,html.top-wash .upbox .tdc.lv-red{background:var(--card)}
 /* things that were tinted against the old near-white page and would vanish on the grey one */
 .ncsi .ntrack{fill:var(--line)}
 .chipPop .jpost{background:var(--soft)}
@@ -3640,6 +3656,10 @@ function nowSummary(M){
   if (bad.length) say.push(bad.join(', ').replace(/^./, function(c){ return c.toUpperCase(); }) + '.');
   if (unsure.length) say.push('Test ' + unsure.join(', ').replace(/, ([^,]*)$/, ' and $1') + ' to be sure.');
   if (!say.length) say.push('Everything looks in range.');
+  var stTop = 'g';                                               // top-card trial: r if anything is red, y if anything needs attention
+  NOW_TILES.forEach(function(d){ var r = M.r[d[0]]; if (!r || (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]] || (NOW_QUIET[d[0]] && r.v <= NOW_QUIET[d[0]])) return;
+    var c = colorOf(d[3], r.v); if (c === 'red') stTop = 'r'; else if ((c === 'yellow' || c === 'purple') && stTop === 'g') stTop = 'y'; });
+  if (stTop === 'g' && (unsure.length || say[0] !== 'Everything looks in range.')) stTop = 'y';
   var c = M.r.csi, csi = '';
   if (c) {
     var cs = nowStatus('CSI', c.v), dom = [-0.6, 0.6], gb = nowGreen('CSI') || {lo: -0.1, hi: 0.3};
@@ -3648,7 +3668,7 @@ function nowSummary(M){
       (cs.txt ? '<span class="ns ' + cs.cls + '">' + cs.txt + '</span>' : '') +
       '<svg viewBox="0 0 88 10" width="88" height="10" aria-hidden="true"><rect x="0" y="3" width="88" height="4" rx="2" class="ntrack"/><rect x="' + px(gb.lo).toFixed(1) + '" y="3" width="' + (px(gb.hi) - px(gb.lo)).toFixed(1) + '" height="4" class="ngood"/><circle cx="' + px(c.v).toFixed(1) + '" cy="5" r="4" fill="var(--k-csi)"/></svg></button>';
   }
-  return '<div class="nsum"><div class="nhd"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now).replace(/^\w+ /, '')) + '</span></div><div class="nl"><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
+  return '<div class="nsum" data-st="' + stTop + '"><div class="nhd"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now).replace(/^\w+ /, '')) + '</span></div><div class="nl"><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
     (nowOpen.csi ? nowCsiDetail(M) : '');
 }
 
@@ -3712,8 +3732,14 @@ function setNowView(on){
   window.addEventListener('resize', function(){ if (!nowView) return; clearTimeout(rt); rt = setTimeout(function(){ var b = $('now'); if (b && Math.min(b.clientWidth, 900) !== nowW) renderNow(); }, 150); });
 })();
 
+/** Top-card trial: how the Coming up box stands, from what it shows (r = something late, y = something due now, g = all fine). */
+function upState(){
+  var b = document.querySelector('.upbox'); if (!b) return;
+  var red = b.querySelector('.jrow.lv-red, .tdc.lv-red'), due = b.querySelector('.jrow.lv-yellow, .tdc.lv-yellow');
+  b.setAttribute('data-st', red ? 'r' : due ? 'y' : 'g');
+}
 function renderAll(){
-  renderHeader(); renderTrackers(); renderPresets(); renderList(); renderLegend();
+  renderHeader(); renderTrackers(); renderPresets(); renderList(); renderLegend(); upState();
   nowCache = null; if (nowView) { if (isBrd()) renderNow(); else setNowView(false); }
   if (window.renderEntry) renderEntry();
 }
