@@ -44,7 +44,7 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <script>
 // Top-card trial (2026-10-08, PREVIEW): ?top=wash = tinted summary card; anything else = summary sits on the page, no card.
-(function(){ try { var t = /[?&]top=wash\b/.test(location.search) ? 'wash' : 'page'; document.documentElement.classList.add('top-' + t); } catch (e) {} })();
+(function(){ try { var t = /[?&]top=wash\b/.test(location.search) ? 'wash' : 'page'; document.documentElement.classList.add('top-' + t); var f = /[?&]st=([gyr])\b/.exec(location.search); if (f) document.documentElement.setAttribute('data-force-st', f[1]); } catch (e) {} })();
 </script>
 <script>
 // Home-screen app (opened from the icon, no Safari bars): class "app" on <html> - no top bar; its menu is the grey ⋯ circle
@@ -1356,6 +1356,9 @@ html.top-page .ncsi,html.top-page .jobs,html.top-page .ntag:not(.g):not(.y):not(
 html.top-wash .upbox[data-st=g],html.top-wash .nsum[data-st=g]{background:color-mix(in srgb,var(--green) 8%,var(--card))}
 html.top-wash .upbox[data-st=y],html.top-wash .nsum[data-st=y]{background:color-mix(in srgb,var(--yellow) 13%,var(--card))}
 html.top-wash .upbox[data-st=r],html.top-wash .nsum[data-st=r]{background:color-mix(in srgb,var(--red) 9%,var(--card))}
+html.top-wash[data-force-st=g] .upbox,html.top-wash[data-force-st=g] .nsum{background:color-mix(in srgb,var(--green) 8%,var(--card))}
+html.top-wash[data-force-st=y] .upbox,html.top-wash[data-force-st=y] .nsum{background:color-mix(in srgb,var(--yellow) 13%,var(--card))}
+html.top-wash[data-force-st=r] .upbox,html.top-wash[data-force-st=r] .nsum{background:color-mix(in srgb,var(--red) 9%,var(--card))}
 html.top-wash .ncsi,html.top-wash .jobs,html.top-wash .ntag{background:var(--card)}
 html.top-wash .ncsi .ns{background:var(--card);box-shadow:inset 0 0 0 1.5px currentColor}
 html.top-wash .upbox .tdc.lv-yellow,html.top-wash .upbox .tdc.lv-red{background:var(--card)}
