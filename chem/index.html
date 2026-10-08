@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
@@ -1313,6 +1313,10 @@ html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nbars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);white-space:nowrap}
 .nbars i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:var(--k);opacity:.7}
 .nbars b{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.nwell{font-size:14px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+.nwsave{width:auto !important;border-radius:999px !important;padding:0 16px;font-size:15px !important;background:var(--accent) !important;color:var(--accentInk) !important;border:0 !important}
+.nwnote{font-size:12px;color:var(--muted)}
+.nwerr{color:var(--red)}
 .nstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .nstats div{background:var(--soft);border-radius:12px;padding:7px 10px}
 .nstats b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
@@ -3014,6 +3018,9 @@ var NOW_SURE_H = {fc:48, cc:48, ph:48, ta:14*24, ch:21*24, cya:21*24};   // how 
 var NOW_TILES = [['fc','Free chlorine','ppm','FC'], ['cc','Combined chlorine','ppm','CC'], ['ph','pH','','pH'],
   ['ta','Total alkalinity','ppm','TA'], ['ch','Calcium hardness','ppm','CH'], ['cya','Stabilizer (CYA)','ppm','CYA']];
 var NOW_SPAN = {fc:4, cc:4, ph:4, ta:25, ch:25, cya:25, csi:25, tempF:12};        // days on the tile's chart (scroll for more)
+/** Calcium hardness of our well water, which refill water brings in: one number for everyone, set on the CH tile (server saveWellCh). */
+function nowWellCh(){ return isNum(DATA.wellCh) ? DATA.wellCh : 200; }
+var nowEditW = false, nowWDraft = 200, nowWMsg = '', nowWBusy = false;
 var NOW_QUIET = {ch: 900};       // Pool right now box: not mentioned in the sentence until above this (our CH always runs high); its tag keeps its color
 var NOW_SPAN_BIG = {fc:30, cc:30, ph:30, ta:120, ch:120, cya:120, csi:120, tempF:60};  // opened tile
 var NOW_BACK = {fc:90, cc:90, ph:90, ta:365, ch:365, cya:365, csi:365, tempF:88};         // days a chart can scroll back
@@ -3087,6 +3094,27 @@ function nowSum(cs, f, a, b, split){
 function nowTests(k){
   return (DATA.tests || []).filter(function(t){ return isNum(t[k]); }).sort(function(a, b){ return a.ms - b.ms; });
 }
+
+/** Gallons of well water the pool's fill meter says went in between a and b (DATA.refill = [[ms, meter]] from the Pump Log's
+ *  Pool tab). Past the last reading it carries on at the last week's pace (at most 7 days). Null when the meter has no reading before a. */
+function nowRefill(a, b){
+  var R = DATA.refill || []; if (R.length < 2) return null;
+  var cum = [0];
+  for (var i = 1; i < R.length; i++) cum.push(cum[i - 1] + Math.max(0, R[i][1] - R[i - 1][1]));    // a meter reset counts as 0
+  var n = R.length - 1, wk = 0, k = n;
+  while (k > 0 && R[n][0] - R[k - 1][0] <= 7 * DAYMS) k--;
+  var rate = R[n][0] > R[k][0] ? (cum[n] - cum[k]) / (R[n][0] - R[k][0]) : 0;
+  var at = function(ms){
+    if (ms < R[0][0]) return null;
+    if (ms >= R[n][0]) return cum[n] + rate * Math.min(ms - R[n][0], 7 * DAYMS);
+    var j = 1; while (R[j][0] < ms) j++;
+    return cum[j - 1] + (cum[j] - cum[j - 1]) * (ms - R[j - 1][0]) / (R[j][0] - R[j - 1][0]);
+  };
+  var x = at(a), y = at(b);
+  return x === null || y === null ? null : Math.max(0, y - x);
+}
+/** CH that refill water brings in: it replaces evaporated water, which leaves its calcium behind. */
+function nowRefillCh(a, b){ var g = nowRefill(a, b); return g === null ? 0 : g * nowWellCh() / 48000; }
 
 /** pH fall when strong acid neutralizes acidPpm of alkalinity (same carbonate balance as Code.gs phDrop_). */
 function nowPhDrop(pH, ta, cya, acidPpm){
@@ -3243,16 +3271,17 @@ function nowModel(){
   }
   // TA, CH, CYA, CC: the last test plus what was added since, plus their own slow drift (refill water, splash-out)
   [['ta', function(a, b){ return nowSum(cs, 'alk', a, b) - nowSum(cs, 'acid', a, b); }, 1, 3],
-   ['ch', function(a, b){ return nowSum(cs, 'ch', a, b); }, 3, 3],
+   ['ch', function(a, b){ return nowSum(cs, 'ch', a, b) + nowRefillCh(a, b); }, null],     // CH: cal-hypo + refill water, no learned drift
    ['cya', function(a, b){ return nowSum(cs, 'cya', a, b); }, 1, 1],
    ['cc', null]].forEach(function(p){
     var L = nowTests(p[0]).pop(); if (!L) return;
-    var path = [], f = p[1], rate = f ? nowDrift(p[0], f, p[2], p[3]) : 0;
+    var path = [], f = p[1], rate = f && p[2] !== null ? nowDrift(p[0], f, p[2], p[3]) : 0;
     var at = function(t){ return f ? f(L.ms, t) + rate * (t - L.ms) / HR : 0; };
     if (f) { for (var t = L.ms + 12 * HR; t < now; t += 12 * HR) path.push({ms: t, v: Math.max(0, L[p[0]] + at(t))}); }
     var add = f ? f(L.ms, now) : 0, drift = rate * (now - L.ms) / HR, dv = add + drift;
     path.push({ms: now, v: Math.max(0, L[p[0]] + dv)});
     M.r[p[0]] = {last: L, v: Math.max(0, L[p[0]] + dv), dv: dv, add: add, drift: drift, rate: rate, path: path, flat: !f || Math.abs(dv) < 0.5};
+    if (p[0] === 'ch') { M.r.ch.water = nowRefill(L.ms, now); M.r.ch.waterCh = nowRefillCh(L.ms, now); M.r.ch.add -= M.r.ch.waterCh; }
   });
   // water temperature
   var tm = nowTempModel(), lastT = nowTests('tempF').pop();
@@ -3484,6 +3513,7 @@ function nowTile(M, def){
   } else if (k === 'ta' || k === 'ch' || k === 'cya') {
     var lbl = {ta: 'Acid since then (feeder and by hand)', ch: 'Cal-hypo since then', cya: 'Trichlor / dichlor since then'}[k];
     how = nowHow([['Tested ' + nowWhen(r.last), nowFmt(k, r.last[k])], Math.abs(r.add) >= 0.5 ? [lbl, nowSigned(k, r.add)] : null,
+      k === 'ch' && r.water ? ['Well water added (' + Math.round(r.water).toLocaleString() + ' gal at ' + nowWellCh() + ')', nowSigned(k, r.waterCh)] : null,
       Math.abs(r.drift) >= 0.5 ? ['Usual drift (refill water, splash-out)', nowSigned(k, r.drift)] : null,
       r.flat ? ['Nothing since then that changes it much', ''] : null], !r.flat ? ['Now', '≈' + nowFmt(k, r.v)] : null);
     var old = pts.filter(function(p){ return p.ms <= M.now - 28 * DAYMS; }).pop(), wkly = null;
@@ -3494,6 +3524,13 @@ function nowTile(M, def){
     if (k === 'ta' && band && r.v < band.lo) { var lb = Math.ceil((80 - r.v) * NOW_L / 50000 * 84 / 453.59237); todo = 'To bring it to 80: about <b>' + lb + ' lb baking soda</b>.'; }
     else if (k === 'ta' && band && wkly !== null && wkly < -0.5 && r.v > band.lo) { var wks = (r.v - band.lo) / -wkly; if (wks < 6) todo = 'At this pace it reaches ' + band.lo + ' in about ' + Math.max(1, Math.round(wks)) + (Math.round(wks) <= 1 ? ' week' : ' weeks') + '.'; }
     else if ((k === 'ch' || k === 'cya') && band && r.v > band.hi) todo = 'Only fresh water brings it down. Nothing to add.';
+    if (k === 'ch') {
+      var mayW = isBrd() && DATA.canEnter;
+      extra = '<div class="nwell"><span>Our well water: CH ' + (mayW ? '<button type="button" class="ntgt" data-nwch="1" aria-expanded="' + nowEditW + '">' + nowWellCh() + '</button>' : '<b>' + nowWellCh() + '</b>') + ' ppm</span>' +
+        (nowEditW && mayW ? '<div class="nted"><button type="button" data-nwd="-10" aria-label="Lower">−</button><b>' + nowWDraft + '</b><button type="button" data-nwd="10" aria-label="Higher">+</button>' +
+          '<button type="button" class="nwsave" data-nwsave="1"' + (nowWBusy ? ' disabled' : '') + '>' + (nowWBusy ? 'Saving…' : 'Save') + '</button></div><span class="nwnote">For everyone. Set it from a test of the well water.</span>' : '') +
+        (nowWMsg ? '<span class="nwnote nwerr">' + esc(nowWMsg) + '</span>' : '') + '</div>';
+    }
     else if (k === 'cya' && band && r.v < band.lo) todo = 'Low: stabilizer (or trichlor) raises it.';
   } else if (k === 'cc') {
     foot = 'Doesn’t drift by itself';
@@ -3623,6 +3660,19 @@ function setNowView(on){
     if (td) { nowFcTarget = Math.max(1, Math.min(10, nowFcTarget + Number(td.getAttribute('data-ntd')))); try { localStorage.setItem('nowFcTarget', nowFcTarget); } catch(x){} renderNow(); return; }
     if (e.target.closest('[data-ntgt]')) { nowEditT = !nowEditT; renderNow(); return; }
     if (e.target.closest('#nowCsiBtn')) { nowOpen.csi = !nowOpen.csi; renderNow(); return; }
+    if (e.target.closest('[data-nwch]')) { nowEditW = !nowEditW; nowWDraft = nowWellCh(); nowWMsg = ''; renderNow(); return; }
+    var wd = e.target.closest('[data-nwd]');
+    if (wd) { nowWDraft = Math.max(10, Math.min(1500, nowWDraft + Number(wd.getAttribute('data-nwd')))); renderNow(); return; }
+    if (e.target.closest('[data-nwsave]') && !nowWBusy) {
+      nowWBusy = true; nowWMsg = ''; renderNow();
+      serverCall('saveWellCh', [CODE, nowWDraft], function(res){
+        nowWBusy = false;
+        if (handleDenied(res)) return;
+        if (!res || !res.ok) { nowWMsg = (res && res.message) || 'Could not save.'; renderNow(); return; }
+        DATA = res.data; nowEditW = false; renderAll();
+      }, function(err){ nowWBusy = false; nowWMsg = 'Could not reach the server: ' + (err && err.message || err); renderNow(); });
+      return;
+    }
     var h = e.target.closest('.nhead');
     if (h) { var k = h.parentNode.getAttribute('data-nk'); nowOpen[k] = !nowOpen[k]; renderNow(); }
   });
