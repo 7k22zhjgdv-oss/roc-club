@@ -880,13 +880,13 @@ html.app .day{top:calc(var(--barTop) + 12px)}
 html.app #entryUi{display:block}
 html.app body:not(.can-enter) #eFab{display:none}
 html.app .efab-zone{right:var(--cornerGap,24px);bottom:var(--cornerGap,24px)}
-/* ⋯: quiet - the same height and see-through glass as the History / Now switch (.nowsw .sg), dark dots (2026-10-08) */
-html.app .emore{display:grid;pointer-events:auto;width:var(--moreD,45px);height:var(--moreD,45px);border-radius:50%;border:0;place-items:center;cursor:pointer;color:var(--ink);
+/* ⋯: quiet - the see-through glass of the History / Now switch (.nowsw .sg), dark dots; same 60 px size as the + (2026-10-08) */
+html.app .emore{display:grid;pointer-events:auto;width:var(--moreD,60px);height:var(--moreD,60px);border-radius:50%;border:0;place-items:center;cursor:pointer;color:var(--ink);
   background:color-mix(in srgb,var(--card) 34%,transparent);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);
   box-shadow:0 6px 20px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px color-mix(in srgb,var(--card) 55%,transparent),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}
-html.app .emore svg{width:22px;height:22px}
+html.app .emore svg{width:26px;height:26px}
 html.app #entryUi.open .emore{display:none}
-html.app #eMore{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + (60px - var(--moreD,45px)) / 2)}   /* centered on the + (60) */            /* ⋯ in the left corner, in line with the switch and the + (2026-10-08) */
+html.app #eMore{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + (60px - var(--moreD,60px)) / 2)}   /* centered on the + (60) */            /* ⋯ in the left corner, in line with the switch and the + (2026-10-08) */
 html.app #mActs{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + 72px);align-items:flex-start}
 html.app #mActs .eact{flex-direction:row-reverse;padding:0 20px 0 8px}   /* on the left: icon first, by the ⋯ */
 html.app #mActs .mcap{text-align:left}
