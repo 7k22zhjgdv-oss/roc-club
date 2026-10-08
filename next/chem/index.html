@@ -1359,6 +1359,7 @@ html.top-wash .upbox[data-st=r],html.top-wash .nsum[data-st=r]{background:color-
 html.top-wash[data-force-st=g] .upbox,html.top-wash[data-force-st=g] .nsum{background:color-mix(in srgb,var(--green) 8%,var(--card))}
 html.top-wash[data-force-st=y] .upbox,html.top-wash[data-force-st=y] .nsum{background:color-mix(in srgb,var(--yellow) 13%,var(--card))}
 html.top-wash[data-force-st=r] .upbox,html.top-wash[data-force-st=r] .nsum{background:color-mix(in srgb,var(--red) 9%,var(--card))}
+html.top-wash .upbox,html.top-wash .nsum{box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.08)}
 html.top-wash .ncsi,html.top-wash .jobs,html.top-wash .ntag{background:var(--card)}
 html.top-wash .ncsi .ns{background:var(--card);box-shadow:inset 0 0 0 1.5px currentColor}
 html.top-wash .upbox .tdc.lv-yellow,html.top-wash .upbox .tdc.lv-red{background:var(--card)}
@@ -3062,6 +3063,7 @@ var NOW_SPAN = {fc:4, cc:4, ph:4, ta:25, ch:25, cya:25, csi:25, tempF:12};      
 /** Calcium hardness of our well water, which refill water brings in: one number for everyone, set on the CH tile (server saveWellCh). */
 function nowWellCh(){ return isNum(DATA.wellCh) ? DATA.wellCh : 200; }
 var nowEditW = false, nowWDraft = 200, nowWMsg = '', nowWBusy = false;
+var NOW_FC_WARN_H = 3;          // the top card turns yellow this many hours before FC is expected to drop low
 var NOW_QUIET = {ch: 900};       // Pool right now box: not mentioned in the sentence until above this (our CH always runs high); its tag keeps its color
 var NOW_SPAN_BIG = {fc:30, cc:30, ph:30, ta:120, ch:120, cya:120, csi:120, tempF:60};  // opened tile
 var NOW_BACK = {fc:90, cc:90, ph:90, ta:365, ch:365, cya:365, csi:365, tempF:88};         // days a chart can scroll back
@@ -3644,10 +3646,10 @@ function nowSummary(M){
     var unsure = (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]], st = unsure ? {cls: 'u'} : nowStatus(d[3], r.v);
     return '<span class="ntag ' + st.cls + '">' + d[3] + ' ' + (unsure ? '?' : nowFmt(d[0], r.v)) + '</span>';
   }).join('');
-  var say = [], fc = M.r.fc, gfc = nowGreen('FC');
+  var say = [], fc = M.r.fc, gfc = nowGreen('FC'), fcSoon = false, fcLow = false;
   if (fc && gfc && (M.now - fc.last.ms) / HR <= NOW_SURE_H.fc) {
-    if (fc.v < gfc.lo) say.push('FC is low now.');
-    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
+    if (fc.v < gfc.lo) { say.push('FC is low now.'); fcLow = true; }
+    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x && x.ms - M.now <= NOW_FC_WARN_H * HR) fcSoon = true; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
   }
   var bad = [], unsure = [];
   NOW_TILES.forEach(function(d){
@@ -3662,7 +3664,7 @@ function nowSummary(M){
   var stTop = 'g';                                               // top-card trial: r if anything is red, y if anything needs attention
   NOW_TILES.forEach(function(d){ var r = M.r[d[0]]; if (!r || (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]] || (NOW_QUIET[d[0]] && r.v <= NOW_QUIET[d[0]])) return;
     var c = colorOf(d[3], r.v); if (c === 'red') stTop = 'r'; else if ((c === 'yellow' || c === 'purple') && stTop === 'g') stTop = 'y'; });
-  if (stTop === 'g' && (unsure.length || say[0] !== 'Everything looks in range.')) stTop = 'y';
+  if (stTop === 'g' && (unsure.length || bad.length || fcLow || fcSoon)) stTop = 'y';
   var c = M.r.csi, csi = '';
   if (c) {
     var cs = nowStatus('CSI', c.v), dom = [-0.6, 0.6], gb = nowGreen('CSI') || {lo: -0.1, hi: 0.3};
