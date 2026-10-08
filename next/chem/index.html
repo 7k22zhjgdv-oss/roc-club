@@ -4578,6 +4578,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var info = chemInfo(pick.name), units = UNIT_BY_KIND[info.kind] || ['gal', 'fl oz', 'lb', 'oz'], last = lastChem(info.name, pick.slow);
     var unit = from ? from.unit : last && units.indexOf(last.unit) >= 0 ? last.unit : /orenda/i.test(info.name) && info.kind === 'Liquid' ? 'fl oz' : units[0];
     if (units.indexOf(unit) < 0) units = units.concat([unit]);
+    if (pick.label === 'Cal-Hypo - Pucks') { units = ['pucks', 'lb']; if (!from) unit = 'pucks'; else if (unit !== 'lb') unit = 'lb'; }   // pucks or lb, no oz (2026-10-07)
     var pct = from && isNum(from.strength) ? from.strength : last && isNum(last.strength) ? last.strength : '';
     return {name: info.name, label: pick.label, fixed: pick.slow !== undefined, info: info, units: units, unit: unit, amount: from ? fmtNum(from.amount) : '', pct: pct === '' ? '' : fmtNum(pct),
       slow: pick.slow !== undefined ? pick.slow : from ? !!from.slow : false};
@@ -4618,14 +4619,17 @@ document.addEventListener('DOMContentLoaded', function(){
     refresh();
   }
   function numIn(v){ v = String(v == null ? '' : v).trim().replace(',', '.'); return v === '' ? NaN : Number(v); }
-  function chemAmt(it){ return numIn(it.amount); }
+  // Cal-hypo pucks: typed as a count, saved as lb (about 44-45 pucks in a 25 lb bucket).
+  var PUCK_LB = 25 / 44.5;
+  function chemAmt(it){ var a = numIn(it.amount); return it.unit === 'pucks' ? Math.round(a * PUCK_LB * 100) / 100 : a; }
+  function chemUnit(it){ return it.unit === 'pucks' ? 'lb' : it.unit; }
   function chemPct(it){ return numIn(it.pct); }
   function chemCheck(){
     if (!chem.items.length) return 'Choose a chemical first.';
     for (var i = 0; i < chem.items.length; i++) {
       var it = chem.items[i], a = chemAmt(it), p = chemPct(it);
       if (!(a > 0)) return 'Enter how much ' + it.name + ' was added.';
-      if (a > CHEM_MAX[it.unit]) return 'Check the amount of ' + it.name + ' - ' + fmtNum(a) + ' ' + it.unit + ' can\'t be right.';
+      if (a > CHEM_MAX[chemUnit(it)]) return 'Check the amount of ' + it.name + ' - ' + fmtNum(a) + ' ' + chemUnit(it) + ' can\'t be right.';
       if (it.info.sMode === 'entry' && !(p >= 1 && p <= 40)) return 'Enter the strength (%) of the ' + it.name + '.';
     }
     return '';
@@ -4700,8 +4704,9 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function chemLine(it, ms){
     var a = chemAmt(it); if (!(a > 0)) return '';
-    var kind = it.info.kind || UNIT_KIND[it.unit], lines = [], sk = slowKind(it);
-    var c = {product: it.name, amount: a, unit: it.unit, kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
+    var kind = it.info.kind || UNIT_KIND[chemUnit(it)], lines = [], sk = slowKind(it);
+    if (it.unit === 'pucks') lines.push(fmtNum(numIn(it.amount)) + ' puck' + (numIn(it.amount) === 1 ? '' : 's') + ' ≈ ' + fmtNum(Math.round(a * 10) / 10) + ' lb (saved in lb; about 44–45 pucks in a 25 lb bucket)');
+    var c = {product: it.name, amount: a, unit: chemUnit(it), kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
       strength: it.info.sMode === 'entry' ? chemPct(it) : it.info.sMode === 'fixed' ? Number(it.info.strength) : ''};
     it.eff = null;
     if (sk === 'tri' || it.slow) lines.push('Slow feed: reaches the pool over several days, so no instant estimate.');
@@ -4713,10 +4718,10 @@ document.addEventListener('DOMContentLoaded', function(){
       if (!chips && !e.why) { var w = (DATA.chems || []).filter(function(x){ return x.what && String(x.product).toLowerCase() === it.name.toLowerCase(); })[0]; if (w) lines.push(esc(w.what)); }
     }
     var key = it.slow && /cal-?hypo/i.test(it.name) ? 'cal-hypo puck' : it.name.toLowerCase(), st = (DATA.stock || {})[key];
-    if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[it.unit]) {
+    if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[chemUnit(it)]) {
       var back = 0;
       if (editing && editing.product && String(editing.product).toLowerCase() === it.name.toLowerCase() && EST_BASE[editing.unit] && !!editing.slow === !!it.slow) back = editing.amount * EST_BASE[editing.unit];
-      var left = (st.base + back) / STOCK_BASE[st.unit], after = (st.base + back - a * EST_BASE[it.unit]) / STOCK_BASE[st.unit];
+      var left = (st.base + back) / STOCK_BASE[st.unit], after = (st.base + back - a * EST_BASE[chemUnit(it)]) / STOCK_BASE[st.unit];
       var rnd = function(x){ return st.unit === 'oz' || st.unit === 'units' ? String(Math.round(x)) : fmtNum(Math.round(x * 10) / 10); };
       lines.push(after < -0.05 ? '<span class="low">More than the ' + rnd(Math.max(left, 0)) + ' ' + st.unit + ' in stock. Check the amount (or Adjust stock in Prices).</span>'
         : 'Stock after this: about ' + rnd(Math.max(after, 0)) + ' ' + st.unit);
@@ -4986,7 +4991,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (dup) { dupOk = true; save.textContent = 'Save anyway'; say('Already logged: ' + dup.summary + ' at ' + dup.time + (dup.day !== w.s.slice(0, 10) ? ' on ' + fmtDayRel(dup.day) : '') + (dup.src === 'Dashboard' ? '' : ' (from Pool Math)') + '. Is this a different addition?', 'warn'); return; }
       }
       payload = {id: editing ? editing.id : '', when: w.s, items: chem.items.map(function(it){
-        return {product: it.name, amount: chemAmt(it), unit: it.unit, strength: it.info.sMode === 'entry' ? chemPct(it) : '', slow: !!it.slow};
+        return {product: it.name, amount: chemAmt(it), unit: chemUnit(it), strength: it.info.sMode === 'entry' ? chemPct(it) : '', slow: !!it.slow};
       })};
       if (!editing) payload.note = $('eNote').value;
       fn = 'saveChems'; label = chem.items.length > 1 ? 'Chemicals' : 'Chemical';
