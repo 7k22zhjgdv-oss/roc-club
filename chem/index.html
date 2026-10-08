@@ -40,8 +40,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">   <!-- solid status bar in the home-screen app: nothing scrolls under the clock, so iOS draws no blur there (2026-10-06) -->
 <meta name="apple-mobile-web-app-title" content="Pool Log">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<script>
+// Top cards (2026-10-08): Coming up and Pool right now are faintly tinted by how things stand (class top-wash).
+// ?top=page shows the other trial (no card); ?st=g|y|r forces a tint, to look at the colors.
+(function(){ try { var t = /[?&]top=page\b/.test(location.search) ? 'page' : 'wash'; document.documentElement.classList.add('top-' + t); var f = /[?&]st=([gyr])\b/.exec(location.search); if (f) document.documentElement.setAttribute('data-force-st', f[1]); } catch (e) {} })();
+</script>
 <script>
 // Home-screen app (opened from the icon, no Safari bars): class "app" on <html> - no top bar; its menu is the grey ⋯ circle
 // above the + (styles: "home-screen app" block). --cornerGap puts the buttons on the screen's rounded corner: same gap from
@@ -1247,10 +1252,11 @@ body.v-now.unlocked:is(.lvl-board,.lvl-manager) #now{display:flex !important}
 #now{margin-bottom:84px}
 html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nsum{background:var(--panel);border-radius:18px;padding:12px 12px 14px 16px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:start}
-.nsum h2{margin:0;font-size:20px;font-weight:650;letter-spacing:-.01em;grid-column:1;grid-row:1;align-self:center}
-.nsum .nat{font-size:13px;color:var(--muted);grid-column:2;grid-row:1;justify-self:end;align-self:center;white-space:nowrap}
+.nsum .nhd{grid-column:1;grid-row:1;display:flex;align-items:baseline;gap:8px;min-width:0}
+.nsum h2{margin:0;font-size:20px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.nsum .nat{font-size:13px;color:var(--muted);white-space:nowrap}
 .nsum .nl{grid-column:1;grid-row:2;min-width:0;display:flex;flex-direction:column;gap:6px}
-.nsum .ncsi{grid-column:2;grid-row:2}
+.nsum .ncsi{grid-column:2;grid-row:1 / span 2;align-self:start}
 .ntags{display:flex;flex-wrap:wrap;gap:5px}
 .ntag{font-size:12px;font-weight:650;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .ntag.g,.ns.g{background:var(--okT);color:var(--okInk)}
@@ -1327,6 +1333,46 @@ html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nmini .nn{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums}
 .nlegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:2px}
 .nlegend svg{vertical-align:-1px;margin-right:5px}
+/* ---- Health look (2026-10-08, live for a trial): like the iPhone Health app. Grey page, white rounded cards with no borders or shadows,
+   wider gaps; the same on History and Now so the two views feel alike. Remove this block (and NOW_ICO) to go back. */
+:root{--bg:#f2f2f7; --soft:#f2f2f7; --panel:#ffffff; --sum:#ffffff; --line:#e3e3e8}
+@media (prefers-color-scheme: dark){ :root{--bg:#000000; --card:#1c1c1e; --soft:#2c2c2e; --panel:#1c1c1e; --sum:#1c1c1e; --line:#38383a} }
+.card{border-radius:22px;padding:12px 15px;margin-bottom:10px;box-shadow:none}
+.card.chem,.chem.chemg{border-radius:0}
+.upbox,.obox{background:var(--card);border-radius:22px;padding:12px}
+.jobs{background:var(--soft)}
+.ntile{border-radius:22px;padding:14px 16px 12px}
+#now{gap:12px}
+.nsum{background:var(--card);border-radius:22px;padding:14px 14px 16px 16px}
+.ncsi{background:var(--soft)}
+.nmini{border-radius:20px}
+.nnm b{display:inline-flex;align-items:center;gap:6px}
+.nico{width:17px;height:17px;flex:0 0 17px;color:var(--k)}
+
+/* ---- top cards (2026-10-08, live for a trial; top-wash is the default). top-page: the summary sits on the grey page with no card; its inner boxes turn white.
+   top-wash: the summary card is faintly tinted by how things stand; everything inside it is white so no tone repeats. */
+html.top-page .upbox,html.top-page .nsum{background:transparent;padding-left:4px;padding-right:4px}
+html.top-page .nsum{padding-top:4px}
+html.top-page .ncsi,html.top-page .jobs,html.top-page .ntag:not(.g):not(.y):not(.r):not(.p){background:var(--card)}
+html.top-wash .upbox[data-st=g],html.top-wash .nsum[data-st=g]{background:color-mix(in srgb,var(--green) 8%,var(--card))}
+html.top-wash .upbox[data-st=y],html.top-wash .nsum[data-st=y]{background:color-mix(in srgb,var(--yellow) 13%,var(--card))}
+html.top-wash .upbox[data-st=r],html.top-wash .nsum[data-st=r]{background:color-mix(in srgb,var(--red) 9%,var(--card))}
+html.top-wash[data-force-st=g] .upbox,html.top-wash[data-force-st=g] .nsum{background:color-mix(in srgb,var(--green) 8%,var(--card))}
+html.top-wash[data-force-st=y] .upbox,html.top-wash[data-force-st=y] .nsum{background:color-mix(in srgb,var(--yellow) 13%,var(--card))}
+html.top-wash[data-force-st=r] .upbox,html.top-wash[data-force-st=r] .nsum{background:color-mix(in srgb,var(--red) 9%,var(--card))}
+html.top-wash .upbox,html.top-wash .nsum{box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.08)}
+html.top-wash .ncsi,html.top-wash .jobs,html.top-wash .ntag{background:var(--card)}
+/* colored tags on the tinted card: a clearly stronger shade than the card plus a thin darker edge, so the two never blend */
+html.top-wash .ntag.g,html.top-wash .ncsi .ns.g{background:color-mix(in srgb,var(--green) 22%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--green) 50%,transparent)}
+html.top-wash .ntag.y,html.top-wash .ncsi .ns.y{background:color-mix(in srgb,var(--yellow) 34%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--yellow) 75%,transparent)}
+html.top-wash .ntag.r,html.top-wash .ncsi .ns.r{background:color-mix(in srgb,var(--red) 20%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--red) 55%,transparent)}
+html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var(--purple) 20%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--purple) 50%,transparent)}
+/* things that were tinted against the old near-white page and would vanish on the grey one */
+.ncsi .ntrack{fill:var(--line)}
+.chipPop .jpost{background:var(--soft)}
+.status{background:var(--card)}
+.skel .sk{background:var(--card)}
+.btn:hover,.navbtn:hover,.impx:hover{background:color-mix(in srgb,var(--ink) 7%,var(--card))}
 </style>
 </head>
 <body>
@@ -3021,6 +3067,7 @@ var NOW_SPAN = {fc:4, cc:4, ph:4, ta:25, ch:25, cya:25, csi:25, tempF:12};      
 /** Calcium hardness of our well water, which refill water brings in: one number for everyone, set on the CH tile (server saveWellCh). */
 function nowWellCh(){ return isNum(DATA.wellCh) ? DATA.wellCh : 200; }
 var nowEditW = false, nowWDraft = 200, nowWMsg = '', nowWBusy = false;
+var NOW_FC_WARN_H = 3;          // the top card turns yellow this many hours before FC is expected to drop low
 var NOW_QUIET = {ch: 900};       // Pool right now box: not mentioned in the sentence until above this (our CH always runs high); its tag keeps its color
 var NOW_SPAN_BIG = {fc:30, cc:30, ph:30, ta:120, ch:120, cya:120, csi:120, tempF:60};  // opened tile
 var NOW_BACK = {fc:90, cc:90, ph:90, ta:365, ch:365, cya:365, csi:365, tempF:88};         // days a chart can scroll back
@@ -3545,11 +3592,21 @@ function nowTile(M, def){
     '<p class="nsure">Estimates stay good for about ' + (NOW_SURE_H[k] < 72 ? NOW_SURE_H[k] / 24 + ' days' : NOW_SURE_H[k] / 168 + ' weeks') + ' after a test.</p>' +
     (todo ? '<div class="ntodo">' + todo + '</div>' : '') + extra + nowStats(k, rname, NOW_SPAN[k] > 8 ? 42 : 30) + '</div>';
   return '<div class="ntile' + (open ? ' open' : '') + (unsure ? ' unsure' : '') + '" data-nk="' + k + '" style="--k:var(--k-' + k + ')">' +
-    '<button type="button" class="nhead" aria-expanded="' + open + '"><span class="nnm"><b>' + def[1] + NOW_CHEV + '</b><span class="ntg">' + tested + '</span></span>' +
+    '<button type="button" class="nhead" aria-expanded="' + open + '"><span class="nnm"><b>' + nowIco(k) + def[1] + NOW_CHEV + '</b><span class="ntg">' + tested + '</span></span>' +
     '<span class="nval">' + (st.txt ? '<span class="ns ' + st.cls + '">' + st.txt + '</span>' : '') +
     '<span class="nn">' + (est ? '<span class="nap">≈</span>' : '') + nowFmt(k, r.v) + (def[2] ? '<small>' + def[2] + '</small>' : '') + '</span></span></button>' +
     nowChart(chartO) + '<div class="nfoot"><span>' + foot + '</span><span>' + due + '</span></div>' + det + '</div>';
 }
+var NOW_ICO = {   // small icons in the reading's color (Health look preview)
+  fc: '<path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 14h9"/>',
+  cc: '<path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><circle cx="10.5" cy="16.5" r="1"/><circle cx="14" cy="15" r="1"/>',
+  ph: '<path d="M12 3c3.5 4.5 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 2.5-6.5 6-11z"/>',
+  ta: '<path d="M12 4v16M5 8h14M7 8l-3 6a3 3 0 0 0 6 0zM17 8l-3 6a3 3 0 0 0 6 0z"/>',
+  ch: '<path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M5 7l7 4 7-4M12 11v10"/>',
+  cya: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
+  tempF: '<path d="M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 10v7"/>'
+};
+function nowIco(k){ return NOW_ICO[k] ? '<svg class="nico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + NOW_ICO[k] + '</svg>' : ''; }
 var NOW_CHEV = '<svg class="nchev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
 function nowTempTile(M){
@@ -3569,7 +3626,7 @@ function nowTempTile(M){
     (how ? '<div><h4>How we got ≈' + Math.round(r.v) + '°</h4>' + how + '</div>' : '') +
     '<p class="nsure">Unheated pool: it follows the weather, a few days behind. Each temperature test makes the estimate better. Warmer water uses chlorine faster and pushes CSI up.</p></div>';
   return '<div class="ntile' + (open ? ' open' : '') + '" data-nk="tempF" style="--k:var(--k-tempF)">' +
-    '<button type="button" class="nhead" aria-expanded="' + open + '"><span class="nnm"><b>Water temperature' + NOW_CHEV + '</b><span class="ntg">' + tg + '</span></span>' +
+    '<button type="button" class="nhead" aria-expanded="' + open + '"><span class="nnm"><b>' + nowIco('tempF') + 'Water temperature' + NOW_CHEV + '</b><span class="ntg">' + tg + '</span></span>' +
     '<span class="nval">' + (r.m && r.m.n < 4 ? '<span class="ns u">Rough</span>' : '') + '<span class="nn">' + (r.noWx ? '' : '<span class="nap">≈</span>') + Math.round(r.v) + '<small>°F</small></span></span></button>' +
     nowChart(co) + '<div class="nfoot"><span>' + foot + '</span><span data-d>' + esc(acc) + '</span></div>' + det + '</div>';
 }
@@ -3593,10 +3650,10 @@ function nowSummary(M){
     var unsure = (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]], st = unsure ? {cls: 'u'} : nowStatus(d[3], r.v);
     return '<span class="ntag ' + st.cls + '">' + d[3] + ' ' + (unsure ? '?' : nowFmt(d[0], r.v)) + '</span>';
   }).join('');
-  var say = [], fc = M.r.fc, gfc = nowGreen('FC');
+  var say = [], fc = M.r.fc, gfc = nowGreen('FC'), fcSoon = false, fcLow = false;
   if (fc && gfc && (M.now - fc.last.ms) / HR <= NOW_SURE_H.fc) {
-    if (fc.v < gfc.lo) say.push('FC is low now.');
-    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
+    if (fc.v < gfc.lo) { say.push('FC is low now.'); fcLow = true; }
+    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x && x.ms - M.now <= NOW_FC_WARN_H * HR) fcSoon = true; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
   }
   var bad = [], unsure = [];
   NOW_TILES.forEach(function(d){
@@ -3608,6 +3665,10 @@ function nowSummary(M){
   if (bad.length) say.push(bad.join(', ').replace(/^./, function(c){ return c.toUpperCase(); }) + '.');
   if (unsure.length) say.push('Test ' + unsure.join(', ').replace(/, ([^,]*)$/, ' and $1') + ' to be sure.');
   if (!say.length) say.push('Everything looks in range.');
+  var stTop = 'g';                                               // top-card trial: r if anything is red, y if anything needs attention
+  NOW_TILES.forEach(function(d){ var r = M.r[d[0]]; if (!r || (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]] || (NOW_QUIET[d[0]] && r.v <= NOW_QUIET[d[0]])) return;
+    var c = colorOf(d[3], r.v); if (c === 'red') stTop = 'r'; else if ((c === 'yellow' || c === 'purple') && stTop === 'g') stTop = 'y'; });
+  if (stTop === 'g' && (unsure.length || bad.length || fcLow || fcSoon)) stTop = 'y';
   var c = M.r.csi, csi = '';
   if (c) {
     var cs = nowStatus('CSI', c.v), dom = [-0.6, 0.6], gb = nowGreen('CSI') || {lo: -0.1, hi: 0.3};
@@ -3616,7 +3677,7 @@ function nowSummary(M){
       (cs.txt ? '<span class="ns ' + cs.cls + '">' + cs.txt + '</span>' : '') +
       '<svg viewBox="0 0 88 10" width="88" height="10" aria-hidden="true"><rect x="0" y="3" width="88" height="4" rx="2" class="ntrack"/><rect x="' + px(gb.lo).toFixed(1) + '" y="3" width="' + (px(gb.hi) - px(gb.lo)).toFixed(1) + '" height="4" class="ngood"/><circle cx="' + px(c.v).toFixed(1) + '" cy="5" r="4" fill="var(--k-csi)"/></svg></button>';
   }
-  return '<div class="nsum"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now)) + '</span><div class="nl"><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
+  return '<div class="nsum" data-st="' + stTop + '"><div class="nhd"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now).replace(/^\w+ /, '')) + '</span></div><div class="nl"><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
     (nowOpen.csi ? nowCsiDetail(M) : '');
 }
 
@@ -3680,8 +3741,14 @@ function setNowView(on){
   window.addEventListener('resize', function(){ if (!nowView) return; clearTimeout(rt); rt = setTimeout(function(){ var b = $('now'); if (b && Math.min(b.clientWidth, 900) !== nowW) renderNow(); }, 150); });
 })();
 
+/** Top-card trial: how the Coming up box stands, from what it shows (r = something late, y = something due now, g = all fine). */
+function upState(){
+  var b = document.querySelector('.upbox'); if (!b) return;
+  var red = b.querySelector('.jrow.lv-red, .tdc.lv-red'), due = b.querySelector('.jrow.lv-yellow, .tdc.lv-yellow');
+  b.setAttribute('data-st', red ? 'r' : due ? 'y' : 'g');
+}
 function renderAll(){
-  renderHeader(); renderTrackers(); renderPresets(); renderList(); renderLegend();
+  renderHeader(); renderTrackers(); renderPresets(); renderList(); renderLegend(); upState();
   nowCache = null; if (nowView) { if (isBrd()) renderNow(); else setNowView(false); }
   if (window.renderEntry) renderEntry();
 }
