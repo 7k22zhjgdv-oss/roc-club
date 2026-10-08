@@ -887,7 +887,6 @@ html.app .emore{display:grid;pointer-events:auto;width:var(--moreD,60px);height:
   background:color-mix(in srgb,var(--card) 34%,transparent);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);
   box-shadow:0 6px 20px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px color-mix(in srgb,var(--card) 55%,transparent),0 0 0 .5px color-mix(in srgb,var(--ink) 12%,transparent)}
 html.app .emore svg{width:26px;height:26px}
-html.app #entryUi.open .emore{display:none}
 html.app #eMore{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + (60px - var(--moreD,60px)) / 2)}   /* centered on the + (60) */            /* ⋯ in the left corner, in line with the switch and the + (2026-10-08) */
 html.app #mActs{position:fixed;left:var(--cornerGap,24px);bottom:calc(var(--cornerGap,24px) + 72px);align-items:flex-start}
 html.app #mActs .eact{flex-direction:row-reverse;padding:0 20px 0 8px}   /* on the left: icon first, by the ⋯ */
@@ -904,13 +903,12 @@ html.app .mrow.appOnly{display:flex}
 .eact{height:60px;display:flex;align-items:center;gap:12px;padding:0 8px 0 20px;border-radius:30px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;font-weight:500;box-shadow:var(--eshadow);cursor:pointer;text-decoration:none;
   opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .16s,transform .18s}
 #entryUi.open .eact{opacity:1;transform:none;pointer-events:auto}
-#entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s}
+#entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s} #entryUi.open .eact:nth-last-child(5){transition-delay:.12s}   /* bottom-up, one after another (5 = Prices & stock) */
 .eact.hold{opacity:0!important;transition:none}
 /* home-screen app: the ⋯ opens the menu as bubbles, like the + (2026-10-07). Built from the menu's rows (buildMenuBubbles). */
 .macts{display:none}
 html.app #entryUi.menu .macts{display:flex}
 #entryUi.menu .escrim{background:var(--escrim);visibility:visible;pointer-events:auto;transition:background-color .18s}
-html.app #entryUi.menu #eFab{display:none}
 #entryUi.menu .macts .eact{opacity:1;transform:none;pointer-events:auto;animation:mpop .2s cubic-bezier(.2,.8,.2,1) both}
 @keyframes mpop{from{opacity:0;transform:translateY(12px) scale(.96)}}
 .macts .mcap{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px;font-size:13px;line-height:1.5;color:var(--muted);text-align:right;box-shadow:var(--eshadow);animation:mpop .2s both}
@@ -5219,8 +5217,8 @@ document.addEventListener('DOMContentLoaded', function(){
   var mode = '', editing = null, fromEl = null, busy = false, dupOk = false;
 
   function setOpen(o){ ui.classList.toggle('open', o); fab.setAttribute('aria-expanded', o ? 'true' : 'false'); }
-  fab.addEventListener('click', function(){ setOpen(!ui.classList.contains('open')); });
-  $('eMore').addEventListener('click', function(){ setMenu(!ui.classList.contains('menu')); });   // home-screen app only (the bar's ⋯)
+  fab.addEventListener('click', function(){ setMenu(false); setOpen(!ui.classList.contains('open')); });   // one list at a time: the + closes the ⋯ list
+  $('eMore').addEventListener('click', function(){ setOpen(false); setMenu(!ui.classList.contains('menu')); });   // and the ⋯ (stays showing while the + list is open) closes the + list   // home-screen app only (the bar's ⋯)
   $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
   // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
   // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
