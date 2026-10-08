@@ -589,13 +589,16 @@ html::-webkit-scrollbar{display:none;width:0;height:0}
 /* Real ripples (2026-10-07): a short looping film of our own pool (pool-ripples.mp4, white light lines on black, slowed to
    40%), laid over the photo's water and lightening it (screen), so the ripples get smaller into the distance like the
    photo. Below it, copies of the film's bottom half (the closest, biggest ripples) repeat to the bottom of the page, each
-   blended into the one above, every other one mirrored and started at a different point so the repeat doesn't show.
+   blended into the one above, flipped side-to-side / upside-down / both in turn so the repeat doesn't show. All layers
+   are canvases redrawn from one playing film (.bg-film: one download, one decoder).
    Placed by the script "Background". Shown only once it is actually playing (not with "reduce motion", Low Power Mode or
    Save-Data); until then, or without it, the drawn ripples (.ripples) cover the water as before. */
 .bg-vids{left:0;top:0;width:100%;height:100%}
 .bg-vids .vw{overflow:hidden;mix-blend-mode:screen;opacity:0;transition:opacity 1.5s}
-.bg-vids video{position:absolute;display:block;pointer-events:none}
-.bg-vids .vw.flip video{transform:scaleX(-1)}
+.bg-vids canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
+/* the film itself plays in a 2px spot that never leaves the screen (iPhones pause a muted video once it scrolls away);
+   every ripple layer is drawn from it */
+.bg-film{position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:-2}
 /* --fade (set per copy by the script) makes the copies fainter the further down the page they are */
 html.vid .bg-vids .vw{opacity:calc(var(--vid-strength,.32) * var(--fade,1))}
 html.vid .ripples{display:none}
@@ -2158,7 +2161,7 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   var mq = window.matchMedia('(max-aspect-ratio: 9/10) and (max-width: 699px), (max-width: 560px)');
   var stack = document.querySelector('.bgstack'), sky = stack.querySelector('.bg-sky');
   var tint = stack.querySelector('.bg-tint'), shade = stack.querySelector('.bg-shade'), root = document.documentElement;
-  var heroH = 0, fbeams = document.querySelector('.bf-beams'), ext = stack.querySelector('.bg-ext'), POOL_HALF = (1 + WATER) / 2, vids = stack.querySelector('.bg-vids'), VID = BASE + 'pool-ripples.mp4', VID_HD = BASE + 'pool-ripples-hd.mp4', vidOn = false, vidSrc = '', filmW = 0;
+  var heroH = 0, fbeams = document.querySelector('.bf-beams'), ext = stack.querySelector('.bg-ext'), POOL_HALF = (1 + WATER) / 2, vids = stack.querySelector('.bg-vids'), VID = BASE + 'pool-ripples.mp4', VID_HD = BASE + 'pool-ripples-hd.mp4', vidOn = false, filmW = 0, film = null;
   // the darkening at the top of the page, for a box whose top is `top` px down the page
   // starts solid in the page colour (#16110B, the browser bar's colour at the top) so the photo fades into the bar, under the title
   function shadeAt(top){ return 'linear-gradient(180deg, rgba(22,17,11,1) ' + (0 - top) + 'px, rgba(22,17,11,.82) ' + (40 - top) + 'px, rgba(20,15,9,.5) ' + (110 - top) + 'px, rgba(20,15,9,.22) ' + (190 - top) + 'px, rgba(20,15,9,0) ' + (330 - top) + 'px)'; }
@@ -2226,66 +2229,79 @@ window.SITE_TEXT = (function(){ try { return JSON.parse(localStorage.getItem('ro
   window.addEventListener('resize', place);
   // The pool film (see the CSS ".bg-vids"): one full copy from where the water starts (at least as tall as the photo's
   // water), then copies of its bottom half down to the page bottom, each overlapping the one above by BLEND of its height.
-  var VW = 540, VH = 960, BLEND = .3, seen = window.IntersectionObserver ? new IntersectionObserver(function(es){
-    es.forEach(function(e){ var v = e.target.firstChild; if (!vidOn) return; if (e.isIntersecting) play(v); else v.pause(); });
+  // All are canvases drawn from the one film (.bg-film), at the film's own resolution (the browser scales them up).
+  var VW = 540, VH = 960, BLEND = .3, FLIPS = ['none', 'scaleX(-1)', 'scaleY(-1)', 'scale(-1,-1)'], seen = new Set(), boxes = [];
+  var io = window.IntersectionObserver ? new IntersectionObserver(function(es){
+    es.forEach(function(e){ if (e.isIntersecting) seen.add(e.target); else seen.delete(e.target); });
+    wake();
   }, { rootMargin: '200px 0px' }) : null;
   function play(v){ var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+  // the film plays while any of the water is near the screen, and pauses otherwise
+  function wake(){ if (!vidOn || !film || document.hidden) return; if (!io || seen.size) { if (film.paused) play(film); } else if (!film.paused) film.pause(); }
   function mask(el, top, bottom){
     var m = 'linear-gradient(180deg,transparent 0,#000 ' + top + 'px,#000 calc(100% - ' + bottom + 'px),transparent 100%)';
     el.style.webkitMaskImage = el.style.maskImage = m;
   }
+  var geo = { W: 1, fw: 1 };
   function placeVids(W, top, water){
     var s = Math.max(W / VW, water / VH), fw = VW * s, fh = VH * s;
-    filmW = fw;
+    filmW = fw; geo = { W: W, fw: fw };
     var half = fh / 2, blend = Math.round(half * BLEND);
-    var pageH = stack.offsetHeight, boxes = [{ t: top, h: fh, from: 0 }], t = top + fh - blend;
-    while (t < pageH && boxes.length < 12){ boxes.push({ t: t, h: half, from: half }); t += half - blend; }
+    var pageH = stack.offsetHeight, t = top + fh - blend;
+    boxes = [{ t: top, h: fh }];
+    while (t < pageH && boxes.length < 16){ boxes.push({ t: t, h: half }); t += half - blend; }
     while (vids.children.length < boxes.length){
-      var k = vids.children.length, w = document.createElement('div'), v = document.createElement('video');
-      w.className = 'vw' + (k % 2 ? ' flip' : '');
-      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'none';
-      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('disablepictureinpicture', '');
-      // each copy starts at a different point of the loop
-      v.addEventListener('loadedmetadata', function(){ var n = Array.prototype.indexOf.call(vids.children, this.parentNode); if (n > 0) this.currentTime = (n * 4.3) % (this.duration || 13); });
-      v.addEventListener('playing', function(){ root.classList.add('vid'); });
-      w.appendChild(v); vids.appendChild(w);
-      if (vidSrc){ v.src = vidSrc; if (seen) seen.observe(w); else play(v); }
+      var k = vids.children.length, w = document.createElement('div'), c = document.createElement('canvas');
+      w.className = 'vw'; c.style.transform = FLIPS[k % 4];
+      w.appendChild(c); vids.appendChild(w);
+      if (io) io.observe(w);
     }
     Array.prototype.forEach.call(vids.children, function(w, k){
       var b = boxes[k];
-      if (!b){ w.style.display = 'none'; return; }
-      w.style.display = '';
-      if (vidSrc && !w.firstChild.getAttribute('src')){ w.firstChild.src = vidSrc; if (seen) seen.observe(w); else play(w.firstChild); }
+      w.style.display = b ? '' : 'none';
+      if (!b) return;
       px(w, 0, b.t, W, b.h);
-      px(w.firstChild, (W - fw) / 2, -b.from, fw, fh);
       mask(w, k ? blend : 140, k < boxes.length - 1 ? blend : 0);
       // the full film at full strength; the copies below fade to 70% by the bottom of the page
       w.style.setProperty('--fade', k ? (1 - .3 * Math.min(1, (b.t - top) / Math.max(1, pageH - top))).toFixed(2) : 1);
     });
+    if (film && !film.paused) draw();
   }
-  // start the pool film (2.4 MB phones / 4 MB computers); show it, and hand the water over to it, only once it plays
+  // copy the film's current frame (all of it for the first layer, its bottom half for the others) into each layer near the screen
+  function draw(){
+    var v = film, vw = v.videoWidth, vh = v.videoHeight;
+    if (!vw) return;
+    var sw = Math.min(vw, geo.W / geo.fw * vw), sx = (vw - sw) / 2;
+    Array.prototype.forEach.call(vids.children, function(w, k){
+      if (w.style.display === 'none' || (io && !seen.has(w))) return;
+      var c = w.firstChild, sy = k ? vh / 2 : 0, sh = vh - sy, cw = Math.round(sw), ch = Math.round(sh);
+      if (c.width !== cw) c.width = cw;
+      if (c.height !== ch) c.height = ch;
+      try { c.getContext('2d').drawImage(v, sx, sy, sw, sh, 0, 0, cw, ch); } catch(e){}
+    });
+  }
+  function loop(){
+    if (film.requestVideoFrameCallback) film.requestVideoFrameCallback(function(){ draw(); loop(); });
+    else { var last = -1; (function f(){ if (film.currentTime !== last){ last = film.currentTime; draw(); } requestAnimationFrame(f); })(); }
+  }
+  // start the pool film (2.4 MB phones / 4 MB computers): it plays as it downloads; shown, and the water handed over to
+  // it, only once it plays
   function startVid(){
     var quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.connection && navigator.connection.saveData);
     if (!vids || quiet || vidOn) return;
     vidOn = true;
-    // the top film plays as it downloads (ripples within a second or so); the copies below get it once it is all in, so
-    // they come from the browser's saved copy instead of downloading it again
-    var top = vids.firstChild && vids.firstChild.firstChild;
-    function all(){ vidSrc = VID; Array.prototype.forEach.call(vids.children, function(w, k){ if (!k || w.style.display === 'none') return; w.firstChild.src = VID; if (seen) seen.observe(w); else play(w.firstChild); }); }
-    function full(){ var b = top.buffered; return top.duration > 0 && b.length && b.end(b.length - 1) >= top.duration - .2; }
-    function check(){ if (!vidSrc && full()){ top.removeEventListener('progress', check); all(); } }
-    if (!top) return;
+    film = document.createElement('video'); film.className = 'bg-film';
+    film.muted = true; film.loop = true; film.playsInline = true;
+    film.setAttribute('muted', ''); film.setAttribute('playsinline', ''); film.setAttribute('disablepictureinpicture', ''); film.setAttribute('aria-hidden', 'true');
+    film.addEventListener('playing', function(){ root.classList.add('vid'); draw(); });
+    document.body.appendChild(film);
     // phones get the small film (432 px wide, 2.4 MB); computers, where it is shown far wider, the sharper one (540 px, 4 MB)
-    if (filmW > 760) VID = VID_HD;
-    top.preload = 'auto'; top.src = VID;
-    if (seen) seen.observe(vids.firstChild);
-    play(top);  // also starts the download while it is still below the screen
-    top.addEventListener('progress', check); top.addEventListener('canplaythrough', check);
-    setTimeout(function(){ if (!vidSrc) all(); }, 20000);  // just in case the browser never reports it complete
-    // if the browser holds them back (page not in view yet), try again when the page is shown or first touched
-    function again(){ Array.prototype.forEach.call(vids.children, function(w){ var v = w.firstChild, r = w.getBoundingClientRect(); if (v.paused && r.bottom > -200 && r.top < innerHeight + 200) play(v); }); }
-    document.addEventListener('visibilitychange', function(){ if (!document.hidden) again(); });
-    ['pointerdown', 'scroll'].forEach(function(e){ window.addEventListener(e, again, { passive: true, once: true }); });
+    film.preload = 'auto'; film.src = filmW > 760 ? VID_HD : VID;
+    wake(); loop();
+    // if the browser holds it back (page not in view yet), try again when the page is shown or first touched
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) wake(); });
+    ['pointerdown', 'scroll'].forEach(function(e){ window.addEventListener(e, wake, { passive: true, once: true }); });
+    setTimeout(wake, 1500);
   }
   // start after the page has loaded and the calendar's first answer is in (at most 2.5 s after load), so the film never
   // holds up the page or the calendar
