@@ -903,13 +903,12 @@ html.app .mrow.appOnly{display:flex}
 .eact{height:60px;display:flex;align-items:center;gap:12px;padding:0 8px 0 20px;border-radius:30px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;font-weight:500;box-shadow:var(--eshadow);cursor:pointer;text-decoration:none;
   opacity:0;transform:translateY(14px) scale(.96);pointer-events:none;transition:opacity .16s,transform .18s}
 #entryUi.open .eact{opacity:1;transform:none;pointer-events:auto}
-#entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s}
+#entryUi.open .eact:nth-last-child(2){transition-delay:.03s} #entryUi.open .eact:nth-last-child(3){transition-delay:.06s} #entryUi.open .eact:nth-last-child(4){transition-delay:.09s} #entryUi.open .eact:nth-last-child(5){transition-delay:.12s}   /* bottom-up, one after another (5 = Prices & stock) */
 .eact.hold{opacity:0!important;transition:none}
 /* home-screen app: the ⋯ opens the menu as bubbles, like the + (2026-10-07). Built from the menu's rows (buildMenuBubbles). */
 .macts{display:none}
 html.app #entryUi.menu .macts{display:flex}
 #entryUi.menu .escrim{background:var(--escrim);visibility:visible;pointer-events:auto;transition:background-color .18s}
-html.app #entryUi.menu #eFab{display:none}
 #entryUi.menu .macts .eact{opacity:1;transform:none;pointer-events:auto;animation:mpop .2s cubic-bezier(.2,.8,.2,1) both}
 @keyframes mpop{from{opacity:0;transform:translateY(12px) scale(.96)}}
 .macts .mcap{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 14px;font-size:13px;line-height:1.5;color:var(--muted);text-align:right;box-shadow:var(--eshadow);animation:mpop .2s both}
