@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
@@ -315,6 +315,16 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .trk.open .trk-c{max-width:none}
 .trk.open .trk-n,.trk.open .trk-w{overflow:visible;text-overflow:clip}
 .chipPop .trkedit{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.chipPop .jm{color:var(--muted)}
+.chipPop .jsw{font:inherit;color:inherit;background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.chipPop .jact{display:flex;gap:8px;margin-top:10px}
+.chipPop .jact button,.chipPop .jopts button{flex:1;font:inherit;font-size:14px;font-weight:600;min-height:40px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chipPop .jact button.pri{background:var(--accent);border-color:var(--accent);color:var(--accentInk)}
+.chipPop .jact button[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--accent)}
+.chipPop .jq{margin-top:10px;font-size:12.5px;color:var(--muted)}
+.chipPop .jopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px;margin-top:4px}
+.chipPop .jopts button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px}
+.chipPop .jopts button span{font-size:11.5px;font-weight:400;color:var(--muted)}
 .chipPop .trkebtn{font:inherit;font-size:12.5px;color:var(--accent);background:none;border:0;padding:0;cursor:pointer}
 .chipPop .trkform{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
 .chipPop .trkform label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:2px}
@@ -1140,6 +1150,43 @@ html.app #entryUi.menu #eFab{display:none}
 .dj .n.due{color:color-mix(in srgb,var(--yellow) 55%,var(--ink));font-weight:600}
 .dj .n.late{color:var(--red);font-weight:600}
 .dj .l{grid-column:1 / -1;font-size:12.5px;color:var(--muted)}
+/* jobs, 2026-10-07: colored pill, a bar toward the due day, amount tag + one grey line */
+.dj{align-items:center;gap:6px 10px;padding:11px 12px}
+.dj .l{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+.jpill{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;background:var(--soft);color:var(--ink2);justify-self:end}
+.jpill.lv-green{background:var(--okT);color:var(--okInk)}
+.jpill.lv-yellow{background:var(--dueBg);color:color-mix(in srgb,var(--yellow) 45%,var(--ink))}
+.jpill.lv-red{background:var(--lateBg);color:var(--red)}
+.jbar{grid-column:1 / -1;display:block;height:5px;border-radius:3px;background:color-mix(in srgb,var(--ink) 9%,transparent);overflow:hidden}
+.jbar i{display:block;height:100%;border-radius:3px;background:var(--green)}
+.jbar.lv-yellow i{background:var(--yellow)} .jbar.lv-red i{background:var(--red)}
+.jtag{font-size:12px;font-weight:600;color:var(--ink);background:var(--soft);padding:2px 8px;border-radius:7px;white-space:nowrap}
+.jtag.post{color:var(--ink2);font-weight:500}
+.jw{font-size:12.5px;color:var(--muted)}
+.chipPop .jph{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chipPop .jph b{font-size:17px}
+.chipPop .jbar.big{height:8px;margin:12px 0 6px}
+.chipPop .jends{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:600}
+.chipPop .jends span:last-child{text-align:right}
+.chipPop .jends small{font-size:12px;font-weight:400;color:var(--muted)}
+.chipPop .jdose{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--soft)}
+.chipPop .jdose .k{flex:none;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.chipPop .jdose .v b{font-size:19px}
+.chipPop .jdose .v .jm{display:block;margin-top:2px;font-size:13px}   /* "FC 5 (today) → 9" / the Orenda note on its own line */
+.chipPop .jpost{margin-top:8px;padding:7px 10px;border-radius:10px;background:var(--sum);font-size:13px;color:var(--ink2)}
+.chipPop .jhist{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.chipPop .jhist span{font-size:12px;color:var(--ink2);border:1px solid var(--line);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.chipPop .jusu{margin-top:6px;font-size:12px;color:var(--muted)}
+.chipPop .jslide{display:flex;align-items:center;gap:14px;margin-top:6px}
+.chipPop .jtank{position:relative;flex:none;width:30px;height:52px;border:2px solid var(--ink2);border-radius:5px 5px 8px 8px;overflow:hidden}
+.chipPop .jtank i{position:absolute;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--accent) 70%,transparent);transition:height .1s}
+.chipPop .jsr{flex:1;min-width:0}
+.chipPop .jsr input{width:100%;accent-color:var(--accent);margin:4px 0}
+.chipPop .jres{font-size:13px;font-variant-numeric:tabular-nums}
+.chipPop .jres>b{display:block;font-size:15px}
+.chipPop .jres>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.chipPop .jres>span b{color:var(--ink)}
+.chipPop .jsave{width:100%;margin-top:8px;font:inherit;font-size:14px;font-weight:600;min-height:40px;border-radius:10px;border:0;background:var(--accent);color:var(--accentInk);cursor:pointer}
 .dj.popopen{box-shadow:inset 0 0 0 2px var(--accent)}
 .ds{display:grid;grid-template-columns:minmax(0,1fr) auto 38px;gap:0 10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}
 .ds b{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1368,8 +1415,8 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 <dialog id="unlockDlg">
   <div id="siPick">
     <h2 class="si-q">Who's signing in?</h2>
-    <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
-    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>I sign in with my name and password</span></button>
+    <button type="button" class="si-big" data-as="member">Pool member<span>Sign in with your pool key to see additional information</span></button>
+    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>Sign in or sign up to be a volunteer</span></button>
     <div class="row"><button class="btn" type="button" id="pickCancel">Cancel</button></div>
   </div>
   <form id="unlockForm" autocomplete="off" hidden>
@@ -1855,6 +1902,7 @@ function popNode(){
     document.body.appendChild(popEl);
     popEl.addEventListener('mouseenter', function(){ if (popHideT){ clearTimeout(popHideT); popHideT = null; } });
     popEl.addEventListener('mouseleave', function(){ if (!isTouch && !popPinned) popHideT = setTimeout(closePop, 150); });
+    popEl.addEventListener('input', function(e){ if (e.target && e.target.id === 'jFull') jobSlide(); });
     popEl.addEventListener('submit', function(e){
       e.preventDefault();
       var f = e.target.closest && e.target.closest('[data-trkform]');
@@ -1868,6 +1916,20 @@ function popNode(){
       if (ed && popCurChip && popCurChip.hasAttribute('data-mkid')){
         var eid = popCurChip.getAttribute('data-mkid'), ek = popCurChip.getAttribute('data-mk') === 'slow' ? 'chem' : 'test'; closePop();
         if (ed.getAttribute('data-mked') === 'edit') { if (window.entryEdit) entryEdit(ek, eid); } else if (window.entryDel) entryDel(ek, eid);
+        return;
+      }
+      if (e.target.closest && e.target.closest('[data-jsw]') && popCurChip){
+        jobShockLiquid = !jobShockLiquid; try { localStorage.setItem('jobShockLiquid', jobShockLiquid ? '1' : '0'); } catch(e2){}
+        var sti = +popCurChip.getAttribute('data-ti'); renderAll(); trkReopen(sti); return;
+      }
+      var jb = e.target.closest && e.target.closest('[data-jlog], [data-jnot], [data-juntil], [data-jundo], [data-jsave]');
+      if (jb && popCurChip){
+        var ji = +popCurChip.getAttribute('data-ti');
+        if (jb.hasAttribute('data-jlog')) jobLog(ji);
+        else if (jb.hasAttribute('data-jnot')) { jobNotYet = jobNotYet === ji ? -1 : ji; jobMsg = ''; openPopFor(popCurChip, true); jobSlide(); }
+        else if (jb.hasAttribute('data-jsave')) { var fr = document.getElementById('jFull'); if (fr) jobPutOff(ji, jobAcidUntil(DATA.trackers[ji], +fr.value / 100), fr.value + '%'); }
+        else if (jb.hasAttribute('data-jundo')) jobPutOff(ji, '');
+        else jobPutOff(ji, jb.getAttribute('data-juntil'), jb.getAttribute('data-jfull'));
         return;
       }
       var te =e.target && e.target.closest && e.target.closest('[data-trkedit], [data-trkcancel]');
@@ -2158,7 +2220,7 @@ function renderPopHtml(chip){
   return popContentReal(rk, col[2], col[1], cur, ms);
 }
 function openPopFor(chip, pinned){
-  if (chip !== popCurChip){ popHistN = popHistStart(); if (!mkBusy) mkMsg = ''; if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== trkEdit){ trkEdit = -1; trkMsg = ''; } }   // switching to a different chip: back to the defaults
+  if (chip !== popCurChip){ popHistN = popHistStart(); if (!mkBusy) mkMsg = ''; if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== trkEdit){ trkEdit = -1; trkMsg = ''; } if (!chip.hasAttribute('data-ti') || +chip.getAttribute('data-ti') !== jobNotYet){ jobNotYet = -1; jobMsg = ''; } }   // switching to a different chip: back to the defaults
   popCurChip = chip;
   var html = renderPopHtml(chip);
   if (!html) return;
@@ -2187,9 +2249,13 @@ function trkState(t){
     return {lv: dt >= t.warn + 1 ? 'red' : dt >= Math.max(t.warn - 1, 1) ? 'yellow' : 'green', d: dt, due: addDays(ev.day, t.warn)};
   }
   if (!ev) return {lv: 'none', d: null};
-  var d = daysBetween(ev.day, todayCentral());
-  var lv = (t.over != null && d >= t.over) ? 'red' : (t.warn != null && d >= t.warn) ? 'yellow' : (t.warn != null || t.over != null) ? 'green' : 'none';
-  return {lv: lv, d: d};
+  // Put off ("Not yet", t.post from the Job checks tab): the schedule runs as if it was last done (due day - Warn), so
+  // yellow / red / "N days late" all count from the new due day. d = days since it was really done; dd = days into the schedule.
+  var d = daysBetween(ev.day, todayCentral()), span = t.warn != null ? t.warn : t.over, anchor = ev.day;
+  if (t.post && span != null) anchor = addDays(t.post.until, -span);
+  var dd = daysBetween(anchor, todayCentral());
+  var lv = (t.over != null && dd >= t.over) ? 'red' : (t.warn != null && dd >= t.warn) ? 'yellow' : (t.warn != null || t.over != null) ? 'green' : 'none';
+  return {lv: lv, d: d, dd: dd, anchor: anchor, due: span != null ? addDays(anchor, span) : null, post: !!(t.post && span != null)};
 }
 function agoText(d){ return d <= 0 ? 'Today' : d === 1 ? 'Yesterday' : d + ' days ago'; }
 function trkDay(day){ return fmtDay(day, day.slice(0, 4) !== todayCentral().slice(0, 4)); }
@@ -2208,7 +2274,7 @@ function trkSortKey(t){
   var s = trkState(t);
   if (s.d === null) return [4, 0];
   var span = t.warn != null ? t.warn : t.over;   // the due day = last + Warn (or Overdue when no Warn)
-  return [TRK_RANK[s.lv], span != null ? span - s.d : 0];
+  return [TRK_RANK[s.lv], span != null ? span - s.dd : 0];
 }
 /** "Acid feeder filled" / "Orenda PR-10000 dosed" / "Superchlorinated" - the card's (and report tile's) top line. */
 function trkLabel(t){ return t.name + (t.type === 'slow' ? ' filled' : t.type === 'product' ? ' dosed' : ''); }
@@ -2223,11 +2289,11 @@ function trkDoneWord(t){ return t.type === 'slow' ? 'Filled' : t.type === 'produ
 /** {word, day, ago} for a card with Warn / Overdue days and a record; null otherwise. Days late count from the due day. */
 function trkDue(t, s, ev){
   if (!ev || s.lv === 'none' || s.d === null) return null;
-  var span = t.warn != null ? t.warn : t.over, left = span - s.d, word;
+  var span = t.warn != null ? t.warn : t.over, left = span - s.dd, word;
   if (s.lv === 'red') word = -left > 0 ? -left + (left === -1 ? ' day late' : ' days late') : 'Late';
   else if (s.lv === 'yellow') word = 'Due now';
   else word = left === 1 ? 'Due tomorrow' : 'Due in ' + left + ' days';
-  return {word: word, day: trkDay(addDays(ev.day, span)), ago: trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase()};
+  return {word: word, day: trkDay(s.due), ago: trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase()};
 }
 function trkCard(t, i){
   var s = trkState(t), ev = t.events && t.events[0], du = trkDue(t, s, ev);
@@ -2250,8 +2316,8 @@ function trkPopHtml(t){
   if (t.typ != null) h += row('Usually', 'every ' + fmtNum(t.typ) + ' day' + (t.typ === 1 ? '' : 's') + ' <span style="color:var(--muted)">(' + t.count + ' times on record)</span>');
   if (t.type === 'test' && s.due) h += row('Next', esc('Due ' + trkDay(s.due) + ' (every ' + fmtNum(t.warn) + ' day' + (t.warn === 1 ? '' : 's') + ')'));
   var due = [];
-  if (t.type !== 'test' && t.warn != null) due.push('due ' + trkDay(addDays(ev.day, t.warn)));
-  if (t.type !== 'test' && t.over != null) due.push('overdue ' + trkDay(addDays(ev.day, t.over)));
+  if (t.type !== 'test' && t.warn != null) due.push('due ' + trkDay(addDays(s.anchor, t.warn)));
+  if (t.type !== 'test' && t.over != null) due.push('overdue ' + trkDay(addDays(s.anchor, t.over)));
   if (due.length) h += row('Next', esc(due.join(' · ').replace(/^./, function(c){ return c.toUpperCase(); })));
   var older = t.events.slice(1);
   if (older.length) h += row('Before', '<ul class="trkhist">' + older.map(function(e){ return '<li>' + esc(trkDay(e.day)) + (trkWhat(t, e) ? ' · ' + esc(trkWhat(t, e)) : '') + '</li>'; }).join('') + '</ul>');
@@ -2277,7 +2343,177 @@ function trkEditHtml(t, i){
     '<div class="trkhint">Days since the last time. Leave blank for no warning.</div>' +
     (trkMsg ? '<div class="trkerr">' + esc(trkMsg) + '</div>' : '') + '</div>';
 }
-function trkPopFull(i){ var t = DATA.trackers[i]; return t ? trkPopHtml(t) + trkEditHtml(t, i) : ''; }
+// ---- Jobs as a resource (2026-10-07): how much to add, and "Not yet" (put a job off; saveJobCheck in Code.gs).
+// Feeder fills are fixed (the pool manager's numbers); Orenda = the weekly maintenance dose from Orenda's instructions for a
+// commercial pool, per 10,000 gal, times the pool; Superchlorinate = granular cal-hypo from the last FC test up to FC 9
+// (the same "2 -> 9" shock as SHOCK_RAISE_PPM in Code.gs). Acid feeder "Not yet": how full it was -> due again when the
+// rest should run out at the rate it emptied since the fill. Every other job: put off 1 / 2 / 3 / 7 days.
+var JOB_POOL_GAL = 48000;
+var JOB_FILL = [[/acid/i, 3, 'gal', 'acid', 12], [/cal-?hypo/i, 6, 'lb']];   // [feeder setting, amount, unit, word, gal of water to dilute with]
+var ORENDA_WEEKLY = [[/cv-?[67]00/i, 5, 10], [/sc-?1000/i, 3, 3], [/pr-?10000/i, 0, 0]];   // fl oz per 10,000 gal a week; 0 = as needed
+var SHOCK_TO_FC = 9, SHOCK_FROM_FC = 2;
+var JOB_PUTOFF = [1, 2, 3, 7];
+var JOB_FULL = [['3/4', '¾', .75], ['1/2', '½', .5], ['1/4', '¼', .25]];
+var jobNotYet = -1, jobMsg = '', jobBusy = false;
+var jobShockLiquid = false;   // Superchlorinate: tap the underlined chemical to work it out with liquid chlorine instead
+try { jobShockLiquid = localStorage.getItem('jobShockLiquid') === '1'; } catch(e){}
+function jobIsAcid(t){ return t.type === 'slow' && /acid/i.test(t.setting || t.name); }
+/** {text (short, for the Details row), html (popover), amount, unit} or null. */
+function jobDose(t){
+  if (t.type === 'slow') {
+    var f = JOB_FILL.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
+    if (!f) return null;
+    var a = f[1] + ' ' + f[2] + (f[3] ? ' ' + f[3] : ''), wtr = f[4] ? ' + ' + f[4] + ' gal water' : '';   // acid goes in diluted
+    return {chip: a + wtr, text: 'Fill with ' + a + wtr, html: '<b>' + a + '</b>' + (wtr ? ' <span class="jm">' + wtr.slice(3) + ' (diluted)</span>' : ''), amount: f[1], unit: f[2]};
+  }
+  if (t.type === 'product') {
+    var o = ORENDA_WEEKLY.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
+    if (!o) return null;
+    if (!o[1]) return {chip: 'As needed', text: 'As needed (no weekly dose)', html: 'As needed <span class="jm">Orenda gives no weekly dose</span>'};
+    var k = JOB_POOL_GAL / 10000, lo = Math.round(o[1] * k), hi = Math.round(o[2] * k), amt = lo === hi ? fmtNum(lo) : lo + '–' + hi;
+    return {chip: amt + ' fl oz / week', text: 'Weekly dose ' + amt + ' fl oz', html: '<b>' + amt + ' fl oz</b> a week <span class="jm">Orenda: ' + (o[1] === o[2] ? o[1] : o[1] + '–' + o[2]) +
+      ' fl oz per 10,000 gal' + (o[1] === o[2] ? '' : ' (commercial pool)') + '</span>', amount: lo === hi ? lo : null, unit: 'fl oz'};
+  }
+  if (t.type === 'shock') {
+    var last = null;
+    (DATA.tests || []).forEach(function(x){ if (isNum(x.fc) && (!last || x.ms > last.ms)) last = x; });
+    var from = last ? last.fc : SHOCK_FROM_FC, ppm = SHOCK_TO_FC - from;
+    var when = !last ? 'no FC test on record' : last.day === todayCentral() ? 'today' : trkDay(last.day);
+    if (ppm <= 0) return {chip: 'FC ' + fmtNum(from) + ' already', text: 'FC is already ' + fmtNum(from), html: 'Nothing: FC was ' + fmtNum(from) + ' (' + esc(when) + ')'};
+    var gl = ppm * JOB_POOL_GAL * 3.785411784 / 1000, fcTxt = ' <span class="jm">FC ' + fmtNum(from) + ' (' + esc(when) + ') → ' + SHOCK_TO_FC + '</span>';
+    var sw = '<button type="button" class="jsw" data-jsw="1" title="Switch chemical">';
+    if (jobShockLiquid) {      // liquid chlorine instead: its last strength (12.5% if none), gallons rounded up to a tenth
+      var lc = null; (DATA.chems || []).forEach(function(x){ if (/^liquid chlorine$/i.test(x.product || '') && isNum(x.strength) && (!lc || x.ms > lc.ms)) lc = x; });
+      var lp = lc ? Number(lc.strength) : 12.5, gal = Math.ceil(gl / (lp * 10) / 3.785411784 * 10 - 1e-9) / 10;   // grams Cl / (g per mL) -> gal
+      return {chip: fmtNum(gal) + ' gal liquid', text: 'About ' + fmtNum(gal) + ' gal liquid chlorine · FC ' + fmtNum(from) + ' → ' + SHOCK_TO_FC,
+        html: '<b>About ' + fmtNum(gal) + ' gal</b> ' + sw + 'liquid chlorine</button> (' + fmtNum(lp) + '%)' + fcTxt, amount: gal, unit: 'gal', pct: lp, label: 'Liquid Chlorine'};
+    }
+    var key = t.stock && t.stock.key || '', c = (DATA.chemicals || []).filter(function(x){ return /cal-?hypo/i.test(x.name) && !/puck/i.test(x.name); })[0];
+    var pct = Number(((key || (c && c.name) || '').match(/(\d+(?:\.\d+)?)\s*%/) || [])[1]) || 70;
+    var oz = Math.ceil(gl / (pct / 100) / 28.349523125 - 1e-9);   // whole ounces, rounded up so it reaches FC 9
+    return {chip: oz + ' oz cal-hypo', text: 'About ' + oz + ' oz granular cal-hypo · FC ' + fmtNum(from) + ' → ' + SHOCK_TO_FC,
+      html: '<b>About ' + oz + ' oz</b> granular ' + sw + 'cal-hypo</button>' + fcTxt, amount: oz, unit: 'oz', label: 'Cal-Hypo - Granular'};
+  }
+  return null;
+}
+function jobFullWord(f){ if (/%$/.test(f)) return f + ' full'; var x = JOB_FULL.filter(function(j){ return j[0] === f; })[0]; return x ? x[1] + ' full' : ''; }
+/** The job's next step for the pill: {txt: "in 3 days" / "Due now" / "2 days late" / "Tomorrow", lv, day: "Sat, Oct 10"}. */
+function jobNext(t){
+  var s = trkState(t), span = t.warn != null ? t.warn : t.over, ev = t.events && t.events[0], today = todayCentral();
+  if (t.err) return {txt: 'Check setting', lv: 'red', day: ''};
+  if (!ev) return {txt: 'No record', lv: 'none', day: ''};
+  if (span == null || !s.due) return {txt: 'No schedule', lv: 'none', day: ''};
+  var k = daysBetween(today, s.due), late = s.dd - span, day = k <= 6 && k >= -6 ? fmtDayLong(s.due).replace(/, \d{4}$/, '') : fmtDay(s.due, false);
+  if (s.lv === 'red') return {txt: late >= 1 ? late + (late === 1 ? ' day late' : ' days late') : 'Late', lv: 'red', day: 'was due ' + day};
+  if (s.lv === 'yellow') return {txt: 'Due now', lv: 'yellow', day: 'due ' + day};
+  return {txt: k === 1 ? 'Tomorrow' : 'in ' + k + ' days', lv: 'green', day: 'due ' + day};
+}
+/** A bar that fills from the last time to the due day (green -> yellow when due -> red when late). */
+function jobBar(t){
+  var s = trkState(t), span = t.warn != null ? t.warn : t.over;
+  if (span == null || s.dd == null || t.err) return '';
+  var f = Math.max(0.04, Math.min(1, s.dd / span));
+  return '<span class="jbar lv-' + s.lv + '"><i style="width:' + Math.round(f * 100) + '%"></i></span>';
+}
+function jobPostShort(t){ return 'put off' + (t.post.full ? ', ' + jobFullWord(t.post.full) : ''); }
+/** Amount of an event for the history tags: "2.5 gal" (the product name left off). */
+function jobEvAmt(t, e){ var w = String(e.what || ''); return t.type === 'shock' ? w : w.replace(/\s+\d+(\.\d+)?%.*$/, '').replace(/ (Liquid Chlorine|Muriatic Acid|Cal-?Hypo|TriChlor|Borax).*$/i, ''); }
+/** The popover for a job (feeders, products, Superchlorinate), 2026-10-07: big and short, details as tags. */
+function jobPopHtml(t, i){
+  var s = trkState(t), ev = t.events && t.events[0], nx = jobNext(t), d = jobDose(t);
+  var h = '<div class="jph"><b>' + esc(trkJob(t)) + '</b><span class="jpill lv-' + nx.lv + '">' + esc(nx.txt) + '</span></div>';
+  if (t.err) h += '<div class="trkerr">' + esc(t.err) + '</div>';
+  if (ev) {
+    h += jobBar(t).replace('jbar', 'jbar big');
+    h += '<div class="jends"><span>' + esc(trkDoneWord(t)) + ' ' + esc(trkDay(ev.day)) + '<br><small>' + esc(agoText(s.d).toLowerCase()) + '</small></span>' +
+      (s.due ? '<span>' + esc(nx.day.replace(/^./, function(c){ return c.toUpperCase(); })) + (t.over != null && t.warn != null ? '<br><small>late after ' + esc(trkDay(addDays(s.anchor, t.over))) + '</small>' : '') + '</span>' : '') + '</div>';
+  }
+  if (d) {
+    var lbl = t.type === 'product' ? 'Dose' : t.type === 'slow' ? 'Fill with' : 'Add';
+    var m = /^<b>([^<]*)<\/b>\s*([\s\S]*)$/.exec(d.html);
+    h += '<div class="jdose"><span class="k">' + lbl + '</span><span class="v">' + (m ? '<b>' + m[1] + '</b> ' + m[2] : d.html) + '</span></div>';
+  }
+  if (t.post && s.post) h += '<div class="jpost">⏸ Put off to <b>' + esc(trkDay(t.post.until)) + '</b> · ' + esc(jobPostText(t).replace(/^./, function(c){ return c.toLowerCase(); })) + (t.post.by ? ' · ' + esc(firstName(t.post.by)) : '') + '</div>';
+  if (ev) {
+    var hist = t.events.slice(0, 4).map(function(e){ var a = jobEvAmt(t, e); return '<span>' + esc(trkDay(e.day)) + (a ? ' · ' + esc(a) : '') + '</span>'; }).join('');
+    h += '<div class="jhist">' + hist + '</div>';
+    if (t.typ != null && t.count >= 4) h += '<div class="jusu">Usually every ' + fmtNum(t.typ) + ' day' + (t.typ === 1 ? '' : 's') + '</div>';
+  } else h += '<div class="jusu">No record yet</div>';
+  return h;
+}
+/** "Checked today, ½ full" / "Put off yesterday" (Jane). */
+function jobPostText(t){
+  if (!t.post) return '';
+  var d = daysBetween(t.post.day, todayCentral()), w = t.post.full ? 'Checked ' : 'Put off ';
+  return w + agoText(d).toLowerCase() + (t.post.full ? ', ' + jobFullWord(t.post.full) : '');
+}
+/** Acid feeder: due again when the rest runs out at the rate it emptied since the fill (at least tomorrow, at most 60 days). */
+function jobAcidUntil(t, frac){
+  var ev = t.events && t.events[0];
+  if (!ev) return null;
+  var used = Math.max(1, daysBetween(ev.day, todayCentral())), more = Math.round(used * frac / (1 - frac));
+  return addDays(todayCentral(), Math.max(1, Math.min(60, more)));
+}
+/** Slider moved: fill the little tank, say the percent and the new due day. */
+function jobSlide(){
+  var r = document.getElementById('jFull'), t = DATA.trackers[jobNotYet]; if (!r || !t) return;
+  var v = +r.value, u = jobAcidUntil(t, v / 100), k = daysBetween(todayCentral(), u);
+  document.getElementById('jTank').style.height = v + '%';
+  // two fixed lines that never wrap, so nothing moves while sliding
+  document.getElementById('jRes').innerHTML = '<b>' + v + '% full</b><span>Due again <b>' + esc(fmtDayLong(u).replace(/, \d{4}$/, '')) + '</b> · ' + (k === 1 ? 'tomorrow' : 'in ' + k + ' days') + '</span>';
+}
+function jobPutOffUntil(t, n){
+  var s = trkState(t), today = todayCentral(), base = s.due && s.due > today ? s.due : today;
+  var u = addDays(base, n);
+  return daysBetween(today, u) > 60 ? addDays(today, 60) : u;
+}
+function jobShort(day){ var k = daysBetween(todayCentral(), day); return k === 1 ? 'tomorrow' : k <= 6 ? fmtDayLong(day).slice(0, 3) : fmtDay(day, false); }
+function jobActHtml(t, i){
+  if (t.type === 'test' || t.err || !isBrd() || !DATA.canEnter) return '';
+  var h = '<div class="jact"><button type="button" class="pri" data-jlog="' + i + '">Log it</button>' +
+    (t.warn != null || t.over != null ? '<button type="button" data-jnot="' + i + '" aria-expanded="' + (jobNotYet === i) + '">Not yet…</button>' : '') + '</div>';
+  if (jobNotYet === i) {
+    if (jobIsAcid(t) && t.events && t.events.length) {
+      // slider (2026-10-07): how full, 5-95%; the due day updates as it moves (jobSlide)
+      h += '<div class="jq">How full is the feeder?</div><div class="jslide"><span class="jtank"><i id="jTank" style="height:50%"></i></span>' +
+        '<div class="jsr"><input type="range" id="jFull" min="5" max="95" step="5" value="50" aria-label="How full, percent">' +
+        '<div class="jres" id="jRes"></div></div></div>' +
+        '<button type="button" class="jsave" data-jsave="' + i + '">Save</button>';
+    } else {
+      h += '<div class="jq">Put it off</div><div class="jopts">' + JOB_PUTOFF.map(function(n){
+        var u = jobPutOffUntil(t, n);
+        return '<button type="button" data-juntil="' + u + '"><b>' + (n === 7 ? '1 week' : n + (n === 1 ? ' day' : ' days')) + '</b><span>due ' + esc(jobShort(u)) + '</span></button>';
+      }).join('') + '</div>';
+    }
+  }
+  if (t.post) h += '<div class="trkedit"><button type="button" class="trkebtn" data-jundo="' + i + '">Undo putting it off</button></div>';
+  if (jobMsg) h += '<div class="trkerr">' + esc(jobMsg) + '</div>';
+  return h;
+}
+/** Save "Not yet" (until = 'yyyy-MM-dd') or undo it (until = ''). */
+function jobPutOff(i, until, full){
+  var t = DATA.trackers[i];
+  if (!t || jobBusy) return;
+  jobBusy = true; jobMsg = '';
+  popNode().querySelectorAll('.jopts, .jslide, .jsave, [data-jundo]').forEach(function(b){ b.style.opacity = '.5'; });
+  serverCall('saveJobCheck', [CODE, {row: t.row, name: t.name, until: until, full: full || ''}], function(res){
+    jobBusy = false;
+    if (handleDenied(res)) return;
+    if (!res || !res.ok){ jobMsg = (res && res.message) || 'Could not save.'; trkReopen(i); return; }
+    DATA = res.data; jobNotYet = -1;
+    var ni = -1; (DATA.trackers || []).forEach(function(x, k){ if (x.row === t.row) ni = k; });
+    renderAll(); trkReopen(ni);
+  }, function(err){ jobBusy = false; jobMsg = 'Could not reach the server: ' + (err && err.message || err); trkReopen(i); });
+}
+function jobLog(i){
+  var t = DATA.trackers[i]; if (!t || !window.entryLogJob) return;
+  var d = jobDose(t), label = '', n = t.setting || t.name;
+  if (t.type === 'shock') label = d && d.label || 'Cal-Hypo - Granular';
+  else if (t.type === 'slow') label = /acid/i.test(n) ? 'Muriatic Acid' : /cal-?hypo/i.test(n) ? 'Cal-Hypo - Pucks' : /tri-?chlor/i.test(n) ? 'Trichlor - Pucks' : '';
+  closePop();
+  entryLogJob({label: label, setting: n, amount: d && d.amount, unit: d && d.unit, pct: d && d.pct, slow: t.type === 'slow'});
+}
+function trkPopFull(i){ var t = DATA.trackers[i]; if (!t) return ''; return (t.type === 'test' ? trkPopHtml(t) : jobPopHtml(t, i)) + jobActHtml(t, i) + trkEditHtml(t, i); }
 /** Indexes into ts: {main: sorted by urgency, extra: the Show = More ones in tab order}. */
 function trkOrder(ts){
   var idx = ts.map(function(t, i){ return i; });
@@ -2323,22 +2559,20 @@ function renderUpDetails(ts){
   // jobs
   var ord = trkOrder(ts), jobs = ord.main.concat(ord.extra).map(function(i){ return ts[i]; }), lasts = {}, cardKeys = [];
   var jobRows = jobs.map(function(t){
-    var ev = t.events && t.events[0], s = trkState(t), span = t.warn != null ? t.warn : t.over, next = '—', cls = '';
-    if (t.err) { next = 'Check setting'; cls = 'late'; }
-    else if (ev && span != null) {
-      var due = addDays(ev.day, span), late = s.d - span;
-      if (s.lv === 'red') { next = late >= 1 ? late + (late === 1 ? ' day late' : ' days late') : 'Late'; cls = 'late'; }
-      else if (s.lv === 'yellow') { next = 'Due now'; cls = 'due'; }
-      else { var k = daysBetween(today, due); next = k === 1 ? 'Tomorrow' : k <= 6 ? fmtDayLong(due).replace(/, \d{4}$/, '') : fmtDay(due, false); }
-    }
+    var nx = jobNext(t);
     var x = t.stock;
     if (x && !lasts[x.key] && st[x.key]) {
       var w = t.type === 'shock' ? ['shock', 'shocks'] : t.type === 'product' ? ['dose', 'doses'] : ['fill', 'fills'];
       lasts[x.key] = x.n == null ? '' : '~' + x.n + ' ' + w[x.n === 1 ? 0 : 1];
       cardKeys.push(x.key);
     }
-    var last = ev ? trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase() : 'No record';
-    return '<button type="button" class="dj" data-ti="' + ts.indexOf(t) + '"><b>' + esc(trkJob(t)) + '</b><span class="n ' + cls + '">' + esc(next) + '</span><span class="l">' + esc(last) + '</span></button>';
+    // 2026-10-07: name + colored "in 3 days" pill, a bar filling toward the due day, then the amount tag + when it was last done
+    var ev = t.events && t.events[0], s = trkState(t), dose = jobDose(t);
+    var last = ev ? trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase() : '';     // no record: the pill says so
+    if (nx.day) last += ' · ' + nx.day;
+    return '<button type="button" class="dj" data-ti="' + ts.indexOf(t) + '"><b>' + esc(trkJob(t)) + '</b><span class="jpill lv-' + nx.lv + '">' + esc(nx.txt) + '</span>' +
+      jobBar(t) + '<span class="l">' + (dose ? '<span class="jtag">' + esc(dose.chip) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
+      '<span class="jw">' + esc(last) + '</span></span></button>';
   });
   var jobsHtml = jobRows.length ? '<div><div class="dsec">Jobs</div><div class="dcard">' + jobRows.join('') + '</div></div>' : '';
   // stock
@@ -2369,7 +2603,7 @@ var upFullOpen = false;   // "Full stock" list under Details; closed again on ev
  *  "Next: … in N days". Returns true when there is anything to show. Tap a row = its popover (data-ti). */
 function renderJobs(ts){
   var ord = trkOrder(ts), all = ord.main.concat(ord.extra), today = todayCentral();
-  function late(t){ var s = trkState(t), span = t.warn != null ? t.warn : t.over; return span != null && s.d != null ? s.d - span : 0; }
+  function late(t){ var s = trkState(t), span = t.warn != null ? t.warn : t.over; return span != null && s.d != null ? s.dd - span : 0; }
   var due = all.filter(function(i){ var t = ts[i], lv = trkState(t).lv; return t.err || lv === 'red' || lv === 'yellow'; });
   due.sort(function(a, b){
     var ra = ts[a].err || trkState(ts[a]).lv === 'red' ? 0 : 1, rb = ts[b].err || trkState(ts[b]).lv === 'red' ? 0 : 1;
@@ -2389,7 +2623,7 @@ function renderJobs(ts){
   ord.main.forEach(function(i){
     var t = ts[i], s = trkState(t), span = t.warn != null ? t.warn : t.over;
     if (t.err || s.lv !== 'green' || s.d == null || span == null) return;
-    var left = span - s.d;
+    var left = span - s.dd;
     if (best === null || left < best){ best = left; names = [trkJob(t)]; } else if (left === best) names.push(trkJob(t));
   });
   var lines = [];
@@ -4424,6 +4658,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var info = chemInfo(pick.name), units = UNIT_BY_KIND[info.kind] || ['gal', 'fl oz', 'lb', 'oz'], last = lastChem(info.name, pick.slow);
     var unit = from ? from.unit : last && units.indexOf(last.unit) >= 0 ? last.unit : /orenda/i.test(info.name) && info.kind === 'Liquid' ? 'fl oz' : units[0];
     if (units.indexOf(unit) < 0) units = units.concat([unit]);
+    if (pick.label === 'Cal-Hypo - Pucks') { units = ['pucks', 'lb']; if (!from) unit = 'pucks'; else if (unit !== 'lb') unit = 'lb'; }   // pucks or lb, no oz (2026-10-07)
     var pct = from && isNum(from.strength) ? from.strength : last && isNum(last.strength) ? last.strength : '';
     return {name: info.name, label: pick.label, fixed: pick.slow !== undefined, info: info, units: units, unit: unit, amount: from ? fmtNum(from.amount) : '', pct: pct === '' ? '' : fmtNum(pct),
       slow: pick.slow !== undefined ? pick.slow : from ? !!from.slow : false};
@@ -4464,14 +4699,17 @@ document.addEventListener('DOMContentLoaded', function(){
     refresh();
   }
   function numIn(v){ v = String(v == null ? '' : v).trim().replace(',', '.'); return v === '' ? NaN : Number(v); }
-  function chemAmt(it){ return numIn(it.amount); }
+  // Cal-hypo pucks: typed as a count, saved as lb (about 44-45 pucks in a 25 lb bucket).
+  var PUCK_LB = 25 / 44.5;
+  function chemAmt(it){ var a = numIn(it.amount); return it.unit === 'pucks' ? Math.round(a * PUCK_LB * 100) / 100 : a; }
+  function chemUnit(it){ return it.unit === 'pucks' ? 'lb' : it.unit; }
   function chemPct(it){ return numIn(it.pct); }
   function chemCheck(){
     if (!chem.items.length) return 'Choose a chemical first.';
     for (var i = 0; i < chem.items.length; i++) {
       var it = chem.items[i], a = chemAmt(it), p = chemPct(it);
       if (!(a > 0)) return 'Enter how much ' + it.name + ' was added.';
-      if (a > CHEM_MAX[it.unit]) return 'Check the amount of ' + it.name + ' - ' + fmtNum(a) + ' ' + it.unit + ' can\'t be right.';
+      if (a > CHEM_MAX[chemUnit(it)]) return 'Check the amount of ' + it.name + ' - ' + fmtNum(a) + ' ' + chemUnit(it) + ' can\'t be right.';
       if (it.info.sMode === 'entry' && !(p >= 1 && p <= 40)) return 'Enter the strength (%) of the ' + it.name + '.';
     }
     return '';
@@ -4546,8 +4784,9 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function chemLine(it, ms){
     var a = chemAmt(it); if (!(a > 0)) return '';
-    var kind = it.info.kind || UNIT_KIND[it.unit], lines = [], sk = slowKind(it);
-    var c = {product: it.name, amount: a, unit: it.unit, kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
+    var kind = it.info.kind || UNIT_KIND[chemUnit(it)], lines = [], sk = slowKind(it);
+    if (it.unit === 'pucks') lines.push(fmtNum(numIn(it.amount)) + ' puck' + (numIn(it.amount) === 1 ? '' : 's') + ' ≈ ' + fmtNum(Math.round(a * 10) / 10) + ' lb');
+    var c = {product: it.name, amount: a, unit: chemUnit(it), kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
       strength: it.info.sMode === 'entry' ? chemPct(it) : it.info.sMode === 'fixed' ? Number(it.info.strength) : ''};
     it.eff = null;
     if (sk === 'tri' || it.slow) lines.push('Slow feed: reaches the pool over several days, so no instant estimate.');
@@ -4559,10 +4798,10 @@ document.addEventListener('DOMContentLoaded', function(){
       if (!chips && !e.why) { var w = (DATA.chems || []).filter(function(x){ return x.what && String(x.product).toLowerCase() === it.name.toLowerCase(); })[0]; if (w) lines.push(esc(w.what)); }
     }
     var key = it.slow && /cal-?hypo/i.test(it.name) ? 'cal-hypo puck' : it.name.toLowerCase(), st = (DATA.stock || {})[key];
-    if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[it.unit]) {
+    if (st && isNum(st.base) && STOCK_BASE[st.unit] && STOCK_KIND[st.unit] === UNIT_KIND[chemUnit(it)]) {
       var back = 0;
       if (editing && editing.product && String(editing.product).toLowerCase() === it.name.toLowerCase() && EST_BASE[editing.unit] && !!editing.slow === !!it.slow) back = editing.amount * EST_BASE[editing.unit];
-      var left = (st.base + back) / STOCK_BASE[st.unit], after = (st.base + back - a * EST_BASE[it.unit]) / STOCK_BASE[st.unit];
+      var left = (st.base + back) / STOCK_BASE[st.unit], after = (st.base + back - a * EST_BASE[chemUnit(it)]) / STOCK_BASE[st.unit];
       var rnd = function(x){ return st.unit === 'oz' || st.unit === 'units' ? String(Math.round(x)) : fmtNum(Math.round(x * 10) / 10); };
       lines.push(after < -0.05 ? '<span class="low">More than the ' + rnd(Math.max(left, 0)) + ' ' + st.unit + ' in stock. Check the amount (or Adjust stock in Prices).</span>'
         : 'Stock after this: about ' + rnd(Math.max(after, 0)) + ' ' + st.unit);
@@ -4832,7 +5071,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (dup) { dupOk = true; save.textContent = 'Save anyway'; say('Already logged: ' + dup.summary + ' at ' + dup.time + (dup.day !== w.s.slice(0, 10) ? ' on ' + fmtDayRel(dup.day) : '') + (dup.src === 'Dashboard' ? '' : ' (from Pool Math)') + '. Is this a different addition?', 'warn'); return; }
       }
       payload = {id: editing ? editing.id : '', when: w.s, items: chem.items.map(function(it){
-        return {product: it.name, amount: chemAmt(it), unit: it.unit, strength: it.info.sMode === 'entry' ? chemPct(it) : '', slow: !!it.slow};
+        return {product: it.name, amount: chemAmt(it), unit: chemUnit(it), strength: it.info.sMode === 'entry' ? chemPct(it) : '', slow: !!it.slow};
       })};
       if (!editing) payload.note = $('eNote').value;
       fn = 'saveChems'; label = chem.items.length > 1 ? 'Chemicals' : 'Chemical';
@@ -4891,6 +5130,19 @@ document.addEventListener('DOMContentLoaded', function(){
     return mine(x) ? '<button type="button" class="emk" data-ek="' + kind + '" data-eid="' + esc(x.id) + '" aria-label="Edit or delete">⋯</button>' : '';
   };
   window.entryCanFix = mine;
+  /** A job's "Log it": Add chemical with that job's chemical (and amount) already picked. o = {label?, setting, amount?, unit?, slow}. */
+  window.entryLogJob = function(o){
+    openPanel('chem', null, fab);
+    var list = chemList(), set = String(o.setting || '');
+    var pick = list.filter(function(p){ return o.label ? p.label === o.label : CHEM_PICKS.some(function(c){ return c[0] === p.label && c[1].test(set); }) || p.name.toLowerCase().indexOf(set.toLowerCase()) >= 0; })[0];
+    if (!pick) return;
+    var it = chemItem(pick);
+    if (o.unit && it.units.indexOf(o.unit) >= 0) it.unit = o.unit;
+    if (isNum(o.amount)) it.amount = fmtNum(o.amount);
+    if (isNum(o.pct) && it.info.sMode === 'entry') it.pct = fmtNum(o.pct);
+    if (o.slow && slowKind(it) === 'feeder') it.slow = true;
+    chem.items = [it]; chem.picking = false; chemDraw(0);
+  };
   window.entryEdit = function(kind, id){ var it = findEntry(kind, id); if (it) openPanel(kind, it, fab); };
   window.entryDel = function(kind, id){ menu(kind, id, true); };
   function findEntry(kind, id){ return ((kind === 'test' ? DATA.tests : kind === 'chem' ? DATA.chems : DATA.notes) || []).filter(function(x){ return x.id === id; })[0] || null; }
