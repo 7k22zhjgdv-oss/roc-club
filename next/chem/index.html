@@ -1247,10 +1247,11 @@ body.v-now.unlocked:is(.lvl-board,.lvl-manager) #now{display:flex !important}
 #now{margin-bottom:84px}
 html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 .nsum{background:var(--panel);border-radius:18px;padding:12px 12px 14px 16px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:start}
-.nsum h2{margin:0;font-size:20px;font-weight:650;letter-spacing:-.01em;grid-column:1;grid-row:1;align-self:center}
-.nsum .nat{font-size:13px;color:var(--muted);grid-column:2;grid-row:1;justify-self:end;align-self:center;white-space:nowrap}
+.nsum .nhd{grid-column:1;grid-row:1;display:flex;align-items:baseline;gap:8px;min-width:0}
+.nsum h2{margin:0;font-size:20px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.nsum .nat{font-size:13px;color:var(--muted);white-space:nowrap}
 .nsum .nl{grid-column:1;grid-row:2;min-width:0;display:flex;flex-direction:column;gap:6px}
-.nsum .ncsi{grid-column:2;grid-row:2}
+.nsum .ncsi{grid-column:2;grid-row:1 / span 2;align-self:start}
 .ntags{display:flex;flex-wrap:wrap;gap:5px}
 .ntag{font-size:12px;font-weight:650;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .ntag.g,.ns.g{background:var(--okT);color:var(--okInk)}
@@ -3647,7 +3648,7 @@ function nowSummary(M){
       (cs.txt ? '<span class="ns ' + cs.cls + '">' + cs.txt + '</span>' : '') +
       '<svg viewBox="0 0 88 10" width="88" height="10" aria-hidden="true"><rect x="0" y="3" width="88" height="4" rx="2" class="ntrack"/><rect x="' + px(gb.lo).toFixed(1) + '" y="3" width="' + (px(gb.hi) - px(gb.lo)).toFixed(1) + '" height="4" class="ngood"/><circle cx="' + px(c.v).toFixed(1) + '" cy="5" r="4" fill="var(--k-csi)"/></svg></button>';
   }
-  return '<div class="nsum"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now)) + '</span><div class="nl"><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
+  return '<div class="nsum"><div class="nhd"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now).replace(/^\w+ /, '')) + '</span></div><div class="nl"><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
     (nowOpen.csi ? nowCsiDetail(M) : '');
 }
 
