@@ -1361,8 +1361,11 @@ html.top-wash[data-force-st=y] .upbox,html.top-wash[data-force-st=y] .nsum{backg
 html.top-wash[data-force-st=r] .upbox,html.top-wash[data-force-st=r] .nsum{background:color-mix(in srgb,var(--red) 9%,var(--card))}
 html.top-wash .upbox,html.top-wash .nsum{box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.08)}
 html.top-wash .ncsi,html.top-wash .jobs,html.top-wash .ntag{background:var(--card)}
-html.top-wash .ncsi .ns{background:var(--card);box-shadow:inset 0 0 0 1.5px currentColor}
-html.top-wash .upbox .tdc.lv-yellow,html.top-wash .upbox .tdc.lv-red{background:var(--card)}
+/* colored tags on the tinted card: a clearly stronger shade than the card plus a thin darker edge, so the two never blend */
+html.top-wash .ntag.g,html.top-wash .ncsi .ns.g{background:color-mix(in srgb,var(--green) 22%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--green) 50%,transparent)}
+html.top-wash .ntag.y,html.top-wash .ncsi .ns.y{background:color-mix(in srgb,var(--yellow) 34%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--yellow) 75%,transparent)}
+html.top-wash .ntag.r,html.top-wash .ncsi .ns.r{background:color-mix(in srgb,var(--red) 20%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--red) 55%,transparent)}
+html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var(--purple) 20%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--purple) 50%,transparent)}
 /* things that were tinted against the old near-white page and would vanish on the grey one */
 .ncsi .ntrack{fill:var(--line)}
 .chipPop .jpost{background:var(--soft)}
