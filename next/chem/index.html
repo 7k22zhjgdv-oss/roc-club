@@ -1172,6 +1172,7 @@ html.app #entryUi.menu #eFab{display:none}
 .chipPop .jdose{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--soft)}
 .chipPop .jdose .k{flex:none;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .chipPop .jdose .v b{font-size:19px}
+.chipPop .jdose .v .jm{display:block;margin-top:2px;font-size:13px}   /* "FC 5 (today) → 9" / the Orenda note on its own line */
 .chipPop .jpost{margin-top:8px;padding:7px 10px;border-radius:10px;background:var(--sum);font-size:13px;color:var(--ink2)}
 .chipPop .jhist{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
 .chipPop .jhist span{font-size:12px;color:var(--ink2);border:1px solid var(--line);padding:2px 8px;border-radius:999px;white-space:nowrap}
@@ -1181,7 +1182,10 @@ html.app #entryUi.menu #eFab{display:none}
 .chipPop .jtank i{position:absolute;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--accent) 70%,transparent);transition:height .1s}
 .chipPop .jsr{flex:1;min-width:0}
 .chipPop .jsr input{width:100%;accent-color:var(--accent);margin:4px 0}
-.chipPop .jres{font-size:13px} .chipPop .jres span{color:var(--muted)}
+.chipPop .jres{font-size:13px;font-variant-numeric:tabular-nums}
+.chipPop .jres>b{display:block;font-size:15px}
+.chipPop .jres>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.chipPop .jres>span b{color:var(--ink)}
 .chipPop .jsave{width:100%;margin-top:8px;font:inherit;font-size:14px;font-weight:600;min-height:40px;border-radius:10px;border:0;background:var(--accent);color:var(--accentInk);cursor:pointer}
 .dj.popopen{box-shadow:inset 0 0 0 2px var(--accent)}
 .ds{display:grid;grid-template-columns:minmax(0,1fr) auto 38px;gap:0 10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}
@@ -1229,6 +1233,86 @@ html.app #entryUi.menu #eFab{display:none}
 body.can-enter #legend{margin-bottom:84px}
 html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 
+/* ---- Right now view (2026-10-08): switch History / Right now (Board+), summary with CSI, one tile per test */
+.nowsw{display:flex;justify-content:center;margin:2px 0 12px}
+.nowsw.priv{display:flex}
+.nowsw .sg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px;gap:2px}
+.nowsw button{font:inherit;font-size:14px;border:0;background:none;color:var(--ink2);padding:6px 18px;border-radius:999px;cursor:pointer}
+.nowsw button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+body.v-now.unlocked:is(.lvl-board,.lvl-manager) :is(#up,#histRow,#opts,#list,#legend){display:none !important}
+#now{display:none !important;flex-direction:column;gap:10px}
+body.v-now.unlocked:is(.lvl-board,.lvl-manager) #now{display:flex !important}
+body.v-now.can-enter #now{margin-bottom:84px}
+html.app body.v-now #now{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
+.nsum{background:var(--panel);border-radius:18px;padding:14px 14px 14px 16px;display:flex;gap:12px;align-items:stretch}
+.nsum .nl{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.nsum h2{margin:0;font-size:20px;font-weight:650;letter-spacing:-.01em}
+.nsum .nat{font-size:13px;color:var(--muted);margin-top:-5px}
+.ntags{display:flex;flex-wrap:wrap;gap:5px}
+.ntag{font-size:12px;font-weight:650;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ntag.g,.ns.g{background:var(--okT);color:var(--okInk)}
+.ntag.y,.ns.y{background:var(--dueBg);color:color-mix(in srgb,var(--yellow) 45%,var(--ink))}
+.ntag.r,.ns.r{background:var(--lateBg);color:var(--red)}
+.ntag.p,.ns.p{background:var(--purBg);color:var(--purple)}
+.nsay{margin:2px 0 0;font-size:14px;color:var(--ink2);line-height:1.4}
+.ncsi{flex:0 0 104px;font:inherit;color:var(--ink);background:var(--card);border:0;border-radius:14px;padding:10px 8px 9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.ncsi .lb{font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--k-csi)}
+.ncsi .nn{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
+.ncsi svg{margin-top:3px}
+.ncsi .ntrack{fill:var(--soft)} .ncsi .ngood{fill:var(--okInk);opacity:.35}
+.ntile{background:var(--card);border-radius:18px;padding:12px 16px 10px;display:flex;flex-direction:column;gap:6px}
+.nhead,.ntop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;width:100%;font:inherit;color:inherit;background:none;border:0;padding:0;text-align:left;cursor:pointer}
+.ntop{cursor:default}
+.nhead:focus-visible,.ncsi:focus-visible,.nowsw button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+.nnm{display:flex;flex-direction:column;gap:3px;min-width:0}
+.nnm b{font-size:15px;font-weight:650;color:var(--k)}
+.ntg{font-size:12.5px;color:var(--muted)}
+.nchev{width:12px;height:12px;color:var(--muted);margin-left:6px;vertical-align:0;transition:transform .2s}
+.ntile.open .nchev{transform:rotate(180deg)}
+.nval{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.nval .nn{font-size:28px;font-weight:650;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nn small{font-size:13px;font-weight:500;color:var(--muted);margin-left:2px}
+.nap{font-size:19px;font-weight:500;color:var(--muted);margin-right:1px}
+.ns{font-size:12px;font-weight:650;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--ink2);white-space:nowrap}
+.ntile.unsure .nval .nn{color:var(--muted)}
+.nchart{display:block;max-width:100%;height:auto;overflow:visible}
+.nchart text{font-size:10.5px;fill:var(--muted);font-family:inherit}
+.nchart .nadd{font-size:10px;font-weight:650}
+.nchart .nband{fill:var(--okT);opacity:.7}
+.nchart .ngrid{stroke:var(--line);stroke-width:1;opacity:.6}
+.nchart .nnow{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
+.nchart .nnowdot{fill:var(--card);stroke-width:2}
+.nfoot{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink2)}
+.nfoot span:last-child{color:var(--muted);text-align:right}
+.nfoot .ndue{color:color-mix(in srgb,var(--yellow) 45%,var(--ink));font-weight:600}
+.nfoot .nlate{color:var(--red);font-weight:600}
+.ndet{display:none;border-top:1px solid var(--line);margin-top:4px;padding-top:10px;flex-direction:column;gap:12px}
+.ntile.open .ndet{display:flex}
+.ndet h4{margin:0 0 5px;font-size:12px;font-weight:650;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.nhow{display:grid;grid-template-columns:1fr auto;gap:3px 12px;font-size:14px;font-variant-numeric:tabular-nums}
+.nhow span:nth-child(even){text-align:right;font-weight:600}
+.nhow .tot{border-top:1px solid var(--line);padding-top:4px;margin-top:2px;font-weight:700}
+.nsure{margin:-6px 0 0;font-size:12px;color:var(--muted)}
+.ntodo{background:var(--soft);border-radius:12px;padding:9px 12px;font-size:14px;line-height:1.45}
+.ntgt{font:inherit;font-weight:700;color:var(--accent);background:none;border:0;border-bottom:1.5px dashed var(--accent);padding:0 1px;cursor:pointer}
+.nted{display:flex;align-items:center;gap:10px;margin-top:8px}
+.nted button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:19px;cursor:pointer}
+.nted b{font-size:18px;min-width:30px;text-align:center;font-variant-numeric:tabular-nums}
+.nted span{font-size:12px;color:var(--muted)}
+.nbars{display:flex;align-items:flex-end;gap:6px}
+.nbars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.nbars i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:var(--k);opacity:.7}
+.nbars b{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.nstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nstats div{background:var(--soft);border-radius:12px;padding:7px 10px}
+.nstats b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.nstats span{font-size:12px;color:var(--muted)}
+.nminis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nmini{background:var(--card);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:1px}
+.nmini b{font-size:13px;font-weight:650;color:var(--k)}
+.nmini .nn{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums}
+.nlegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:2px}
+.nlegend svg{vertical-align:-1px;margin-right:5px}
 </style>
 </head>
 <body>
@@ -1259,6 +1343,8 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
   </div>
   <div class="skel" id="skel" aria-hidden="true"></div>
   <p class="lvlnote" id="lvlNote" hidden></p>
+  <div class="nowsw priv brd" id="nowSw" role="group" aria-label="View"><span class="sg"><button type="button" id="vHist" class="on" aria-pressed="true">History</button><button type="button" id="vNow" aria-pressed="false">Right now</button></span></div>
+  <div id="now" class="priv brd" aria-live="polite"></div>
   <div class="up priv" id="up" hidden>
     <div class="uprow"><span class="seclbl">Coming up</span><span class="hln" aria-hidden="true"></span>
       <button type="button" class="optbtn" id="upBtn" aria-expanded="false" aria-controls="upDet">Details<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button></div>
@@ -1411,8 +1497,8 @@ html.app #legend{margin-bottom:calc(var(--cornerGap,24px) + 150px)}
 <dialog id="unlockDlg">
   <div id="siPick">
     <h2 class="si-q">Who's signing in?</h2>
-    <button type="button" class="si-big" data-as="member">Pool member<span>I have a pool key</span></button>
-    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>I sign in with my name and password</span></button>
+    <button type="button" class="si-big" data-as="member">Pool member<span>Sign in with your pool key to see additional information</span></button>
+    <button type="button" class="si-big" data-as="vol">Volunteer or board<span>Sign in or sign up to be a volunteer</span></button>
     <div class="row"><button class="btn" type="button" id="pickCancel">Cancel</button></div>
   </div>
   <form id="unlockForm" autocomplete="off" hidden>
@@ -2345,7 +2431,7 @@ function trkEditHtml(t, i){
 // (the same "2 -> 9" shock as SHOCK_RAISE_PPM in Code.gs). Acid feeder "Not yet": how full it was -> due again when the
 // rest should run out at the rate it emptied since the fill. Every other job: put off 1 / 2 / 3 / 7 days.
 var JOB_POOL_GAL = 48000;
-var JOB_FILL = [[/acid/i, 3, 'gal'], [/cal-?hypo/i, 6, 'lb']];                       // [feeder setting, amount, unit]
+var JOB_FILL = [[/acid/i, 3, 'gal', 'acid', 12], [/cal-?hypo/i, 6, 'lb']];   // [feeder setting, amount, unit, word, gal of water to dilute with]
 var ORENDA_WEEKLY = [[/cv-?[67]00/i, 5, 10], [/sc-?1000/i, 3, 3], [/pr-?10000/i, 0, 0]];   // fl oz per 10,000 gal a week; 0 = as needed
 var SHOCK_TO_FC = 9, SHOCK_FROM_FC = 2;
 var JOB_PUTOFF = [1, 2, 3, 7];
@@ -2358,7 +2444,9 @@ function jobIsAcid(t){ return t.type === 'slow' && /acid/i.test(t.setting || t.n
 function jobDose(t){
   if (t.type === 'slow') {
     var f = JOB_FILL.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
-    return f ? {chip: f[1] + ' ' + f[2], text: 'Fill with ' + f[1] + ' ' + f[2], html: '<b>' + f[1] + ' ' + f[2] + '</b>', amount: f[1], unit: f[2]} : null;
+    if (!f) return null;
+    var a = f[1] + ' ' + f[2] + (f[3] ? ' ' + f[3] : ''), wtr = f[4] ? ' + ' + f[4] + ' gal water' : '';   // acid goes in diluted
+    return {chip: a + wtr, text: 'Fill with ' + a + wtr, html: '<b>' + a + '</b>' + (wtr ? ' <span class="jm">' + wtr.slice(3) + ' (diluted)</span>' : ''), amount: f[1], unit: f[2]};
   }
   if (t.type === 'product') {
     var o = ORENDA_WEEKLY.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
@@ -2453,7 +2541,8 @@ function jobSlide(){
   var r = document.getElementById('jFull'), t = DATA.trackers[jobNotYet]; if (!r || !t) return;
   var v = +r.value, u = jobAcidUntil(t, v / 100), k = daysBetween(todayCentral(), u);
   document.getElementById('jTank').style.height = v + '%';
-  document.getElementById('jRes').innerHTML = '<b>' + v + '% full</b> · due again <b>' + esc(fmtDayLong(u).replace(/, \d{4}$/, '')) + '</b> <span>(' + (k === 1 ? 'tomorrow' : 'in ' + k + ' days') + ')</span>';
+  // two fixed lines that never wrap, so nothing moves while sliding
+  document.getElementById('jRes').innerHTML = '<b>' + v + '% full</b><span>Due again <b>' + esc(fmtDayLong(u).replace(/, \d{4}$/, '')) + '</b> · ' + (k === 1 ? 'tomorrow' : 'in ' + k + ' days') + '</span>';
 }
 function jobPutOffUntil(t, n){
   var s = trkState(t), today = todayCentral(), base = s.due && s.due > today ? s.due : today;
@@ -2905,8 +2994,613 @@ function renderHeader(){
   $('mnAsof').textContent = DATA.dataAsOf ? 'Data as of ' + relStamp(DATA.dataAsOf) : 'No data yet';
   $('mnUpd').textContent = DATA.lastImport ? 'Updated ' + relStamp(DATA.lastImport) : '';
 }
+/* ------------------------------------------------------------ Right now view (2026-10-08, Board and up)
+   A second view beside History: one tile per test with a chart and an estimate for this moment.
+   Estimates = the last real test + what was added since (chemicals and slow feeders, from c.fx made by the server's
+   chemFx_) + the pool's own drift: FC burns off in sunlight (hourly sun from Open-Meteo) plus a small steady use,
+   learned from our own tests; pH creeps up at a rate learned the same way. Water temperature follows the air of the
+   last few days plus sun, nudged by our own temperature tests. */
+var NOW_SURE_H = {fc:48, cc:48, ph:48, ta:14*24, ch:21*24, cya:21*24};   // how long an estimate stays good after a test
+var NOW_TILES = [['fc','Free chlorine','ppm','FC'], ['cc','Combined chlorine','ppm','CC'], ['ph','pH','','pH'],
+  ['ta','Total alkalinity','ppm','TA'], ['ch','Calcium hardness','ppm','CH'], ['cya','Stabilizer (CYA)','ppm','CYA']];
+var NOW_SPAN = {fc:7, cc:7, ph:7, ta:42, ch:42, cya:42, csi:42, tempF:21};        // days on the tile's chart
+var NOW_SPAN_BIG = {fc:30, cc:30, ph:30, ta:120, ch:120, cya:120, csi:120, tempF:60};  // opened tile
+var NOW_LAT = 30.05848366518573, NOW_LON = -98.02794210048737;                  // the club (same as Code.gs)
+var NOW_L = 48000 * 3.785411784, HR = 3600000, DAYMS = 86400000;
+var nowView = false, nowWx = null, nowWxBusy = false, nowOpen = {}, nowCache = null, nowW = 0, nowEditT = false;
+var nowFcTarget = 5;
+try { var nt0 = parseFloat(localStorage.getItem('nowFcTarget')); if (nt0 >= 1 && nt0 <= 10) nowFcTarget = nt0; } catch(e){}
+
+/** Hourly air temperature (°F) and sunshine (kW/m²) at the club: 92 days back, 3 ahead. Kept for an hour. */
+function nowWeather(){
+  if (nowWx && Date.now() - nowWx.at < HR) return;
+  try { var c = JSON.parse(localStorage.getItem('nowWx') || 'null'); if (c && c.air && Date.now() - c.at < HR) { nowWx = c; return; } } catch(e){}
+  if (nowWxBusy || !window.fetch) return;
+  nowWxBusy = true;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + NOW_LAT + '&longitude=' + NOW_LON +
+    '&hourly=temperature_2m,shortwave_radiation&past_days=92&forecast_days=3&temperature_unit=fahrenheit&timezone=GMT&timeformat=unixtime')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var h = j && j.hourly;
+      if (!h || !h.time || !h.time.length) throw new Error('no data');
+      nowWx = {at: Date.now(), t0: h.time[0] * 1000, air: h.temperature_2m, sun: h.shortwave_radiation.map(function(v){ return isNum(v) ? v / 1000 : null; })};
+      try { localStorage.setItem('nowWx', JSON.stringify(nowWx)); } catch(e){}
+    })
+    .catch(function(){ nowWx = {at: Date.now(), fail: true}; })
+    .then(function(){ nowWxBusy = false; nowCache = null; if (nowView) renderNow(); });
+}
+/** Open-Meteo's value for the hour ending at ms (sun is the average over that hour), or null. */
+function nowWxAt(arr, ms){
+  if (!nowWx || !nowWx[arr]) return null;
+  var i = Math.ceil((ms - nowWx.t0) / HR);
+  var v = nowWx[arr][i];
+  return isNum(v) ? v : null;
+}
+/** Sunshine, kW/m², for the hour ending at ms; a clear-sky guess (7 AM - 7:30 PM Central) if the weather is missing. */
+function nowSun(ms){
+  var v = nowWxAt('sun', ms);
+  if (v !== null) return v;
+  var hr = ((ms / HR - 5) % 24 + 24) % 24;
+  return Math.max(0, Math.sin(Math.PI * (hr - 7) / 12.5)) * 0.8;
+}
+
+/** The additions that move anything, oldest first; a slow fill is spread from its time to the next fill of the same feeder. */
+function nowChems(){
+  var cs = (DATA.chems || []).filter(function(c){ return c.fx; }).map(function(c){
+    var kind = !c.fx.rampH ? '' : /cal-?hypo/i.test(c.product) ? 'cal' : /tri-?chlor/i.test(c.product) ? 'tri' : c.fx.acid ? 'acid' : 'other';
+    return {ms: c.ms, fx: c.fx, slow: !!c.fx.rampH, dur: (c.fx.rampH || 0) * HR, kind: kind, c: c};
+  }).sort(function(a, b){ return a.ms - b.ms; });
+  ['cal', 'tri', 'acid', 'other'].forEach(function(k){
+    var fills = cs.filter(function(x){ return x.kind === k; }), gaps = [];
+    fills.forEach(function(x, i){
+      var nx = fills[i + 1];
+      if (nx) { var g = nx.ms - x.ms; if (g >= DAYMS && g <= 30 * DAYMS) { x.dur = g; gaps.push(g); } }
+      else if (gaps.length) { var s = gaps.slice(-4).sort(function(a, b){ return a - b; }); x.dur = s[Math.floor(s.length / 2)]; }
+    });
+  });
+  return cs;
+}
+/** How much of field f (fc, acid, alk, ch, cya, bor) the additions put in between a and b. */
+function nowSum(cs, f, a, b, split){
+  var s = 0, slow = 0;
+  cs.forEach(function(x){
+    var v = x.fx[f]; if (!v || x.ms > b) return;
+    if (!x.slow) { if (x.ms > a) s += v; return; }
+    var fr = function(t){ return Math.max(0, Math.min(1, (t - x.ms) / x.dur)); };
+    var d = v * (fr(b) - fr(a)); s += d; slow += d;
+  });
+  return split ? {all: s, slow: slow} : s;
+}
+function nowTests(k){
+  return (DATA.tests || []).filter(function(t){ return isNum(t[k]); }).sort(function(a, b){ return a.ms - b.ms; });
+}
+
+/** pH fall when strong acid neutralizes acidPpm of alkalinity (same carbonate balance as Code.gs phDrop_). */
+function nowPhDrop(pH, ta, cya, acidPpm){
+  if (!(acidPpm > 0)) return 0;
+  var K1 = Math.pow(10, -6.35), K2 = Math.pow(10, -10.33);
+  var frac = function(p){ var h = Math.pow(10, -p), d = h * h + K1 * h + K1 * K2; return (K1 * h + 2 * K1 * K2) / d; };
+  var cyaAlk = function(p){ return (cya || 0) * (50 / 129) / (1 + Math.pow(10, 6.88 - p)); };
+  var carb = ta - cyaAlk(pH); if (carb <= 0) return null;
+  var dic = carb / frac(pH), target = ta - acidPpm, lo = 3, hi = pH;
+  if (target <= dic * frac(lo) + cyaAlk(lo)) return null;
+  for (var i = 0; i < 50; i++) { var mid = (lo + hi) / 2; if (dic * frac(mid) + cyaAlk(mid) > target) hi = mid; else lo = mid; }
+  return pH - (lo + hi) / 2;
+}
+/** CSI (same formula as the entry preview). */
+function nowCsi(ph, ta, ch, cya, salt, bor, tempF){
+  var carb = ta - 0.38772 * cya / (1 + Math.pow(10, 6.83 - ph)) - 4.63 * bor / (1 + Math.pow(10, 9.11 - ph));
+  if (!(carb > 0) || !(ch > 0)) return null;
+  var ionic = (1.5 * ch + ta) / 50045 + (salt - 1.1678 * ch) / 58443;
+  if (!(ionic > 0)) return null;
+  var tc = (tempF - 32) * 5 / 9;
+  return ph - 11.677 + Math.log(ch) / Math.LN10 + Math.log(carb) / Math.LN10 - 2.56 * Math.sqrt(ionic) / (1 + 1.65 * Math.sqrt(ionic)) - 1412.5 / (tc + 273.15) + 4.7375;
+}
+function nowMedian(a){ if (!a.length) return null; var s = a.slice().sort(function(x, y){ return x - y; }); return s[Math.floor(s.length / 2)]; }
+function nowLastBefore(k, ms, maxMs){
+  var b = null; (DATA.tests || []).forEach(function(t){ if (isNum(t[k]) && t.ms <= ms && ms - t.ms <= maxMs && (!b || t.ms > b.ms)) b = t; }); return b;
+}
+
+/* ---- FC: each hour, sunlight burns a share of what is there (a x sun) and contaminants use a little (b ppm/hour) */
+function nowFcSteps(cs, a, b){
+  var steps = [];
+  for (var t = a; t < b; t += HR) {
+    var t2 = Math.min(b, t + HR), d = nowSum(cs, 'fc', t, t2, true);
+    steps.push({h: (t2 - t) / HR, sun: nowSun(t2), add: d.all, slow: d.slow, ms: t2});
+  }
+  return steps;
+}
+function nowFcRun(fc, steps, al, be, track){
+  var o = track ? {day: 0, night: 0, add: 0, feed: 0, path: []} : null;
+  steps.forEach(function(s){
+    fc += s.add;
+    var burn = fc * (1 - Math.exp(-al * s.sun * s.h)), use = be * s.h, loss = Math.min(fc, burn + use);
+    fc -= loss;
+    if (o) { o.add += s.add - s.slow; o.feed += s.slow; if (s.sun > 0.03) o.day += loss; else o.night += loss; o.path.push({ms: s.ms, v: fc}); }
+  });
+  return o ? (o.fc = fc, o) : fc;
+}
+function nowFcModel(cs){
+  var T = nowTests('fc'), now = Date.now(), pairs = [];
+  for (var i = 1; i < T.length; i++) {
+    var a = T[i - 1], b = T[i], g = b.ms - a.ms;
+    if (now - b.ms > 60 * DAYMS || g < 3 * HR || g > 96 * HR) continue;
+    var st = nowFcSteps(cs, a.ms, b.ms), add = st.reduce(function(s, x){ return s + x.add; }, 0);
+    pairs.push({a: a, b: b, steps: st, used: a.fc + add - b.fc, hrs: g / HR});
+  }
+  var best = {al: 0.06, be: 0.015}, bestS = Infinity;
+  for (var al = 0; al <= 0.25001; al += 0.005) for (var be = 0; be <= 0.10001; be += 0.0025) {
+    var s = 0.3 * Math.pow((al - 0.06) / 0.06, 2) + 0.3 * Math.pow((be - 0.015) / 0.015, 2);
+    for (var p = 0; p < pairs.length && s < bestS; p++) { var e = nowFcRun(pairs[p].a.fc, pairs[p].steps, al, be) - pairs[p].b.fc; s += e * e; }
+    if (s < bestS) { bestS = s; best = {al: al, be: be}; }
+  }
+  // chlorine used per day, week by week (from the tests themselves), newest week last
+  var weeks = [];
+  for (var w = 5; w >= 0; w--) {
+    var hi = now - w * 7 * DAYMS, lo = hi - 7 * DAYMS, u = 0, h = 0;
+    pairs.forEach(function(p){ if (p.b.ms > lo && p.b.ms <= hi) { u += p.used; h += p.hrs; } });
+    weeks.push(h >= 24 ? Math.max(0, u / h * 24) : null);
+  }
+  best.weeks = weeks; best.n = pairs.length;
+  return best;
+}
+
+/* ---- pH: rises by itself (aeration) at a steady rate, learned from test pairs after taking off the acid in between */
+function nowPhRate(cs){
+  var T = nowTests('ph'), now = Date.now(), r = [];
+  for (var i = 1; i < T.length; i++) {
+    var a = T[i - 1], b = T[i], g = b.ms - a.ms;
+    if (now - b.ms > 45 * DAYMS || g < 3 * HR || g > 96 * HR) continue;
+    var ta = nowLastBefore('ta', a.ms, 45 * DAYMS); if (!ta) continue;
+    var cy = nowLastBefore('cya', a.ms, 45 * DAYMS);
+    var drop = nowPhDrop(a.ph, ta.ta, cy ? cy.cya : 0, nowSum(cs, 'acid', a.ms, b.ms));
+    if (drop === null) continue;
+    r.push((b.ph - a.ph + drop) / (g / HR));
+  }
+  var m = r.length >= 3 ? nowMedian(r) : 0.004;
+  return Math.max(0, Math.min(0.03, m));
+}
+
+/** A slow reading's own drift per hour (refill water, splash-out), from pairs of its tests after taking off what was added
+ *  in between; 0 until there are 2 such pairs. Limited to -down..+up ppm a day. */
+function nowDrift(k, addFn, down, up){
+  var T = nowTests(k), now = Date.now(), r = [];
+  for (var i = 1; i < T.length; i++) {
+    var a = T[i - 1], b = T[i], g = b.ms - a.ms;
+    if (now - b.ms > 90 * DAYMS || g < 2 * DAYMS || g > 30 * DAYMS) continue;
+    r.push((b[k] - a[k] - addFn(a.ms, b.ms)) / (g / HR));
+  }
+  if (r.length < 2) return 0;
+  return Math.max(-down / 24, Math.min(up / 24, nowMedian(r)));
+}
+
+/* ---- water temperature: a slow average of (air + sun warming), plus what our own temperature tests say it runs off by */
+function nowTempModel(){
+  if (!nowWx || !nowWx.air) return null;
+  var n = nowWx.air.length, T = nowTests('tempF').filter(function(t){ return t.ms > nowWx.t0 + 10 * DAYMS && t.ms < nowWx.t0 + n * HR; });
+  var series = function(tau, kap){
+    var out = new Array(n), e = null, k = 1 - Math.exp(-1 / tau);
+    for (var i = 0; i < n; i++) {
+      var x = isNum(nowWx.air[i]) ? nowWx.air[i] + kap * (nowWx.sun[i] || 0) : null;
+      if (x !== null) e = e === null ? x : e + k * (x - e);
+      out[i] = e;
+    }
+    return out;
+  };
+  var at = function(sr, ms){ var i = Math.ceil((ms - nowWx.t0) / HR); return sr[Math.max(0, Math.min(n - 1, i))]; };
+  var best = null;
+  (T.length >= 4 ? [36, 48, 72, 96, 120, 168] : [72]).forEach(function(tau){
+    (T.length >= 4 ? [0, 5, 10, 15, 20] : [10]).forEach(function(kap){
+      var sr = series(tau, kap), res = T.map(function(t){ return t.tempF - at(sr, t.ms); });
+      var off = res.length ? res.reduce(function(s, x){ return s + x; }, 0) / res.length : 0;
+      var err = res.reduce(function(s, x){ return s + (x - off) * (x - off); }, 0);
+      if (!best || err < best.err) best = {tau: tau, kap: kap, off: off, err: err, sr: sr};
+    });
+  });
+  best.n = T.length; best.rms = T.length ? Math.sqrt(best.err / T.length) : null;
+  best.at = function(ms){ var v = at(best.sr, ms); return v === null ? null : v + best.off; };
+  best.air4 = (function(){ var s = 0, c = 0, now = Date.now(); for (var t = now - 4 * DAYMS; t <= now; t += HR) { var v = nowWxAt('air', t); if (v !== null) { s += v; c++; } } return c ? s / c : null; })();
+  return best;
+}
+
+/* ---- the whole picture */
+function nowModel(){
+  var key = (DATA.tests || []).length + '|' + (DATA.chems || []).length + '|' + (nowWx ? nowWx.at : 0) + '|' + Math.floor(Date.now() / (10 * 60000));
+  if (nowCache && nowCache.key === key) return nowCache;
+  var cs = nowChems(), now = Date.now(), M = {key: key, cs: cs, now: now, r: {}};
+  // FC
+  var fcm = nowFcModel(cs), lastFc = nowTests('fc').pop();
+  if (lastFc) {
+    var run = nowFcRun(lastFc.fc, nowFcSteps(cs, lastFc.ms, now), fcm.al, fcm.be, true);
+    var fut = nowFcRun(run.fc, nowFcSteps(cs, now, now + 36 * HR), fcm.al, fcm.be, true);
+    M.r.fc = {last: lastFc, v: run.fc, run: run, fut: fut.path, m: fcm};
+  }
+  // pH
+  var rate = nowPhRate(cs), lastPh = nowTests('ph').pop();
+  if (lastPh) {
+    var ta0 = nowLastBefore('ta', lastPh.ms, 45 * DAYMS), cy0 = nowLastBefore('cya', lastPh.ms, 45 * DAYMS);
+    var phAt = function(ms){
+      var acid = nowSum(cs, 'acid', lastPh.ms, ms), d = ta0 ? nowPhDrop(lastPh.ph, ta0.ta, cy0 ? cy0.cya : 0, acid) : 0;
+      return {v: Math.min(8.4, lastPh.ph + rate * (ms - lastPh.ms) / HR - (d || 0)), drop: d || 0, acid: acid};
+    };
+    var pn = phAt(now), path = [];
+    for (var t = lastPh.ms + 3 * HR; t < now; t += 3 * HR) path.push({ms: t, v: phAt(t).v});
+    path.push({ms: now, v: pn.v});
+    M.r.ph = {last: lastPh, v: pn.v, drop: pn.drop, acid: pn.acid, rise: rate * (now - lastPh.ms) / HR, rate: rate, path: path};
+  }
+  // TA, CH, CYA, CC: the last test plus what was added since, plus their own slow drift (refill water, splash-out)
+  [['ta', function(a, b){ return nowSum(cs, 'alk', a, b) - nowSum(cs, 'acid', a, b); }, 1, 3],
+   ['ch', function(a, b){ return nowSum(cs, 'ch', a, b); }, 3, 3],
+   ['cya', function(a, b){ return nowSum(cs, 'cya', a, b); }, 1, 1],
+   ['cc', null]].forEach(function(p){
+    var L = nowTests(p[0]).pop(); if (!L) return;
+    var path = [], f = p[1], rate = f ? nowDrift(p[0], f, p[2], p[3]) : 0;
+    var at = function(t){ return f ? f(L.ms, t) + rate * (t - L.ms) / HR : 0; };
+    if (f) { for (var t = L.ms + 12 * HR; t < now; t += 12 * HR) path.push({ms: t, v: Math.max(0, L[p[0]] + at(t))}); }
+    var add = f ? f(L.ms, now) : 0, drift = rate * (now - L.ms) / HR, dv = add + drift;
+    path.push({ms: now, v: Math.max(0, L[p[0]] + dv)});
+    M.r[p[0]] = {last: L, v: Math.max(0, L[p[0]] + dv), dv: dv, add: add, drift: drift, rate: rate, path: path, flat: !f || Math.abs(dv) < 0.5};
+  });
+  // water temperature
+  var tm = nowTempModel(), lastT = nowTests('tempF').pop();
+  if (tm) {
+    var path2 = [];
+    for (var t2 = now - NOW_SPAN_BIG.tempF * DAYMS; t2 <= now + 48 * HR; t2 += 6 * HR) { var v2 = tm.at(t2); if (v2 !== null) path2.push({ms: t2, v: v2}); }
+    M.r.tempF = {last: lastT, v: tm.at(now), m: tm, path: path2, tomorrow: tm.at(nowTomorrowAt(16))};
+  } else if (lastT) M.r.tempF = {last: lastT, v: lastT.tempF, path: [], noWx: true};
+  // CSI from the estimates
+  var g = function(k){ return M.r[k] ? M.r[k].v : null; };
+  var salt = nowTests('salt').pop(), bor = nowTests('bor').pop();
+  if (isNum(g('ph')) && isNum(g('ta')) && isNum(g('ch')) && isNum(g('cya')) && isNum(g('tempF'))) {
+    var sv = salt && salt.salt >= 500 ? salt.salt : 1000, bv = bor ? bor.bor : 0;
+    var cv = nowCsi(g('ph'), g('ta'), g('ch'), g('cya'), sv, bv, g('tempF'));
+    if (cv !== null) M.r.csi = {v: cv, last: nowTests('csi').pop(), salt: sv, bor: bv};
+  }
+  nowCache = M;
+  return M;
+}
+/** ms of hour h (Central) tomorrow. */
+function nowTomorrowAt(h){
+  var p = addDays(todayCentral(), 1).split('-');
+  var guess = Date.UTC(+p[0], +p[1] - 1, +p[2], h + 5);           // CDT; one hour off in winter is fine here
+  return guess;
+}
+
+/* ---- words */
+function nowGreen(rname){
+  var g = bandsFor(rname).filter(function(b){ return b.color === 'green'; });
+  if (!g.length) return null;
+  var lo = Infinity, hi = -Infinity;
+  g.forEach(function(b){ lo = Math.min(lo, b.min == null ? -Infinity : b.min); hi = Math.max(hi, b.max == null ? Infinity : b.max); });
+  return {lo: lo, hi: hi};
+}
+function nowStatus(rname, v){
+  var col = colorOf(rname, v), g = nowGreen(rname);
+  if (!col) return {cls: '', txt: ''};
+  if (col === 'green') return {cls: 'g', txt: rname === 'CSI' ? 'Balanced' : 'Good'};
+  var low = g && v < g.lo, strong = col === 'red';
+  if (col === 'purple') return {cls: 'p', txt: 'High'};
+  return {cls: strong ? 'r' : 'y', txt: rname === 'CSI' ? (low ? 'Corrosive' : 'Scaling') : (low ? (strong ? 'Too low' : 'Low') : (strong ? 'Too high' : 'High'))};
+}
+function nowFmt(k, v){
+  if (!isNum(v)) return '–';
+  if (k === 'csi') return (v < 0 ? '−' : '') + Math.abs(v).toFixed(2);
+  if (k === 'ph') return v.toFixed(1);
+  if (k === 'fc' || k === 'cc') return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
+  return String(Math.round(v));
+}
+function nowWhen(t){
+  if (!t) return '';
+  var today = todayCentral(), d = Math.round((Date.parse(today) - Date.parse(t.day)) / DAYMS);
+  if (d <= 0) return 'today ' + t.time;
+  if (d === 1) return 'yesterday ' + t.time;
+  if (d < 7) return d + ' days ago';
+  if (d < 14) return '1 week ago';
+  return Math.round(d / 7) + ' weeks ago';
+}
+function nowClock(ms){
+  var s = new Date(ms).toLocaleString('en-US', {timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit'});
+  return s.replace(/:00 /, ' ');
+}
+/** "Test due today" / "Next test Fri" from the Trackers tab's test row for this reading. */
+function nowDue(short, last){
+  var tr = (DATA.trackers || []).filter(function(t){ return t.type === 'test' && String(t.setting || t.name).toLowerCase() === short.toLowerCase(); })[0];
+  if (!tr || !isNum(tr.warn) || !last) return '';
+  var due = addDays(last.day, tr.warn), today = todayCentral();
+  if (due < today) { var n = Math.round((Date.parse(today) - Date.parse(due)) / DAYMS); return '<span class="nlate">Test ' + n + (n === 1 ? ' day' : ' days') + ' late</span>'; }
+  if (due === today) return '<span class="ndue">Test due today</span>';
+  if (due === addDays(today, 1)) return 'Next test tomorrow';
+  var p = due.split('-');
+  var dd = Math.round((Date.parse(due) - Date.parse(today)) / DAYMS);
+  return 'Next test ' + (dd < 7 ? WDAY[new Date(+p[0], +p[1] - 1, +p[2]).getDay()] : MONTHS[+p[1] - 1] + ' ' + (+p[2]));
+}
+function nowLiquidPct(){ var lc = null; (DATA.chems || []).forEach(function(x){ if (/^liquid chlorine$/i.test(x.product || '') && isNum(x.strength) && (!lc || x.ms > lc.ms)) lc = x; }); return lc ? Number(lc.strength) : 12.5; }
+function nowCalPct(){ var c = (DATA.chemicals || []).filter(function(x){ return /cal-?hypo/i.test(x.name) && !/puck/i.test(x.name); })[0]; return Number(((c && c.name || '').match(/(\d+(?:\.\d+)?)\s*%/) || [])[1]) || 70; }
+function nowAcidPct(){ var a = null; (DATA.chems || []).forEach(function(x){ if (x.fx && x.fx.acid && isNum(x.strength) && (!a || x.ms > a.ms)) a = x; }); return a ? Number(a.strength) : 31.45; }
+
+/* ---- chart: tests as dots on a line, a dashed estimate from the last test on, triangles for additions, a bar for feeders */
+function nowChart(o){
+  var W = Math.max(240, nowW - 32), H = o.big ? 120 : 92, padL = 2, padR = 30, top = 8, bot = 22, iw = W - padL - padR, ih = H - top - bot;
+  var now = Date.now(), x0 = now - o.span * DAYMS, x1 = now + (o.ahead || 0) * HR;
+  var vals = [];
+  o.pts.forEach(function(p){ if (p.ms >= x0) vals.push(p.v); });
+  (o.est || []).forEach(function(p){ vals.push(p.v); });
+  (o.fut || []).forEach(function(p){ if (p.ms <= x1) vals.push(p.v); });
+  (o.model || []).forEach(function(p){ if (p.ms >= x0 && p.ms <= x1) vals.push(p.v); });
+  var lo = Math.min.apply(null, vals.concat(o.band ? [o.band.lo] : [])), hi = Math.max.apply(null, vals.concat(o.band ? [o.band.hi] : []));
+  if (!isFinite(lo) || !isFinite(hi)) return '';
+  if (o.floor !== undefined) lo = Math.max(o.floor, lo);
+  var pad = (hi - lo) * 0.12 || Math.max(Math.abs(hi) * 0.1, 0.5); lo -= pad; hi += pad;
+  if (o.floor !== undefined) lo = Math.max(o.floor, lo);
+  var X = function(ms){ return padL + iw * (ms - x0) / (x1 - x0); }, Y = function(v){ return top + ih * (1 - (v - lo) / (hi - lo)); };
+  var col = 'var(--k-' + o.k + ')', s = '';
+  if (o.band && isFinite(o.band.lo) && isFinite(o.band.hi)) {
+    var bl = Math.max(lo, o.band.lo), bh = Math.min(hi, o.band.hi);
+    if (bh > bl) {
+      s += '<rect x="' + padL + '" y="' + Y(bh).toFixed(1) + '" width="' + iw + '" height="' + (Y(bl) - Y(bh)).toFixed(1) + '" class="nband" rx="3"/>';
+      s += '<text x="' + (W - padR + 5) + '" y="' + (Y(bh) + 4).toFixed(1) + '">' + nowFmt(o.k, o.band.hi) + '</text>';
+      s += '<text x="' + (W - padR + 5) + '" y="' + (Y(bl) + 4).toFixed(1) + '">' + nowFmt(o.k, o.band.lo) + '</text>';
+    }
+  }
+  // day / week lines and labels
+  var today = todayCentral(), step = o.span <= 8 ? 1 : o.span <= 31 ? 7 : o.span <= 63 ? 7 : 28, lastLx = -99;
+  for (var d = 0; d <= o.span; d += step) {
+    var day = addDays(today, -d), p = day.split('-'), ms = Date.UTC(+p[0], +p[1] - 1, +p[2], 5);
+    if (ms < x0) continue;
+    var xx = X(ms);
+    s += '<line x1="' + xx.toFixed(1) + '" x2="' + xx.toFixed(1) + '" y1="' + top + '" y2="' + (top + ih) + '" class="ngrid"/>';
+    var lab = d === 0 ? 'Today' : step === 1 ? WDAY[new Date(+p[0], +p[1] - 1, +p[2]).getDay()] : MONTHS[+p[1] - 1] + ' ' + (+p[2]);
+    if (Math.abs(xx - lastLx) > 38 && xx > 14) { s += '<text x="' + xx.toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle">' + lab + '</text>'; lastLx = xx; }
+  }
+  if (o.ahead) s += '<line x1="' + X(now).toFixed(1) + '" x2="' + X(now).toFixed(1) + '" y1="' + top + '" y2="' + (top + ih) + '" class="nnow"/>';
+  // feeders running
+  (o.feeds || []).forEach(function(f){
+    var a = Math.max(x0, f[0]), b = Math.min(now, f[1]); if (b <= a) return;
+    s += '<rect x="' + X(a).toFixed(1) + '" y="' + (top + ih + 2) + '" width="' + (X(b) - X(a)).toFixed(1) + '" height="3" rx="1.5" fill="' + col + '" opacity=".35"/>';
+  });
+  // the modeled line (water temperature) or the tests' line
+  if (o.model) {
+    var mp = o.model.filter(function(p){ return p.ms >= x0 && p.ms <= x1; });
+    var mpast = mp.filter(function(p){ return p.ms <= now; }), mfut = mp.filter(function(p){ return p.ms >= now - 3 * HR; });
+    var pl = function(a){ return a.map(function(p, i){ return (i ? 'L' : 'M') + X(p.ms).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' '); };
+    if (mpast.length > 1) s += '<path d="' + pl(mpast) + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" opacity=".75"/>';
+    if (mfut.length > 1) s += '<path d="' + pl(mfut) + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-dasharray="4 4" opacity=".6"/>';
+  }
+  var pts = o.pts.filter(function(p){ return p.ms >= x0; });
+  var prev = o.pts.filter(function(p){ return p.ms < x0; }).pop();
+  if (!o.model) {
+    var line = (prev ? [{ms: x0, v: prev.v + (pts[0] ? (pts[0].v - prev.v) * (x0 - prev.ms) / (pts[0].ms - prev.ms) : 0)}] : []).concat(pts);
+    if (line.length > 1) {
+      var d1 = line.map(function(p, i){ return (i ? 'L' : 'M') + X(p.ms).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' ');
+      s += '<path d="' + d1 + ' L' + X(line[line.length - 1].ms).toFixed(1) + ' ' + (top + ih) + ' L' + X(line[0].ms).toFixed(1) + ' ' + (top + ih) + ' Z" fill="' + col + '" opacity=".08"/>';
+      s += '<path d="' + d1 + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    }
+    if (o.est && o.est.length && pts.length) {
+      var e = [pts[pts.length - 1]].concat(o.est);
+      s += '<path d="' + e.map(function(p, i){ return (i ? 'L' : 'M') + X(p.ms).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' ') + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-dasharray="4 4" opacity="' + (o.unsure ? .45 : .9) + '"/>';
+    }
+  }
+  if (o.fut && o.fut.length) {
+    var f2 = [{ms: now, v: o.nowV}].concat(o.fut.filter(function(p){ return p.ms <= x1; }));
+    s += '<path d="' + f2.map(function(p, i){ return (i ? 'L' : 'M') + X(p.ms).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' ') + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-dasharray="2 4" opacity=".55"/>';
+  }
+  pts.forEach(function(p, i){ s += '<circle cx="' + X(p.ms).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="' + (i === pts.length - 1 ? 3.6 : 2.6) + '" fill="' + col + '"/>'; });
+  if (isNum(o.nowV)) s += '<circle cx="' + X(now).toFixed(1) + '" cy="' + Y(o.nowV).toFixed(1) + '" r="4.5" class="nnowdot" stroke="' + col + '"/>';
+  // additions
+  var axs = (o.adds || []).filter(function(a){ return a.ms >= x0 && a.ms <= now; }).map(function(a){ return {x: X(a.ms), label: a.label}; });
+  axs.forEach(function(a, i){
+    s += '<path d="M' + a.x.toFixed(1) + ' ' + (top + ih - 7) + ' l4 7 l-8 0 Z" fill="' + col + '" opacity=".8"/>';
+    var nx = axs[i + 1], room = (nx ? nx.x : W - padR + 24) - a.x;      // a label only where it fits before the next triangle
+    if (a.label && room > a.label.length * 6 + 12) s += '<text class="nadd" x="' + (a.x + 6).toFixed(1) + '" y="' + (top + ih - 1) + '" style="fill:' + col + '">' + esc(a.label) + '</text>';
+  });
+  return '<svg class="nchart" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.name) + ' chart">' + s + '</svg>';
+}
+function nowAdds(cs, f){
+  return cs.filter(function(x){ return !x.slow && (f === 'ph' ? x.fx.acid || x.fx.alk : f === 'ta' ? x.fx.acid || x.fx.alk : x.fx[f]); }).map(function(x){
+    var c = x.c, u = c.unit === 'fl oz' ? 'oz' : c.unit;
+    return {ms: x.ms, label: f === 'ph' ? (x.fx.acid ? 'acid' : 'borax') : (isNum(Number(c.amount)) ? '+' + fmtNum(Number(c.amount)) + ' ' + u : '')};
+  });
+}
+function nowFeeds(cs, f){
+  return cs.filter(function(x){ return x.slow && (f === 'ph' || f === 'ta' ? x.fx.acid : x.fx[f]); }).map(function(x){ return [x.ms, x.ms + x.dur]; });
+}
+function nowStats(k, rname, days){
+  var cut = Date.now() - days * DAYMS, v = (DATA.tests || []).filter(function(t){ return t.ms >= cut && isNum(t[k]); }).map(function(t){ return t[k]; });
+  if (!v.length) return '';
+  var g = v.filter(function(x){ return colorOf(rname, x) === 'green'; }).length;
+  var lab = days >= 42 ? Math.round(days / 7) + ' weeks' : days + ' days';
+  return '<div class="nstats"><div><b>' + Math.round(g / v.length * 100) + '%</b><span>tests in range, ' + lab + '</span></div>' +
+    '<div><b>' + nowFmt(k, Math.min.apply(null, v)) + '</b><span>lowest test</span></div><div><b>' + nowFmt(k, Math.max.apply(null, v)) + '</b><span>highest test</span></div></div>';
+}
+function nowHow(rows, total){
+  return '<div class="nhow">' + rows.filter(Boolean).map(function(r){ return '<span>' + r[0] + '</span><span>' + r[1] + '</span>'; }).join('') +
+    (total ? '<span class="tot">' + total[0] + '</span><span class="tot">' + total[1] + '</span>' : '') + '</div>';
+}
+function nowSigned(k, v){ var t = nowFmt(k === 'ph' ? 'csi' : k, Math.abs(v)); if (k === 'ph') t = Math.abs(v).toFixed(2); if (t === '0' || t === '0.00') return '0'; return (v < 0 ? '−' : '+') + t; }
+
+/* ---- one tile */
+function nowTile(M, def){
+  var k = def[0], rname = def[3], r = M.r[k];
+  if (!r) return '<div class="ntile" style="--k:var(--k-' + k + ')"><div class="ntop"><div class="nnm"><b>' + def[1] + '</b><span class="ntg">No tests yet</span></div></div></div>';
+  var age = (M.now - r.last.ms) / HR, unsure = age > NOW_SURE_H[k], est = !r.flat && k !== 'cc';
+  var st = unsure ? {cls: 'u', txt: 'Test to be sure'} : nowStatus(rname, r.v), open = !!nowOpen[k], band = nowGreen(rname);
+  var pts = nowTests(k).map(function(t){ return {ms: t.ms, v: t[k]}; });
+  var f = k === 'ta' ? 'ta' : k === 'ph' ? 'ph' : k;
+  var chartO = {k: k, name: def[1], span: NOW_SPAN[k], band: band, pts: pts, est: est ? (r.run ? r.run.path : r.path) : null, nowV: est ? r.v : null, unsure: unsure,
+    adds: k === 'cc' ? [] : nowAdds(M.cs, f), feeds: k === 'cc' ? [] : nowFeeds(M.cs, f), floor: 0};
+  if (k === 'ph') delete chartO.floor;
+  var foot = '', how = '', todo = '', extra = '';
+  var tested = 'Tested ' + nowFmt(k, r.last[k]) + ' · ' + nowWhen(r.last);
+  if (k === 'fc') {
+    var wk = r.m.weeks.filter(isNum), perDay = wk.length ? wk[wk.length - 1] : null;
+    foot = perDay !== null ? 'Uses about ' + fmtNum(Math.round(perDay * 10) / 10) + ' ppm a day, mostly in the sun' : 'Most chlorine is used up by sunlight';
+    how = nowHow([['Tested ' + nowWhen(r.last), nowFmt('fc', r.last.fc)],
+      r.run.add > 0.05 ? ['Chlorine added since', nowSigned('fc', r.run.add)] : null,
+      r.run.feed > 0.05 ? ['Feeders since then', nowSigned('fc', r.run.feed)] : null,
+      ['Used in sunlight', nowSigned('fc', -r.run.day)], ['Used overnight / in shade', nowSigned('fc', -r.run.night)]], ['Now', '≈' + nowFmt('fc', r.v)]);
+    var need = nowFcTarget - r.v, lp = nowLiquidPct(), cp = nowCalPct(), gl = Math.max(0, need) * NOW_L / 1000;
+    var gal = Math.ceil(gl / (lp * 10) / 3.785411784 * 10 - 1e-9) / 10, oz = Math.ceil(gl / (cp / 100) / 28.349523125 - 1e-9);
+    var tgt = '<button type="button" class="ntgt" data-ntgt="1" aria-expanded="' + nowEditT + '">' + fmtNum(nowFcTarget) + '</button>';
+    todo = need > 0.05 ? 'To get back to ' + tgt + ': add <b>' + fmtNum(gal) + ' gal liquid chlorine</b> (' + fmtNum(lp) + '%) or <b>' + oz + ' oz cal-hypo</b>.'
+      : 'Above ' + tgt + '. Nothing to add.';
+    todo += '<div class="nted"' + (nowEditT ? '' : ' hidden') + '><button type="button" data-ntd="-0.5" aria-label="Lower">−</button><b>' + fmtNum(nowFcTarget) + '</b><button type="button" data-ntd="0.5" aria-label="Higher">+</button><span>Your goal, kept on this device</span></div>';
+    var mx = Math.max.apply(null, r.m.weeks.filter(isNum).concat([0.1]));
+    extra = '<div><h4>Chlorine used, ppm per day, by week</h4><div class="nbars">' + r.m.weeks.map(function(v, i){
+      return '<div><b>' + (isNum(v) ? fmtNum(Math.round(v * 10) / 10) : '–') + '</b><i style="height:' + (isNum(v) ? Math.max(2, Math.round(v / mx * 38)) : 0) + 'px"></i>' + (i === 5 ? 'This wk' : (5 - i) + 'w ago') + '</div>'; }).join('') + '</div></div>';
+    chartO.fut = r.fut; chartO.ahead = 24;
+  } else if (k === 'ph') {
+    foot = 'Rises about ' + fmtNum(Math.round(r.rate * 24 * 100) / 100) + ' a day without acid';
+    how = nowHow([['Tested ' + nowWhen(r.last), nowFmt('ph', r.last.ph)], r.drop > 0.005 ? ['Acid since then', nowSigned('ph', -r.drop)] : null,
+      ['Usual rise since then', nowSigned('ph', r.rise)]], ['Now', '≈' + r.v.toFixed(2)]);
+    var gp = band;
+    if (gp && r.v > gp.hi) {
+      var ta1 = M.r.ta ? M.r.ta.v : null, cy1 = M.r.cya ? M.r.cya.v : 0, goal = 7.5;
+      if (ta1) { var lo2 = 0, hi2 = 200; for (var i = 0; i < 40; i++) { var mid = (lo2 + hi2) / 2, dd = nowPhDrop(r.v, ta1, cy1, mid); if (dd === null || dd > r.v - goal) hi2 = mid; else lo2 = mid; }
+        var ap = nowAcidPct(), agal = Math.ceil(lo2 * NOW_L / 50000 * 36.46 / (ap / 100 * (1 + 0.005 * ap)) / 3785.411784 * 10 - 1e-9) / 10;
+        todo = 'To bring it to 7.5: about <b>' + fmtNum(agal) + ' gal acid</b> (' + fmtNum(ap) + '%), diluted.'; }
+    } else if (gp && r.v < gp.lo) todo = 'Low. It rises by itself; the acid feeder may be set too high.';
+  } else if (k === 'ta' || k === 'ch' || k === 'cya') {
+    var lbl = {ta: 'Acid since then (feeder and by hand)', ch: 'Cal-hypo since then', cya: 'Trichlor / dichlor since then'}[k];
+    how = nowHow([['Tested ' + nowWhen(r.last), nowFmt(k, r.last[k])], Math.abs(r.add) >= 0.5 ? [lbl, nowSigned(k, r.add)] : null,
+      Math.abs(r.drift) >= 0.5 ? ['Usual drift (refill water, splash-out)', nowSigned(k, r.drift)] : null,
+      r.flat ? ['Nothing since then that changes it much', ''] : null], !r.flat ? ['Now', '≈' + nowFmt(k, r.v)] : null);
+    var old = pts.filter(function(p){ return p.ms <= M.now - 28 * DAYMS; }).pop(), wkly = null;
+    if (old && isNum(r.v)) { wkly = (r.v - old.v) / ((M.now - old.ms) / (7 * DAYMS)); }
+    var word = {ta: 'acid feeder lowers it', ch: 'cal-hypo raises it', cya: 'trichlor raises it'}[k];
+    foot = wkly === null ? 'Changes slowly' : Math.abs(wkly) < 0.5 ? 'Steady' : (wkly < 0 ? 'Down' : 'Up') + ' about ' + Math.round(Math.abs(wkly)) + ' a week';
+    if (wkly !== null && Math.abs(wkly) >= 0.5 && ((wkly < 0 && k === 'ta') || (wkly > 0 && k !== 'ta'))) foot += ' (' + word.split(' ')[0] + ')';
+    if (k === 'ta' && band && r.v < band.lo) { var lb = Math.ceil((80 - r.v) * NOW_L / 50000 * 84 / 453.59237); todo = 'To bring it to 80: about <b>' + lb + ' lb baking soda</b>.'; }
+    else if (k === 'ta' && band && wkly !== null && wkly < -0.5 && r.v > band.lo) { var wks = (r.v - band.lo) / -wkly; if (wks < 6) todo = 'At this pace it reaches ' + band.lo + ' in about ' + Math.max(1, Math.round(wks)) + (Math.round(wks) <= 1 ? ' week' : ' weeks') + '.'; }
+    else if ((k === 'ch' || k === 'cya') && band && r.v > band.hi) todo = 'Only fresh water brings it down. Nothing to add.';
+    else if (k === 'cya' && band && r.v < band.lo) todo = 'Low: stabilizer (or trichlor) raises it.';
+  } else if (k === 'cc') {
+    foot = 'Doesn’t drift by itself';
+    how = nowHow([['Tested ' + nowWhen(r.last), nowFmt('cc', r.last.cc)]]);
+    if (band && r.v > band.hi) todo = 'Over ' + band.hi + ': superchlorinate.';
+  }
+  if (unsure) todo = 'It’s been ' + (age < 72 ? Math.round(age) + ' hours' : Math.round(age / 24) + ' days') + ' since the last test, so this is a rough guess. <b>Test ' + rname + '</b> to be sure.' + (todo ? '<br>' + todo : '');
+  var due = nowDue(rname, r.last);
+  var big = Object.assign({}, chartO, {span: NOW_SPAN_BIG[k], big: true, fut: null});
+  var det = '<div class="ndet">' + '<div><h4>Last ' + (NOW_SPAN_BIG[k] >= 60 ? Math.round(NOW_SPAN_BIG[k] / 30) + ' months' : NOW_SPAN_BIG[k] + ' days') + '</h4>' + (open ? nowChart(big) : '') + '</div>' +
+    '<div><h4>How we got ' + (est ? '≈' : '') + nowFmt(k, r.v) + '</h4>' + how + '</div>' +
+    '<p class="nsure">Estimates stay good for about ' + (NOW_SURE_H[k] < 72 ? NOW_SURE_H[k] / 24 + ' days' : NOW_SURE_H[k] / 168 + ' weeks') + ' after a test.</p>' +
+    (todo ? '<div class="ntodo">' + todo + '</div>' : '') + extra + nowStats(k, rname, NOW_SPAN[k] > 8 ? 42 : 30) + '</div>';
+  return '<div class="ntile' + (open ? ' open' : '') + (unsure ? ' unsure' : '') + '" data-nk="' + k + '" style="--k:var(--k-' + k + ')">' +
+    '<button type="button" class="nhead" aria-expanded="' + open + '"><span class="nnm"><b>' + def[1] + NOW_CHEV + '</b><span class="ntg">' + esc(tested) + '</span></span>' +
+    '<span class="nval"><span class="nn">' + (est ? '<span class="nap">≈</span>' : '') + nowFmt(k, r.v) + (def[2] ? '<small>' + def[2] + '</small>' : '') + '</span>' +
+    (st.txt ? '<span class="ns ' + st.cls + '">' + st.txt + '</span>' : '') + '</span></button>' +
+    nowChart(chartO) + '<div class="nfoot"><span>' + foot + '</span><span>' + due + '</span></div>' + det + '</div>';
+}
+var NOW_CHEV = '<svg class="nchev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+function nowTempTile(M){
+  var r = M.r.tempF, k = 'tempF', open = !!nowOpen.tempF;
+  if (!r) return '<div class="ntile" style="--k:var(--k-tempF)"><div class="ntop"><span class="nnm"><b>Water temperature</b><span class="ntg">Weather not loaded yet</span></span></div></div>';
+  var pts = nowTests('tempF').map(function(t){ return {ms: t.ms, v: t.tempF}; });
+  var tg = r.last ? 'Tested ' + Math.round(r.last.tempF) + '° · ' + nowWhen(r.last) : 'No temperature tests yet';
+  var co = {k: k, name: 'Water temperature', span: NOW_SPAN.tempF, pts: pts, model: r.path, nowV: r.v, ahead: 48};
+  var foot = r.noWx ? (nowWxBusy || !nowWx ? 'Loading the weather…' : 'Weather didn’t load, so this is the last test') : isNum(r.tomorrow) ? 'Tomorrow afternoon ≈' + Math.round(r.tomorrow) + '°' : '';
+  var acc = r.m && r.m.n >= 4 && isNum(r.m.rms) ? 'Within about ±' + Math.max(1, Math.round(r.m.rms)) + '° of your tests' : r.m ? 'Rough until there are a few more temperature tests' : '';
+  var how = r.m ? nowHow([isNum(r.m.air4) ? ['Air, last 4 days on average', Math.round(r.m.air4) + '°'] : null,
+    ['Water from air and sun (lags a few days)', Math.round(r.v - r.m.off) + '°'],
+    r.m.n ? ['Your tests run ' + (r.m.off >= 0 ? 'warmer' : 'cooler') + ' by', (r.m.off >= 0 ? '+' : '−') + Math.abs(r.m.off).toFixed(1) + '°'] : ['No temperature tests to learn from yet', '']],
+    ['Now', '≈' + Math.round(r.v) + '°']) : '';
+  var big = Object.assign({}, co, {span: NOW_SPAN_BIG.tempF, big: true});
+  var det = '<div class="ndet"><div><h4>Last 2 months and the next 2 days</h4>' + (open ? nowChart(big) : '') + '</div>' +
+    (how ? '<div><h4>How we got ≈' + Math.round(r.v) + '°</h4>' + how + '</div>' : '') +
+    '<p class="nsure">Unheated pool: it follows the weather, a few days behind. Each temperature test makes the estimate better. Warmer water uses chlorine faster and pushes CSI up.</p></div>';
+  return '<div class="ntile' + (open ? ' open' : '') + '" data-nk="tempF" style="--k:var(--k-tempF)">' +
+    '<button type="button" class="nhead" aria-expanded="' + open + '"><span class="nnm"><b>Water temperature' + NOW_CHEV + '</b><span class="ntg">' + esc(tg) + '</span></span>' +
+    '<span class="nval"><span class="nn">' + (r.noWx ? '' : '<span class="nap">≈</span>') + Math.round(r.v) + '<small>°F</small></span>' + (acc ? '<span class="ns u">' + (r.m && r.m.n >= 4 ? 'From weather' : 'Rough') + '</span>' : '') + '</span></button>' +
+    nowChart(co) + '<div class="nfoot"><span>' + foot + '</span><span>' + esc(acc) + '</span></div>' + det + '</div>';
+}
+
+function nowCsiDetail(M){
+  var r = M.r.csi; if (!r) return '';
+  var pts = nowTests('csi').map(function(t){ return {ms: t.ms, v: t.csi}; });
+  var g = function(k, d){ return M.r[k] ? nowFmt(k, M.r[k].v) : '–'; };
+  var co = {k: 'csi', name: 'CSI', span: NOW_SPAN.csi, band: nowGreen('CSI'), pts: pts, est: [{ms: M.now, v: r.v}], nowV: r.v};
+  var ph78 = M.r.ph ? nowCsi(7.8, M.r.ta.v, M.r.ch.v, M.r.cya.v, r.salt, r.bor, M.r.tempF.v) : null;
+  return '<div class="ntile open ncsid" style="--k:var(--k-csi)"><div class="ntop"><span class="nnm"><b>Balance (CSI)</b><span class="ntg">Worked out from the estimates below</span></span></div>' +
+    nowChart(co) + '<div class="ndet" style="display:flex">' +
+    nowHow([['pH ≈' + g('ph') + ' · TA ≈' + g('ta') + ' · CH ≈' + g('ch'), ''], ['CYA ≈' + g('cya') + ' · water ≈' + g('tempF') + '° · salt ' + Math.round(r.salt), '']], ['CSI now', '≈' + nowFmt('csi', r.v)]) +
+    '<div class="ntodo">Between −0.1 and 0.3 the water neither eats plaster nor leaves scale. pH moves it most' + (ph78 !== null ? ': at pH 7.8 it would be ' + nowFmt('csi', ph78) : '') + '.</div>' +
+    nowStats('csi', 'CSI', 42) + '</div></div>';
+}
+
+function nowSummary(M){
+  var tags = NOW_TILES.map(function(d){
+    var r = M.r[d[0]]; if (!r) return '';
+    var unsure = (M.now - r.last.ms) / HR > NOW_SURE_H[d[0]], st = unsure ? {cls: 'u'} : nowStatus(d[3], r.v);
+    return '<span class="ntag ' + st.cls + '">' + d[3] + ' ' + (unsure ? '?' : nowFmt(d[0], r.v)) + '</span>';
+  }).join('');
+  var say = [], fc = M.r.fc, gfc = nowGreen('FC');
+  if (fc && gfc && (M.now - fc.last.ms) / HR <= NOW_SURE_H.fc) {
+    if (fc.v < gfc.lo) say.push('FC is low now.');
+    else { var x = fc.fut.filter(function(p){ return p.v < gfc.lo; })[0]; if (x) say.push('FC drops under ' + gfc.lo + ' around ' + nowClock(Math.round(x.ms / HR) * HR).replace(/^(\w+) /, function(m, d){ return d === nowClock(M.now).split(' ')[0] ? '' : d + ' '; }) + '.'); }
+  }
+  var bad = [], unsure = [];
+  NOW_TILES.forEach(function(d){
+    var r = M.r[d[0]]; if (!r) return;
+    if ((M.now - r.last.ms) / HR > NOW_SURE_H[d[0]]) { unsure.push(d[3]); return; }
+    var st = nowStatus(d[3], r.v); if (d[0] !== 'fc' && st.cls && st.cls !== 'g') bad.push(d[3] + ' is ' + st.txt.toLowerCase());
+  });
+  if (bad.length) say.push(bad.join(', ').replace(/^./, function(c){ return c.toUpperCase(); }) + '.');
+  if (unsure.length) say.push('Test ' + unsure.join(', ').replace(/, ([^,]*)$/, ' and $1') + ' to be sure.');
+  if (!say.length) say.push('Everything looks in range.');
+  var c = M.r.csi, csi = '';
+  if (c) {
+    var cs = nowStatus('CSI', c.v), dom = [-0.6, 0.6], gb = nowGreen('CSI') || {lo: -0.1, hi: 0.3};
+    var px = function(v){ return (Math.max(dom[0], Math.min(dom[1], v)) - dom[0]) / (dom[1] - dom[0]) * 88; };
+    csi = '<button type="button" class="ncsi" id="nowCsiBtn" aria-expanded="' + !!nowOpen.csi + '"><span class="lb">CSI</span><span class="nn">≈' + nowFmt('csi', c.v) + '</span>' +
+      (cs.txt ? '<span class="ns ' + cs.cls + '">' + cs.txt + '</span>' : '') +
+      '<svg viewBox="0 0 88 10" width="88" height="10" aria-hidden="true"><rect x="0" y="3" width="88" height="4" rx="2" class="ntrack"/><rect x="' + px(gb.lo).toFixed(1) + '" y="3" width="' + (px(gb.hi) - px(gb.lo)).toFixed(1) + '" height="4" class="ngood"/><circle cx="' + px(c.v).toFixed(1) + '" cy="5" r="4" fill="var(--k-csi)"/></svg></button>';
+  }
+  return '<div class="nsum"><div class="nl"><h2>Pool right now</h2><span class="nat">' + esc(nowClock(M.now)) + '</span><div class="ntags">' + tags + '</div><p class="nsay">' + esc(say.join(' ')) + '</p></div>' + csi + '</div>' +
+    (nowOpen.csi ? nowCsiDetail(M) : '');
+}
+
+function renderNow(){
+  var box = $('now'); if (!box || !nowView) return;
+  nowWeather();
+  nowW = Math.min(box.clientWidth || 360, 900);
+  var M = nowModel();
+  var mini = [['salt', 'Salt', 'ppm'], ['bor', 'Borates', 'ppm']].map(function(m){
+    var t = nowTests(m[0]).pop();
+    return '<div class="nmini" style="--k:var(--k-' + m[0] + ')"><b>' + m[1] + '</b><span class="nn">' + (t ? Math.round(t[m[0]]) + '<small>' + m[2] + '</small>' : '–') + '</span><span class="ntg">' + (t ? nowWhen(t) : 'No tests') + '</span></div>';
+  }).join('');
+  box.innerHTML = nowSummary(M) + NOW_TILES.map(function(d){ return nowTile(M, d); }).join('') + nowTempTile(M) +
+    '<div class="nminis">' + mini + '</div>' +
+    '<div class="nlegend"><span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>test</span>' +
+    '<span><svg width="18" height="10" aria-hidden="true"><line x1="0" y1="5" x2="18" y2="5" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 3"/></svg>estimate</span>' +
+    '<span><svg width="10" height="10" aria-hidden="true"><path d="M5 1 L9 8 L1 8 Z" fill="currentColor"/></svg>chemical added</span>' +
+    '<span><svg width="14" height="10" aria-hidden="true"><rect x="0" y="6" width="14" height="4" rx="1" fill="currentColor" opacity=".35"/></svg>feeder running</span></div>';
+}
+function setNowView(on){
+  nowView = !!on && isBrd();
+  document.body.classList.toggle('v-now', nowView);
+  $('vHist').classList.toggle('on', !nowView); $('vNow').classList.toggle('on', nowView);
+  $('vHist').setAttribute('aria-pressed', !nowView); $('vNow').setAttribute('aria-pressed', nowView);
+  if (nowView) renderNow(); else $('now').innerHTML = '';
+}
+(function(){
+  $('vHist').addEventListener('click', function(){ setNowView(false); });
+  $('vNow').addEventListener('click', function(){ setNowView(true); });
+  $('now').addEventListener('click', function(e){
+    var td = e.target.closest('[data-ntd]');
+    if (td) { nowFcTarget = Math.max(1, Math.min(10, nowFcTarget + Number(td.getAttribute('data-ntd')))); try { localStorage.setItem('nowFcTarget', nowFcTarget); } catch(x){} renderNow(); return; }
+    if (e.target.closest('[data-ntgt]')) { nowEditT = !nowEditT; renderNow(); return; }
+    if (e.target.closest('#nowCsiBtn')) { nowOpen.csi = !nowOpen.csi; renderNow(); return; }
+    var h = e.target.closest('.nhead');
+    if (h) { var k = h.parentNode.getAttribute('data-nk'); nowOpen[k] = !nowOpen[k]; renderNow(); }
+  });
+  var rt = null;
+  window.addEventListener('resize', function(){ if (!nowView) return; clearTimeout(rt); rt = setTimeout(function(){ var b = $('now'); if (b && Math.min(b.clientWidth, 900) !== nowW) renderNow(); }, 150); });
+})();
+
 function renderAll(){
   renderHeader(); renderTrackers(); renderPresets(); renderList(); renderLegend();
+  nowCache = null; if (nowView) { if (isBrd()) renderNow(); else setNowView(false); }
   if (window.renderEntry) renderEntry();
 }
 function showStatus(msg, isErr){
@@ -4778,7 +5472,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function chemLine(it, ms){
     var a = chemAmt(it); if (!(a > 0)) return '';
     var kind = it.info.kind || UNIT_KIND[chemUnit(it)], lines = [], sk = slowKind(it);
-    if (it.unit === 'pucks') lines.push(fmtNum(numIn(it.amount)) + ' puck' + (numIn(it.amount) === 1 ? '' : 's') + ' ≈ ' + fmtNum(Math.round(a * 10) / 10) + ' lb (saved in lb; about 44–45 pucks in a 25 lb bucket)');
+    if (it.unit === 'pucks') lines.push(fmtNum(numIn(it.amount)) + ' puck' + (numIn(it.amount) === 1 ? '' : 's') + ' ≈ ' + fmtNum(Math.round(a * 10) / 10) + ' lb');
     var c = {product: it.name, amount: a, unit: chemUnit(it), kind: kind, ms: ms, affects: it.info.affects || '', dir: it.info.dir || '',
       strength: it.info.sMode === 'entry' ? chemPct(it) : it.info.sMode === 'fixed' ? Number(it.info.strength) : ''};
     it.eff = null;
