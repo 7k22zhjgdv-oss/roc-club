@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","saveFeeder","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
@@ -358,6 +358,24 @@ dialog .chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-siz
 dialog .chk input{margin-top:3px}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
+/* cal-hypo feeder settings (2026-10-08) */
+#feedDlg .fdres{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.35}
+#feedDlg .fdres b{display:block;font-size:16px}
+#feedDlg .fdres b.d{margin-top:2px}
+#feedDlg .fdres span{color:var(--ink2)}
+#feedDlg .fdres .m{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+#feedDlg .fdgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:6px;align-items:center}
+#feedDlg .fdgrid span{font-size:12px;color:var(--muted)}
+#feedDlg input[type=time],#feedDlg input[type=number]{width:100%;min-width:0;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font:inherit}
+#feedDlg .fdmore{margin-top:12px;font-size:14px}
+#feedDlg .fdmore summary{cursor:pointer;color:var(--ink2)}
+#feedDlg .fd2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.jfeed{margin:8px 0 2px;font-size:13px;line-height:1.35}
+.jfeed b{display:block}
+.jfeed b.e{color:var(--red, #b3261e)}
+.jfeed b span{font-weight:400;color:var(--muted)}
+.jfeed .m{display:block;color:var(--muted);font-size:12px}
+.jfeed .trkebtn{margin-top:6px}
 #codeIn,#nameIn{font-size:16px}
 #nameIn,#codeIn:not(.secret){width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px}
 #unlockDlg .si-q{margin:0 0 12px;font-size:18px;font-weight:600}
@@ -1476,11 +1494,34 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   <button type="button" class="mrow mobonly priv brd" id="mnPrint">Print</button>
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
+  <button type="button" class="mrow priv mgr" id="mnFeeder">Cal-hypo feeder</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
   <button type="button" class="mrow priv mgr" id="mnVols">Volunteers</button>
   <button type="button" class="mrow priv volonly" id="mnChgPw">My login</button>
   <button type="button" class="mrow priv" id="mnLock" style="border-bottom:0">Sign out</button>
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
+</dialog>
+
+<dialog id="feedDlg" aria-labelledby="fdH">
+  <h2 id="fdH">Cal-hypo feeder</h2>
+  <div class="fdres" id="fdRes" aria-live="polite"></div>
+  <label for="fdLetter">Cartridge letter</label>
+  <select id="fdLetter"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select>
+  <label>Pump schedule</label>
+  <div class="fdgrid" id="fdRows"></div>
+  <p class="hint">Feeder gpm = the reading on the feeder's own flow meter at that pump speed. Each speed runs until the next start time. Leave a row empty if not used.</p>
+  <label for="fdTabs">Tablets in a full load</label>
+  <input type="number" id="fdTabs" inputmode="numeric" min="1" max="30" step="1">
+  <label for="fdDays">A full load lasts (days)</label>
+  <input type="number" id="fdDays" inputmode="decimal" min="1" max="60" step="0.5" placeholder="From the maker's table">
+  <p class="hint">Leave blank to use the maker's table. Fill it in once you've seen how long a load really lasts; the pump schedule still decides the hours.</p>
+  <details class="fdmore"><summary>Tablets</summary>
+    <div class="fd2"><span><label for="fdTabG">Weight of one (g)</label><input type="number" id="fdTabG" inputmode="numeric" min="50" max="1000" step="1"></span>
+    <span><label for="fdPct">Strength (%)</label><input type="number" id="fdPct" inputmode="decimal" min="20" max="100" step="0.5"></span></div>
+    <p class="hint">CCH Endurance: 265 g, 68% (maker's sheet).</p>
+  </details>
+  <div class="err" id="fdErr" role="alert"></div>
+  <div class="row"><button class="btn" type="button" id="fdCancel">Cancel</button><button class="btn primary" type="button" id="fdSave">Save</button></div>
 </dialog>
 
 <dialog id="removedDlg" class="sheet" aria-labelledby="rmH">
@@ -1906,7 +1947,7 @@ var ALSO_WHY = {
 };
 function effHtml(c){
   var parts = [];
-  if (c.slow) return '<span class="eff slowf" title="Slow feed: added through the feeder, so it reaches the pool gradually. No instant estimate, and it is left out of the predicted water chemistry.">Slow feed</span>';
+  if (c.slow) return '<span class="eff slowf" title="Slow feed: added through the feeder, so it reaches the pool gradually. No instant estimate; predictions spread it out until the feeder is filled again.">Slow feed</span>';
   if (isNum(c.eff)){
     var what = c.affects === 'ph' ? 'pH' : c.affects === 'bor' ? 'borates ppm' : 'FC ppm';
     parts.push('<span title="Estimated change in ' + what + ' for the 48,000 gal pool, from the amount added' +
@@ -2071,6 +2112,7 @@ function popNode(){
         jobShockLiquid = !jobShockLiquid; try { localStorage.setItem('jobShockLiquid', jobShockLiquid ? '1' : '0'); } catch(e2){}
         var sti = +popCurChip.getAttribute('data-ti'); renderAll(); trkReopen(sti); return;
       }
+      if (e.target.closest && e.target.closest('[data-jfeed]')) { closePop(); feedOpen(); return; }
       var jb = e.target.closest && e.target.closest('[data-jlog], [data-jnot], [data-juntil], [data-jundo], [data-jsave]');
       if (jb && popCurChip){
         var ji = +popCurChip.getAttribute('data-ti');
@@ -2512,6 +2554,7 @@ function jobDose(t){
   if (t.type === 'slow') {
     var f = JOB_FILL.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
     if (!f) return null;
+    if (/cal-?hypo/i.test(f[0].source) && DATA.feeder) f = [f[0], DATA.feeder.set.tabs, 'pucks'];   // a full load, from the feeder settings
     var a = f[1] + ' ' + f[2] + (f[3] ? ' ' + f[3] : ''), wtr = f[4] ? ' + ' + f[4] + ' gal water' : '';   // acid goes in diluted
     return {chip: a + wtr, text: 'Fill with ' + a + wtr, html: '<b>' + a + '</b>' + (wtr ? ' <span class="jm">' + wtr.slice(3) + ' (diluted)</span>' : ''), amount: f[1], unit: f[2]};
   }
@@ -2582,6 +2625,7 @@ function jobPopHtml(t, i){
     var m = /^<b>([^<]*)<\/b>\s*([\s\S]*)$/.exec(d.html);
     h += '<div class="jdose"><span class="k">' + lbl + '</span><span class="v">' + (m ? '<b>' + m[1] + '</b> ' + m[2] : d.html) + '</span></div>';
   }
+  if (feedJob(t)) h += feedLineHtml();
   if (t.post && s.post) h += '<div class="jpost">⏸ Put off to <b>' + esc(trkDay(t.post.until)) + '</b> · ' + esc(jobPostText(t).replace(/^./, function(c){ return c.toLowerCase(); })) + (t.post.by ? ' · ' + esc(firstName(t.post.by)) : '') + '</div>';
   if (ev) {
     var hist = t.events.slice(0, 4).map(function(e){ var a = jobEvAmt(t, e); return '<span>' + esc(trkDay(e.day)) + (a ? ' · ' + esc(a) : '') + '</span>'; }).join('');
@@ -2589,6 +2633,24 @@ function jobPopHtml(t, i){
     if (t.typ != null && t.count >= 4) h += '<div class="jusu">Usually every ' + fmtNum(t.typ) + ' day' + (t.typ === 1 ? '' : 's') + '</div>';
   } else h += '<div class="jusu">No record yet</div>';
   return h;
+}
+/* ---- cal-hypo feeder (2026-10-08): how the settings work out and when the last fill runs out (server feederOut_) */
+function feedJob(t){ return t && t.type === 'slow' && /cal-?hypo/i.test(t.setting || t.name) && DATA.feeder; }
+/** {empty: true, day} once the newest fill should be used up, {empty: false, days left, day} before; null without a fill. */
+function feedState(){
+  var F = DATA.feeder; if (!F || !F.emptyAt) return null;
+  var now = Date.now(), day = dayOfMs(F.emptyAt);
+  return F.emptyAt <= now ? {empty: true, day: day} : {empty: false, left: (F.emptyAt - now) / DAYMS, day: day};
+}
+function dayOfMs(ms){ var d = new Date(ms - 5 * 3600000); return d.toISOString().slice(0, 10); }   // Central (CDT; an hour off in winter is fine here)
+function feedLineHtml(){
+  var F = DATA.feeder, st = feedState();
+  var h = '<div class="jfeed">';
+  if (st) h += st.empty ? '<b class="e">Probably empty since ' + esc(trkDay(st.day)) + '</b>' :
+    '<b>About ' + (st.left < 1 ? 'a day' : Math.round(st.left) + (Math.round(st.left) === 1 ? ' day' : ' days')) + ' left <span>(runs out ' + esc(jobShort(st.day)) + ')</span></b>';
+  h += '<span class="m">About ' + fmtNum(F.lbDay) + ' lb chlorine a day (FC +' + fmtNum(Math.round(F.ppmDay * 10) / 10) + ' a day) · a full load lasts about ' + fmtNum(Math.round(F.days * 10) / 10) + ' days</span>';
+  if (isMgr()) h += '<button type="button" class="trkebtn" data-jfeed="1">Feeder settings…</button>';
+  return h + '</div>';
 }
 /** "Checked today, ½ full" / "Put off yesterday" (Jane). */
 function jobPostText(t){
@@ -2720,7 +2782,8 @@ function renderUpDetails(ts){
     var last = ev ? trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase() : '';     // no record: the pill says so
     if (nx.day) last += ' · ' + nx.day;
     return '<button type="button" class="dj" data-ti="' + ts.indexOf(t) + '"><b>' + esc(trkJob(t)) + '</b><span class="jpill lv-' + nx.lv + '">' + esc(nx.txt) + '</span>' +
-      jobBar(t) + '<span class="l">' + (dose ? '<span class="jtag">' + esc(dose.chip) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
+      jobBar(t) + '<span class="l">' + (dose ? '<span class="jtag">' + esc(dose.chip) + '</span>' : '') +
+      (feedJob(t) && feedState() && feedState().empty ? '<span class="jtag post">empty since ' + esc(trkDay(feedState().day)) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
       '<span class="jw">' + esc(last) + '</span></span></button>';
   });
   var jobsHtml = jobRows.length ? '<div><div class="dsec">Jobs</div><div class="dcard">' + jobRows.join('') + '</div></div>' : '';
@@ -2776,6 +2839,8 @@ function renderJobs(ts){
     if (best === null || left < best){ best = left; names = [trkJob(t)]; } else if (left === best) names.push(trkJob(t));
   });
   var lines = [];
+  var fe = feedState(), fj = all.filter(function(i){ return feedJob(ts[i]); })[0];
+  if (fe && fe.empty && fj != null && due.indexOf(fj) < 0) lines.push('<div class="jline"><span>Cal-hypo feeder probably empty since ' + esc(trkDay(fe.day)) + '</span></div>');
   if (!rows.length && all.length) lines.push('<div class="jline"><span><span class="ok">✓</span> <b>All jobs done</b></span></div>');
   if (best !== null) lines.push('<div class="jline"><span>Next: ' + esc(names.slice(0, 2).join(' · ')) + '</span><span>' + (best <= 1 ? 'tomorrow' : 'in ' + best + ' days') + '</span></div>');
   $('jlines').innerHTML = lines.join('');
@@ -3117,21 +3182,12 @@ function nowSun(ms){
   return Math.max(0, Math.sin(Math.PI * (hr - 7) / 12.5)) * 0.8;
 }
 
-/** The additions that move anything, oldest first; a slow fill is spread from its time to the next fill of the same feeder. */
+/** The additions that move anything, oldest first. A slow fill is spread over c.fx.rampH, which the server works out
+ *  (Code.gs slowSpans_: until the next fill of the same feeder, or from a "How full" check), the same as the History predictions. */
 function nowChems(){
-  var cs = (DATA.chems || []).filter(function(c){ return c.fx; }).map(function(c){
-    var kind = !c.fx.rampH ? '' : /cal-?hypo/i.test(c.product) ? 'cal' : /tri-?chlor/i.test(c.product) ? 'tri' : c.fx.acid ? 'acid' : 'other';
-    return {ms: c.ms, fx: c.fx, slow: !!c.fx.rampH, dur: (c.fx.rampH || 0) * HR, kind: kind, c: c};
+  return (DATA.chems || []).filter(function(c){ return c.fx; }).map(function(c){
+    return {ms: c.ms, fx: c.fx, slow: !!c.fx.rampH, dur: (c.fx.rampH || 0) * HR, c: c};
   }).sort(function(a, b){ return a.ms - b.ms; });
-  ['cal', 'tri', 'acid', 'other'].forEach(function(k){
-    var fills = cs.filter(function(x){ return x.kind === k; }), gaps = [];
-    fills.forEach(function(x, i){
-      var nx = fills[i + 1];
-      if (nx) { var g = nx.ms - x.ms; if (g >= DAYMS && g <= 30 * DAYMS) { x.dur = g; gaps.push(g); } }
-      else if (gaps.length) { var s = gaps.slice(-4).sort(function(a, b){ return a - b; }); x.dur = s[Math.floor(s.length / 2)]; }
-    });
-  });
-  return cs;
 }
 /** How much of field f (fc, acid, alk, ch, cya, bor) the additions put in between a and b. */
 function nowSum(cs, f, a, b, split){
@@ -3139,10 +3195,16 @@ function nowSum(cs, f, a, b, split){
   cs.forEach(function(x){
     var v = x.fx[f]; if (!v || x.ms > b) return;
     if (!x.slow) { if (x.ms > a) s += v; return; }
-    var fr = function(t){ return Math.max(0, Math.min(1, (t - x.ms) / x.dur)); };
+    var fr = x.fx.rel ? function(t){ return nowRel(x.fx.rel, (t - x.ms) / HR); } : function(t){ return Math.max(0, Math.min(1, (t - x.ms) / x.dur)); };
     var d = v * (fr(b) - fr(a)); s += d; slow += d;
   });
   return split ? {all: s, slow: slow} : s;
+}
+/** Share arrived h hours after a cal-hypo feeder fill, from the server's release curve [[hours, share]] (Code.gs slowFrac_). */
+function nowRel(r, h){
+  if (h <= r[0][0]) return 0;
+  for (var i = 1; i < r.length; i++) if (h <= r[i][0]) return r[i - 1][1] + (r[i][1] - r[i - 1][1]) * (h - r[i - 1][0]) / (r[i][0] - r[i - 1][0]);
+  return 1;
 }
 function nowTests(k){
   return (DATA.tests || []).filter(function(t){ return isNum(t[k]); }).sort(function(a, b){ return a.ms - b.ms; });
@@ -4020,6 +4082,74 @@ function doPrint(){
   buildPrintFit({from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked});
   closeDlg('printDlg');
   setTimeout(function(){ window.print(); }, 50);
+}
+/* ---- cal-hypo feeder settings (Manager, 2026-10-08): server saveFeeder; the result line works out live from the maker's
+   table the server sends (DATA.feeder.table, same math as Code.gs feederLbDay_ / feederInfo_). */
+var FEED_ROWS = 4, feedBusy = false;
+function feedOpen(){
+  var F = DATA.feeder; if (!F) return;
+  var f = F.set, rows = '<span>Starts</span><span>Pump rpm</span><span>Feeder gpm</span>';
+  for (var i = 0; i < FEED_ROWS; i++) {
+    var r = f.rows[i] || {};
+    rows += '<input type="time" step="60" data-fd="at" value="' + esc(r.at || '') + '" aria-label="Start time ' + (i + 1) + '">' +
+      '<input type="number" data-fd="rpm" inputmode="numeric" min="0" max="4000" step="50" value="' + (r.rpm != null ? r.rpm : '') + '" aria-label="Pump rpm ' + (i + 1) + '">' +
+      '<input type="number" data-fd="gpm" inputmode="decimal" min="0" max="6" step="0.1" value="' + (r.gpm != null ? r.gpm : '') + '" aria-label="Feeder gpm ' + (i + 1) + '">';
+  }
+  $('fdRows').innerHTML = rows;
+  $('fdLetter').value = f.letter; $('fdTabs').value = f.tabs; $('fdDays').value = f.days == null ? '' : f.days;
+  $('fdTabG').value = f.tabG; $('fdPct').value = f.pct; $('fdErr').textContent = '';
+  feedCalc(); openDlg('feedDlg');
+}
+function feedRead(){
+  var ins = $('fdRows').querySelectorAll('input'), rows = [];
+  for (var i = 0; i < ins.length; i += 3) {
+    var at = ins[i].value, rpm = ins[i + 1].value, gpm = ins[i + 2].value;
+    if (at || rpm || gpm) rows.push({at: at, rpm: rpm === '' ? null : +rpm, gpm: gpm === '' ? null : +gpm});
+  }
+  return {letter: $('fdLetter').value, rows: rows, tabs: +$('fdTabs').value, tabG: +$('fdTabG').value, pct: +$('fdPct').value, days: $('fdDays').value === '' ? '' : +$('fdDays').value};
+}
+function feedLb(letter, gpm){
+  var T = DATA.feeder.table, G = DATA.feeder.gpms, row = T[letter], rated = true;
+  if (!row || !(gpm > 0)) return {lb: 0, rated: true};
+  function cell(j){ if (row[j] !== null) return row[j]; rated = false; var b = 0; for (var k in T) if (T[k][j] !== null && T[k][j] > b) b = T[k][j]; return b; }
+  var n = G.length, v;
+  if (gpm <= G[0]) v = cell(0) * gpm / G[0];
+  else if (gpm >= G[n - 1]) v = cell(n - 1);
+  else for (var j = 1; j < n; j++) if (gpm <= G[j]) { var a = cell(j - 1), b = cell(j); v = a + (b - a) * (gpm - G[j - 1]) / (G[j] - G[j - 1]); break; }
+  return {lb: v, rated: rated};
+}
+function feedCalc(){
+  var f = feedRead(), segs = f.rows.filter(function(r){ return /^\d{1,2}:\d{2}$/.test(r.at) && r.gpm >= 0; }).map(function(r){ var p = r.at.split(':'); return {m: +p[0] * 60 + +p[1], gpm: r.gpm, rpm: r.rpm}; });
+  segs.sort(function(a, b){ return a.m - b.m; });
+  var el = $('fdRes');
+  if (!segs.length || !(f.tabs > 0) || !(f.tabG > 0) || !(f.pct > 0)) { el.innerHTML = '<span class="m">Fill in the pump schedule to see what it works out to.</span>'; return; }
+  var sum = 0, rated = true, parts = [];
+  segs.forEach(function(s, i){
+    var mins = segs.length === 1 ? 1440 : ((segs[(i + 1) % segs.length].m - s.m) % 1440 + 1440) % 1440, v = feedLb(f.letter, s.gpm);
+    if (!v.rated) rated = false;
+    sum += v.lb * mins; s.lb = v.lb; s.mins = mins;
+  });
+  var tableLb = sum / 1440, full = f.tabs * f.tabG / 453.59237 * f.pct / 100, days = f.days > 0 ? f.days : tableLb > 0 ? full / tableLb : null;
+  var lb = days ? full / days : 0, ppm = lb * 453.59237 * 1000 / (48000 * 3.785411784);
+  el.innerHTML = '<b>About ' + fmtNum(Math.round(lb * 100) / 100) + ' lb chlorine a day</b> <span>(FC +' + fmtNum(Math.round(ppm * 10) / 10) + ' a day)</span>' +
+    '<b class="d">A full load lasts about ' + (days ? fmtNum(Math.round(days * 10) / 10) : '–') + ' days</b>' +
+    '<span class="m">' + (f.days > 0 ? 'Using your "lasts ' + fmtNum(f.days) + ' days"; the table alone says about ' + fmtNum(Math.round((tableLb > 0 ? full / tableLb : 0) * 10) / 10) + '.'
+      : rated ? 'From the maker\'s table.' : 'Letter ' + esc(f.letter) + ' isn\'t in the maker\'s table at this low a flow, so these use the nearest rated numbers. Treat it as a guess until you\'ve seen how long a load lasts.') + '</span>';
+}
+function feedWire(){
+  $('feedDlg').addEventListener('input', feedCalc);
+  $('feedDlg').addEventListener('change', feedCalc);
+  $('fdCancel').addEventListener('click', function(){ closeDlg('feedDlg'); });
+  $('fdSave').addEventListener('click', function(){
+    if (feedBusy) return;
+    feedBusy = true; $('fdSave').textContent = 'Saving…'; $('fdErr').textContent = '';
+    serverCall('saveFeeder', [CODE, feedRead()], function(res){
+      feedBusy = false; $('fdSave').textContent = 'Save';
+      if (handleDenied(res)) return;
+      if (!res || !res.ok) { $('fdErr').textContent = (res && res.message) || 'Could not save.'; return; }
+      DATA = res.data; closeDlg('feedDlg'); renderAll();
+    }, function(err){ feedBusy = false; $('fdSave').textContent = 'Save'; $('fdErr').textContent = 'Could not reach the server: ' + (err && err.message || err); });
+  });
 }
 function openDlg(id){ var d = $(id); if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', ''); }
 // menus open with nothing outlined (no auto-focus ring on the first row)
@@ -4998,6 +5128,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }).join(''));
   }
   $('mnRemoved').addEventListener('click', function(){ closeDlg('menuDlg'); rmRender(''); openDlg('removedDlg'); });
+  $('mnFeeder').addEventListener('click', function(){ closeDlg('menuDlg'); feedOpen(); });
+  feedWire();
   $('rmDone').addEventListener('click', function(){ closeDlg('removedDlg'); });
   $('rmList').addEventListener('click', function(e){
     var b = e.target.closest && e.target.closest('[data-rmback]');
@@ -5199,7 +5331,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
     chem: ['chemical', 'var(--k-fc)', 'Save chemical'],
     vols: ['Volunteers', 'var(--red)', '']};
-  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
+  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnFeeder": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M7 13h10M10 17h4\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
   ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
@@ -5222,7 +5354,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
   // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
   // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
-  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnVols', 'mnChgPw', 'mnLock'];
+  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnFeeder', 'mnVols', 'mnChgPw', 'mnLock'];
   function setMenu(o){
     if (o) buildMenuBubbles();
     ui.classList.toggle('menu', o);
@@ -5546,9 +5678,9 @@ document.addEventListener('DOMContentLoaded', function(){
     refresh();
   }
   function numIn(v){ v = String(v == null ? '' : v).trim().replace(',', '.'); return v === '' ? NaN : Number(v); }
-  // Cal-hypo pucks: typed as a count, saved as lb (about 44-45 pucks in a 25 lb bucket).
-  var PUCK_LB = 25 / 44.5;
-  function chemAmt(it){ var a = numIn(it.amount); return it.unit === 'pucks' ? Math.round(a * PUCK_LB * 100) / 100 : a; }
+  // Cal-hypo pucks: typed as a count, saved as lb. Weight of one = the feeder settings' tablet (CCH Endurance 265 g).
+  function puckLb(){ var f = DATA.feeder && DATA.feeder.set; return f ? f.tabG / 453.59237 : 265 / 453.59237; }
+  function chemAmt(it){ var a = numIn(it.amount); return it.unit === 'pucks' ? Math.round(a * puckLb() * 100) / 100 : a; }
   function chemUnit(it){ return it.unit === 'pucks' ? 'lb' : it.unit; }
   function chemPct(it){ return numIn(it.pct); }
   function chemCheck(){
