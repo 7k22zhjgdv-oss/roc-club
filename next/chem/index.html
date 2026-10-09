@@ -680,7 +680,9 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
   #printView{display:block}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-#printView{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#000;background:#fff}
+/* the report is laid out in the PDF's own fonts (Inter + RocSym for ✕ and the like, loaded by pdfLoad) so the PDF matches it exactly;
+   no kerning or ligatures, which the PDF does not use either */
+#printView{font-family:RocPrint,RocSym,sans-serif;color:#000;background:#fff;font-kerning:none;font-variant-ligatures:none;font-synthesis:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #printView h1{font-size:16pt;margin:0}
 #printView .ptitle{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:5px}
 #printView .ptitle h1{font-size:15pt}
@@ -738,7 +740,7 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 #printView tr.predrow td{color:#777;font-style:italic;background:linear-gradient(90deg,#777 50%,transparent 0) top left/6px 1px repeat-x #fff;white-space:nowrap}
 #printView tr.dim td.green,#printView tr.dim td.yellow,#printView tr.dim td.red,#printView tr.dim td.purple{background:#fff;font-weight:400}
 #printView tr.dim td[class*=" "]{}
-#printView .ppage{display:flex;flex-direction:column;height:9.55in;break-after:page;page-break-after:always}
+#printView .ppage{display:flex;flex-direction:column;height:10in;break-after:page;page-break-after:always}
 #printView .ppage.last{break-after:auto;page-break-after:auto}
 #printView .ppage table{flex:0 0 auto}
 #printView .pgap{flex:0 0 auto}
@@ -1624,6 +1626,17 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
     <button class="btn" type="button" id="pCancel">Cancel</button>
     <button class="btn primary" type="button" id="pGo">Print</button>
   </div>
+  <div class="err" id="pErr" role="alert"></div>
+</dialog>
+
+<dialog id="pdfDlg">
+  <h2>Report ready</h2>
+  <p class="hint" id="pdfInfo" style="margin:0 0 12px"></p>
+  <div class="row">
+    <a class="btn" id="pdfSave" style="margin-right:auto;text-decoration:none">Save a copy</a>
+    <button class="btn" type="button" id="pdfClose">Close</button>
+    <button class="btn primary" type="button" id="pdfOpen">Open</button>
+  </div>
 </dialog>
 
 <dialog id="chgDlg">
@@ -1746,14 +1759,13 @@ var PRINT_HEADER_TINT = false;
 // Splashscreen (home) link. Paste its .../exec URL between the quotes once it is deployed.
 var HOME_URL = '../';
 var PRINT_TITLE = 'Rolling Oaks Club - Pool Report';
-var SAFARI_SCALE = 1.0667;         // Safari prints every CSS length (px, pt, in) 6.67% larger than Chrome, but its page area stays 10in
-var PRINT_BOX_IN = 9.55;           // CSS height of one page box (also in the .ppage rule). Page area is 10.25in (@page margins .5in top, .25in bottom; Safari obeys them, tested 2026-10-01), so this must stay under 10.25 / 1.0667 = 9.61in
-var PRINT_PAGE_PT = PRINT_BOX_IN * 72 * SAFARI_SCALE;   // that box as Safari really prints it (Chrome is smaller, so anything that fits here fits there)
-var PRINT_ROW_PT = 14.3;           // Safari row = 12.5pt*1.0667 + 0.8pt border = 14.13pt (13.5pt rows measured 15.2pt in a Safari PDF, 2026-10-01; tightened 2026-10-02); count 14.3pt so a page can never overfill
+// The report is a PDF the page makes itself (2026-10-09; before, the browser printed it, and the iPhone's layout broke the
+// page count). It is laid out in the PDF's own font, so every size below is exact on every device: 1 CSS px = 0.75 pt.
+var PRINT_BOX_IN = 10;             // one page box (also in the .ppage rule): letter 11in minus .5in top and .5in bottom (page footer)
+var PRINT_PAGE_PT = PRINT_BOX_IN * 72;
 var PRINT_FIT_PAGES = 2;           // "Fit on 2 pages when possible": leave out close-together readings until the report is this many pages
 var PRINT_FIT_GAP_MS = 2 * 3600e3; // readings on the same day this close together count as a retest / before-and-after pair
 var PRINT_LIST_GAP_PT = 6;         // extra space above the separate "Chemical additions" heading, below the test log
-var PRINT_LEGEND_PT = 0.56 * 72 * SAFARI_SCALE;   // room kept for the legend at the bottom of each page (it measures 0.50in)
 
 /* ------------------------------------------------------------ helpers */
 function $(id){ return document.getElementById(id); }
@@ -3884,14 +3896,6 @@ function legendItems(){
   items.push('<div class="lr">' + GLYPH.green + ' in range &nbsp;! watch &nbsp;' + GLYPH.red + ' out of range (bold) &nbsp;' + GLYPH.purple + ' high</div>');
   return items.join('');
 }
-var PRINT_LINE_MAX = 82;    // characters that fit one printed addition line ("Added ..." + effect / "what" text; 2026-10-02 Safari PDF: 91 wrapped, 78 fit). Longer -> one line per chemical
-/** Characters a combined addition line would take: "Added a + b" plus the arrow/effect or "what" text. */
-function printLineLen(blk){
-  var c = blk.first, aff = AFFECT_LABEL[c.affects] ? c.affects : '';
-  var tail = aff ? 3 + AFFECT_LABEL[aff].length + (c.slow ? 10 : blk.calc.eff !== null ? 9 : 0) + blk.calc.also.reduce(function(n, a){ return n + a.k.length + 8; }, 0)
-                 : printWhat(blk.items).length + 1;
-  return 6 + blk.items.map(function(x){ return x.summary; }).join(' + ').length + tail;
-}
 function printWhat(items){ return items.map(function(x){ return x.what; }).filter(function(w, i, all){ return w && all.indexOf(w) === i; }).join(' · '); }
 /** The tests a report prints (before any are left out to fit). */
 function printTests(o){
@@ -3930,7 +3934,19 @@ function buildPrintFit(o){
   }
   return buildPrint(o);
 }
+/** A combined addition line that wraps (measured) prints one line per chemical instead: build again with those blocks split. */
 function buildPrint(o){
+  var split = {}, res;
+  for (var n = 0; n < 4; n++){
+    res = buildPrintOnce(o, split);
+    if (!res.wrapped.length) return res;
+    res.wrapped.forEach(function(k){ split[k] = 1; });
+  }
+  return res;
+}
+// #printView while the report is laid out: off screen, one page wide (7.5in = letter minus .5in sides), real layout
+var PV_OFF = 'display:block;position:absolute;left:-10000px;top:0;width:7.5in';
+function buildPrintOnce(o, split){
   var from = o.from, to = o.to;
   var tests = printTests(o).filter(function(t){ return !o.drop || o.drop.indexOf(t) < 0; });
   var chems = (o.chem && unlocked) ? (DATA.chems || []).filter(function(c){ return o.whole || inRange(c.day, from, to); }) : [];
@@ -3939,14 +3955,14 @@ function buildPrint(o){
   var seenG = {}, pblock = {};
   chems.forEach(function(c){
     var k = c.gid + '|' + blockKey(c);
-    (pblock[k] = pblock[k] || {items: [], first: c}).items.push(c);
+    (pblock[k] = pblock[k] || {items: [], first: c, key: k}).items.push(c);
     if (c.ms > pblock[k].first.ms) pblock[k].first = c;
   });
   Object.keys(pblock).forEach(function(k){ pblock[k].calc = blockCalc(pblock[k].items); });
   chems.forEach(function(c){
     var blk = pblock[c.gid + '|' + blockKey(c)];
-    // one line per block (same group, same reading), amounts joined with "+"; a block too long for one line prints a line per chemical
-    if (blk.one === undefined) blk.one = blk.items.length < 2 || printLineLen(blk) <= PRINT_LINE_MAX;
+    // one line per block (same group, same reading), amounts joined with "+"; a block whose line wraps prints a line per chemical
+    if (blk.one === undefined) blk.one = blk.items.length < 2 || !split[blk.key];
     if (!blk.one) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:[c], lead: blk.first === c});
     else if (blk.first === c) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:blk.items, lead: true});
     var pr = DATA.preds && DATA.preds[c.gid];
@@ -4030,29 +4046,44 @@ function buildPrint(o){
   if (!rowHtml.length) rowHtml.push('<tr><td colspan="' + (PRINT_COLS.length + 1 + (showCost ? 1 : 0)) + '">No readings in this range.</td></tr>');
   var legend = '<div class="plegend">' + legendItems() + '</div>';
 
-  // Every page is its own fixed-height box; page 1 has the legend pinned to its bottom (later pages use that room for rows),
-  // so nothing depends on how a browser paginates tables (Safari does not repeat table footers or fixed elements).
-  // Every table row is forced to a fixed height in POINTS (Safari's CSS pixel is 0.8pt, not 0.75pt, so anything
-  // sized in px comes out 7% bigger there; points and inches are physical everywhere), so how many rows fit on a page
-  // is plain arithmetic. Only the title block on page 1 is measured (with a margin).
+  // Every page is its own fixed-height box; page 1 has the legend pinned to its bottom (later pages use that room for rows).
+  // The report is laid out off screen in the PDF's font at one page's width, so every height is measured, not guessed:
+  // the title block, the stock block, the legend, the table headings and each row (1 CSS px = 0.75pt in the PDF).
   var pv = $('printView');
-  pv.style.cssText = 'display:block;position:absolute;left:-9999px;top:0;width:7.5in;visibility:hidden';
-  pv.innerHTML = '<div id="pvh">' + head + '</div>' + (stockHtml ? '<div id="pvs" class="pstockend">' + stockHtml + '</div>' : '');
-  var headPt = document.getElementById('pvh').offsetHeight * 0.75 * 1.15 + 8;   // screen px -> pt, with a margin
-  var stockPt = stockHtml ? document.getElementById('pvs').offsetHeight * 0.75 * 1.15 + 8 : 0;   // measured the same way
-  pv.style.cssText = '';
-  if (!o.group) items = rowHtml.map(function(h, ix){ return {t: 'a', h: h, m: meta[ix]}; });
+  pv.className = multiYear ? 'yr' : '';
+  pv.style.cssText = PV_OFF;
+  var cols = PRINT_COLS.length + 1 + (testCost ? 1 : 0);
+  pv.innerHTML = '<div id="pvh" style="display:flex;flex-direction:column">' + head + '</div>' +
+    (stockHtml ? '<div id="pvs" class="pstockend" style="display:flow-root">' + stockHtml + '</div>' : '') + legend +
+    '<table id="pvt">' + thead + '<tbody>' + rowHtml.map(function(h, ix){
+      return h.replace('{{L}}', '').replace('{{D}}', meta[ix] && meta[ix].date ? esc(dayLabel(meta[ix].day, multiYear)) : '');
+    }).join('') + '<tr><td colspan="' + cols + '">No readings in this range.</td></tr></tbody></table>' +
+    '<table id="pvb">' + theadB + '</table>';
+  var hPt = function(el){ return el ? el.getBoundingClientRect().height * 0.75 : 0; };
+  var headPt = hPt($('pvh')) + 2, stockPt = stockHtml ? hPt($('pvs')) + 2 : 0, legendPt = hPt(pv.querySelector('.plegend'));
+  var theadPt = hPt($('pvt').tHead), theadBPt = hPt($('pvb').tHead);
+  var trs = $('pvt').tBodies[0].rows, rowPt = rowHtml.map(function(h, ix){ return hPt(trs[ix]); }), plainPt = hPt(trs[trs.length - 1]);
+  // combined addition lines that wrapped (taller than a plain row): buildPrint splits them and builds again
+  var wrapped = [];
+  rows.forEach(function(r, ix){ if (r.type === 'c' && r.items.length > 1 && rowPt[ix] > plainPt + 1 && wrapped.indexOf(r.blk.key) < 0) wrapped.push(r.blk.key); });
+  if (wrapped.length){ pv.innerHTML = ''; pv.style.cssText = ''; return {wrapped: wrapped, pages: 0, rows: rowHtml.length}; }
+  if (!o.group) items = rowHtml.map(function(h, ix){ return {t: 'a', h: h, m: meta[ix], ix: ix}; });
+  else { var ixs = rows.map(function(r, ix){ return ix; }), ta = ixs.filter(function(ix){ return rows[ix].type === 't'; }), tb = ixs.filter(function(ix){ return rows[ix].type !== 't'; }), na = 0, nb = 0;
+    items.forEach(function(it){ if (it.t === 'a' && it.m) it.ix = ta[na++]; else if (it.t === 'b') it.ix = tb[nb++]; }); }
   // The stock block is one last "item" as tall as it measures, so pagination keeps room for it (or starts a new page);
   // it is drawn after that page's tables, pushed down to sit just above the legend.
   if (stockHtml) items.push({t: 'k', w: stockPt});
+  var gapPt = plainPt + PRINT_LIST_GAP_PT;   // the "Chemical additions" heading over a separate list
   function paginate(){
     var out = [], i = 0;
     while (i < items.length || !out.length){
-      var availPt = PRINT_PAGE_PT - PRINT_ROW_PT - (out.length ? 0 : headPt + PRINT_LEGEND_PT), used = 0, pg = [];   // the legend is on page 1 only
+      var availPt = PRINT_PAGE_PT - 2 - (out.length ? 0 : headPt + legendPt), used = 0, pg = [], cur = '';   // the legend is on page 1 only
       while (i < items.length){
-        var w = items[i].t === 's' ? 2 * PRINT_ROW_PT + PRINT_LIST_GAP_PT * SAFARI_SCALE + 1 : items[i].t === 'k' ? items[i].w : PRINT_ROW_PT;
-        if (pg.length && (used + w > availPt || (items[i].t === 's' && used + w + PRINT_ROW_PT > availPt))) break;   // no heading left alone at the bottom of a page
-        pg.push(items[i]); used += w; i++;
+        var it = items[i], w = it.t === 's' ? gapPt + theadBPt : it.t === 'k' ? it.w : (it.ix != null ? rowPt[it.ix] : plainPt);
+        if ((it.t === 'a' || it.t === 'b') && it.t !== cur) w += it.t === 'b' ? theadBPt : theadPt;   // a table starts here: its heading row
+        if (pg.length && (used + w > availPt || (it.t === 's' && used + w + plainPt > availPt))) break;   // no heading left alone at the bottom of a page
+        pg.push(it); used += w; i++;
+        if (it.t === 'a' || it.t === 'b') cur = it.t; else if (it.t === 's') cur = 'b';
       }
       out.push(pg);
     }
@@ -4077,20 +4108,19 @@ function buildPrint(o){
       if (it.t === 'k') return;                          // the stock block is added after the tables (below)
       // start of the separate chemical list: its heading fills the one-row gap (already counted in the separator's height),
       // drawn whether the list continues a page or starts a new one
-      if (it.t === 's'){ flush(); out += '<div class="pgap psech pgaph" style="height:' + (PRINT_ROW_PT + PRINT_LIST_GAP_PT) + 'pt">Chemical additions</div>'; cur = 'b'; return; }
+      if (it.t === 's'){ flush(); out += '<div class="pgap psech pgaph" style="height:' + gapPt.toFixed(2) + 'pt">Chemical additions</div>'; cur = 'b'; return; }
       if (it.t !== cur){ flush(); cur = it.t; }
       buf.push(it);
     });
     flush();
     return out;
   }
-  pv.className = multiYear ? 'yr' : '';
   pv.innerHTML = pages.map(function(pg, n){
     var hasStock = pg.some(function(it){ return it.t === 'k'; });
     return '<div class="ppage' + (n === pages.length - 1 ? ' last' : '') + '">' + (n === 0 ? head : '') + pageTables(pg) +
       (hasStock ? '<div class="pstockend">' + stockHtml + '</div>' : '') + (n === 0 ? legend : '') + '</div>';
   }).join('');
-  return {rows: rowHtml.length, pages: pages.length};
+  return {rows: rowHtml.length, pages: pages.length, wrapped: [], range: rangeText};
 }
 function syncGroupOpt(){ var on = $('pChem').checked; $('pGroup').disabled = !on; if (!on) $('pGroup').checked = false; }
 function openPrint(){
@@ -4108,8 +4138,9 @@ function openPrint(){
   if (sel.value === 'custom'){ $('pFrom').value = pp.from || ''; $('pTo').value = pp.to || ''; }
   $('pChem').checked = !!pp.chem; $('pWhole').checked = !!pp.whole; $('pTint').checked = !!pp.tint; $('pEst').checked = !!pp.est;
   $('pTrk').checked = !!pp.trk; $('pStock').checked = !!pp.stock; $('pGroup').checked = !!pp.group; $('pFit').checked = pp.fit !== false; syncGroupOpt();
-  $('pSave').disabled = false; $('pSave').textContent = 'Remember settings';
+  $('pSave').disabled = false; $('pSave').textContent = 'Remember settings'; $('pErr').textContent = '';
   openDlg('printDlg');
+  pdfLoad().catch(function(){});   // get the PDF maker and fonts now, so Print is quick
 }
 function printChoices(){
   return {range: $('pRange').value, from: $('pFrom').value, to: $('pTo').value, chem: $('pChem').checked, tint: $('pTint').checked,
@@ -4127,9 +4158,214 @@ function doPrint(){
   var p = $('pRange').value, from, to;
   if (p === 'custom'){ from = $('pFrom').value; to = $('pTo').value; }
   else { var r = presetRange(p); from = r[0]; to = r[1]; }
-  buildPrintFit({from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked});
-  closeDlg('printDlg');
-  setTimeout(function(){ window.print(); }, 50);
+  var o = {from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked};
+  // computers: the PDF opens in a new tab, which has to be opened now, while this tap counts (else it is a blocked pop-up)
+  var win = null;
+  if (!pdfShareOk()){ try { win = window.open('', '_blank'); if (win) win.document.write('<p style="font:16px -apple-system,Segoe UI,sans-serif;padding:24px;color:#555">Making the report…</p>'); } catch (e) { win = null; } }
+  var go = $('pGo'); go.disabled = true; go.textContent = 'Making the PDF…'; $('pErr').textContent = '';
+  pdfLoad().then(function(kit){
+    var res = buildPrintFit(o), blob = pdfBuild(kit, res), name = pdfName(res);
+    go.disabled = false; go.textContent = 'Print';
+    closeDlg('printDlg');
+    pdfDeliver(blob, name, res.pages, win);
+  }).catch(function(e){
+    var pv = $('printView'); pv.innerHTML = ''; pv.style.cssText = '';
+    go.disabled = false; go.textContent = 'Print';
+    if (win) try { win.close(); } catch (x) {}
+    $('pErr').textContent = 'Could not make the report' + (navigator.onLine === false ? ' - no internet connection.' : ': ' + (e && e.message || e)) + ' Try again.';
+  });
+}
+
+/* ------------------------------------------------------------ PDF report (2026-10-09)
+   Every device gets the same file. The report is laid out as before (buildPrintFit -> page boxes in #printView, off screen)
+   in the PDF's own fonts, then each page box is copied into the PDF (pdfPage): backgrounds, borders and every word at the
+   spot the browser put it. Phones and tablets get the share sheet (Print, Save to Files, Mail); computers open the PDF in a
+   new tab (print from there). Files on the website in chem/print/: jsPDF 2.5.1, Inter (SIL Open Font License) and RocSymbols
+   (a few DejaVu Sans symbols such as ✕ that Inter lacks), trimmed to the characters a report uses. */
+var PRINT_ASSETS = 'print/';
+// file, family, jsPDF style, CSS style, CSS weights (600-800 bold all use the Bold file, on screen and in the PDF)
+var PDF_FACES = [['Inter-Regular.ttf', 'RocPrint', 'normal', 'normal', '1 549'], ['Inter-Italic.ttf', 'RocPrint', 'italic', 'italic', '1 549'],
+  ['Inter-Bold.ttf', 'RocPrint', 'bold', 'normal', '550 1000'], ['Inter-BoldItalic.ttf', 'RocPrint', 'bolditalic', 'italic', '550 1000'],
+  ['RocSymbols.ttf', 'RocSym', 'normal', 'normal', '1 549'], ['RocSymbols-Bold.ttf', 'RocSym', 'bold', 'normal', '550 1000']];
+var PDF_INTER = /^[\u0020-\u007e\u00a0-\u00ac\u00ae-\u0148\u014a-\u017f\u2010-\u2027\u2030-\u2055\u2057\u20ac\u2122\u2190-\u2199\u21a9-\u21aa\u21b0-\u21b1\u21b3-\u21b5\u21ba-\u21bb\u21d0\u21d2\u21d4\u21de-\u21df\u21e4-\u21e5\u21e7\u21ea\u2202\u2205-\u2206\u220f\u2211-\u2212\u221a\u221e\u222b\u2236\u2248\u2260\u2264-\u2265\u2295-\u2298\u25a0-\u25a2\u25aa\u25b2-\u25b3\u25b6-\u25b7\u25ba-\u25bd\u25c0-\u25c1\u25c4-\u25c7\u25ca-\u25cb\u25cf\u25e6\u25ef\u2600\u2605-\u2606\u263c\u2661\u2665\u26a0\u2713\u2717\u2756\u2764\u2780-\u2788]$/;   // characters Inter has; anything else is drawn in RocSym
+var PDF_ASCENT = 1984 / 2048;   // Inter's ascent: a word's baseline sits this many font sizes below the top of its box
+var pdfKit = null;
+/** Loads jsPDF and the fonts once (started when the Print window opens, so Print is quick); fonts also go into the page for the layout. */
+function pdfLoad(){
+  if (pdfKit) return pdfKit;
+  function get(f){ return fetch(PRINT_ASSETS + f).then(function(r){ if (!r.ok) throw new Error(f + ' ' + r.status); return r.arrayBuffer(); }); }
+  var lib = window.jspdf ? Promise.resolve() : new Promise(function(ok, no){
+    var sc = document.createElement('script'); sc.src = PRINT_ASSETS + 'jspdf.umd.min.js';
+    sc.onload = ok; sc.onerror = function(){ no(new Error('the PDF maker did not load')); }; document.head.appendChild(sc);
+  });
+  pdfKit = Promise.all([lib].concat(PDF_FACES.map(function(f){ return get(f[0]); }))).then(function(res){
+    var bufs = res.slice(1);
+    return Promise.all(bufs.map(function(b, i){
+      var f = PDF_FACES[i];
+      return new FontFace(f[1], b.slice(0), {style: f[3], weight: f[4]}).load().then(function(ff){ document.fonts.add(ff); });
+    })).then(function(){ return {b64: bufs.map(pdfB64)}; });
+  });
+  pdfKit.catch(function(){ pdfKit = null; });   // a failed load is tried again next time
+  return pdfKit;
+}
+function pdfB64(buf){ var s = '', a = new Uint8Array(buf); for (var i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); }
+/** Phones and tablets: hand the file to the share sheet. Computers (no touch screen): open it in a tab. */
+function pdfShareOk(){
+  try { return !!(navigator.share && navigator.canShare && navigator.maxTouchPoints > 1 && navigator.canShare({files: [new File(['x'], 'x.pdf', {type: 'application/pdf'})]})); }
+  catch (e) { return false; }
+}
+/** "Pool Report Sep 1 – Oct 9, 2026.pdf" (the year once when both ends share it), "Pool Report all dates.pdf". */
+function pdfName(res){
+  var r = res.range === 'All dates' ? 'all dates' : res.range.replace(/^(\w+ \d+), (\d{4}) – (\w+ \d+, )\2$/, '$1 – $3$2');
+  return 'Pool Report ' + r.replace(/[\/\\:*?"<>|]/g, '-') + '.pdf';
+}
+function pdfBuild(kit, res){
+  var doc = new window.jspdf.jsPDF({unit: 'pt', format: 'letter', compress: true});
+  PDF_FACES.forEach(function(f, i){ doc.addFileToVFS(f[0], kit.b64[i]); doc.addFont(f[0], f[1], f[2]); });
+  var pv = $('printView'), pages = [].slice.call(pv.querySelectorAll('.ppage'));
+  var stamp = 'Printed ' + new Date().toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'});
+  pages.forEach(function(pg, n){
+    if (n) doc.addPage();
+    pdfPage(doc, pg, 36, 36);
+    // footer, in the bottom margin
+    doc.setFont('RocPrint', 'normal'); doc.setFontSize(7); doc.setTextColor(120, 120, 120);
+    doc.text(PRINT_TITLE + ' · ' + stamp, 36, 770);
+    if (pages.length > 1) doc.text('Page ' + (n + 1) + ' of ' + pages.length, 576, 770, {align: 'right'});
+  });
+  doc.setProperties({title: PRINT_TITLE + ' ' + res.range, creator: 'rollingoaksclub.org'});
+  pv.innerHTML = ''; pv.style.cssText = '';
+  return doc.output('blob');
+}
+/** Copies one laid-out page box into the PDF at (ox, oy) points: 1 CSS px = 0.75pt. */
+function pdfPage(doc, root, ox, oy){
+  var R0 = root.getBoundingClientRect(), K = 0.75;
+  var X = function(x){ return ox + (x - R0.left) * K; }, Y = function(y){ return oy + (y - R0.top) * K; };
+  (function walk(el, clip){
+    var cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+    var r = el.getBoundingClientRect();
+    if (el !== root) pdfBox(doc, cs, r, X, Y);
+    if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible'){
+      // boxes that cut their text off (table cells, tiles); with text-overflow: ellipsis the cut text ends in "…"
+      var bl = parseFloat(cs.borderLeftWidth) || 0, br = parseFloat(cs.borderRightWidth) || 0;
+      var c = {left: r.left + bl, right: r.right - br, top: r.top, bottom: r.bottom, ell: cs.textOverflow === 'ellipsis', eRight: r.right - br - (parseFloat(cs.paddingRight) || 0)};
+      if (clip) { c.left = Math.max(c.left, clip.left); c.right = Math.min(c.right, clip.right); c.eRight = Math.min(c.eRight, clip.right); c.top = Math.max(c.top, clip.top); c.bottom = Math.min(c.bottom, clip.bottom); c.ell = c.ell || clip.ell; }
+      clip = c;
+    }
+    for (var n = el.firstChild; n; n = n.nextSibling){
+      if (n.nodeType === 1) walk(n, clip);
+      else if (n.nodeType === 3) pdfText(doc, n, cs, clip, X, Y);
+    }
+  })(root, null);
+}
+/** "rgb(…)" / "rgba(…)" -> [r, g, b] over white paper; null when see-through. */
+function pdfColor(c){
+  var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return null;
+  var p = m[1].split(/[\s,\/]+/).filter(Boolean).map(function(v){ return /%$/.test(v) ? parseFloat(v) / 100 : parseFloat(v); });
+  var a = p.length > 3 ? p[3] : 1; if (!(a > 0)) return null;
+  return [0, 1, 2].map(function(i){ return Math.round(p[i] * a + 255 * (1 - a)); });
+}
+function pdfFill(doc, c){ doc.setFillColor(c[0], c[1], c[2]); }
+function pdfRect(doc, x, y, w, h, rad){
+  if (w <= 0 || h <= 0) return;
+  rad = Math.min(rad || 0, w / 2, h / 2);
+  if (rad > 0.2) doc.roundedRect(x, y, w, h, rad, rad, 'F'); else doc.rect(x, y, w, h, 'F');
+}
+/** An element's background, its borders, and the dashed top line of the estimate rows (a CSS gradient). */
+function pdfBox(doc, cs, r, X, Y){
+  if (r.width <= 0 || r.height <= 0) return;
+  var x = X(r.left), y = Y(r.top), w = r.width * 0.75, h = r.height * 0.75;
+  var bg = pdfColor(cs.backgroundColor), rad = (parseFloat(cs.borderTopLeftRadius) || 0) * 0.75;
+  var S = ['Top', 'Right', 'Bottom', 'Left'];
+  var bw = S.map(function(s){ var st = cs['border' + s + 'Style']; return st === 'none' || st === 'hidden' ? 0 : (parseFloat(cs['border' + s + 'Width']) || 0) * 0.75; });
+  var bc = S.map(function(s, i){ return bw[i] ? pdfColor(cs['border' + s + 'Color']) : null; });
+  if (rad > 0 && (bc[0] || bc[3])){
+    // rounded box with a border (the "Chemicals to add next" tiles: thin grey edge, thick colored left side)
+    pdfFill(doc, bc[0] || bc[3]); pdfRect(doc, x, y, w, h, rad);
+    if (bc[3] && bw[3] > bw[0]){ pdfFill(doc, bc[3]); pdfRect(doc, x, y, Math.min(w, bw[3] + rad * 2), h, rad); }
+    pdfFill(doc, bg || [255, 255, 255]);
+    pdfRect(doc, x + bw[3], y + bw[0], w - bw[1] - bw[3], h - bw[0] - bw[2], Math.max(0, rad - Math.max(bw[0], bw[3])));
+    return;
+  }
+  if (bg){ pdfFill(doc, bg); pdfRect(doc, x, y, w, h, rad); }
+  var gi = cs.backgroundImage;
+  if (gi && /linear-gradient/.test(gi)){
+    var gc = pdfColor((/rgba?\([^)]+\)/.exec(gi) || [''])[0]) || [119, 119, 119];
+    var sz = String(cs.backgroundSize).split(' ').map(parseFloat), per = (sz[0] || 6) * 0.75, th = (sz[1] || 1) * 0.75;
+    pdfFill(doc, gc);
+    for (var dx = 0; dx < w; dx += per) doc.rect(x + dx, y, Math.min(per / 2, w - dx), th, 'F');
+  }
+  if (bc[0]){ pdfFill(doc, bc[0]); doc.rect(x, y, w, bw[0], 'F'); }
+  if (bc[1]){ pdfFill(doc, bc[1]); doc.rect(x + w - bw[1], y, bw[1], h, 'F'); }
+  if (bc[2]){ pdfFill(doc, bc[2]); doc.rect(x, y + h - bw[2], w, bw[2], 'F'); }
+  if (bc[3]){ pdfFill(doc, bc[3]); doc.rect(x, y, bw[3], h, 'F'); }
+}
+/** Each word of a text node, drawn where the browser placed it (so wrapping, alignment and spacing match exactly). */
+function pdfText(doc, node, cs, clip, X, Y){
+  var s = node.nodeValue; if (!/\S/.test(s)) return;
+  var px = parseFloat(cs.fontSize) || 12, pt = px * 0.75, bold = (parseInt(cs.fontWeight, 10) || 400) >= 550, ital = /italic|oblique/.test(cs.fontStyle);
+  var col = pdfColor(cs.color) || [0, 0, 0], ls = cs.letterSpacing === 'normal' ? 0 : (parseFloat(cs.letterSpacing) || 0) * 0.75;
+  var up = cs.textTransform === 'uppercase', rg = document.createRange(), re = /\S+/g, m;
+  doc.setTextColor(col[0], col[1], col[2]);
+  while ((m = re.exec(s))){
+    rg.setStart(node, m.index); rg.setEnd(node, m.index + m[0].length);
+    var rr = rg.getClientRects(); if (!rr.length) continue;
+    var b = rr[0], word = up ? m[0].toUpperCase() : m[0];
+    if (b.width <= 0) continue;
+    if (clip){
+      if (b.left >= clip.right - 0.5 || b.top >= clip.bottom - 0.5 || b.bottom <= clip.top + 0.5) continue;   // cut off entirely
+      var lim = clip.ell ? clip.eRight : clip.right;
+      if (b.right > lim + 0.5){ word = pdfFit(doc, word, (lim - b.left) * 0.75, clip.ell, pt, bold, ital, ls); if (!word) continue; }
+    }
+    pdfWord(doc, word, X(b.left), Y(b.top) + PDF_ASCENT * pt, pt, bold, ital, ls);
+  }
+}
+function pdfFace(doc, sym, pt, bold, ital){
+  doc.setFont(sym ? 'RocSym' : 'RocPrint', sym ? (bold ? 'bold' : 'normal') : bold ? (ital ? 'bolditalic' : 'bold') : ital ? 'italic' : 'normal');
+  doc.setFontSize(pt);
+}
+/** One word, split into runs of Inter and symbol characters. */
+function pdfWord(doc, w, x, y, pt, bold, ital, ls){
+  var ch = Array.from(w), i = 0;
+  while (i < ch.length){
+    var sym = !PDF_INTER.test(ch[i]), j = i + 1;
+    while (j < ch.length && !PDF_INTER.test(ch[j]) === sym) j++;
+    var part = ch.slice(i, j).join('');
+    pdfFace(doc, sym, pt, bold, ital);
+    doc.text(part, x, y, ls ? {charSpace: ls} : undefined);
+    x += doc.getTextWidth(part) + ls * (j - i);
+    i = j;
+  }
+}
+/** The longest start of a word that fits maxPt (plus "…" for text-overflow: ellipsis). */
+function pdfFit(doc, w, maxPt, ell, pt, bold, ital, ls){
+  var ch = Array.from(w); pdfFace(doc, false, pt, bold, ital);
+  var tail = ell ? '…' : '', room = maxPt - (ell ? doc.getTextWidth(tail) + ls : 0);
+  while (ch.length && doc.getTextWidth(ch.join('')) + ls * ch.length > room) ch.pop();
+  return ch.length || ell ? ch.join('') + tail : '';
+}
+/** Hands the finished file over: share sheet on phones and tablets, the tab opened at the tap on computers, else the Report ready window. */
+function pdfDeliver(blob, name, pages, win){
+  var file = new File([blob], name, {type: 'application/pdf'});
+  if (win && !win.closed){ win.location.href = URL.createObjectURL(file); return; }
+  if (pdfShareOk()){
+    navigator.share({files: [file]}).catch(function(e){ if (!e || e.name !== 'AbortError') pdfReady(file, pages); });   // too long after the tap: one more tap
+    return;
+  }
+  pdfReady(file, pages);
+}
+var pdfLast = null;
+function pdfReady(file, pages){
+  pdfLast = file;
+  $('pdfInfo').textContent = file.name + (pages ? ' · ' + pages + (pages === 1 ? ' page' : ' pages') : '');
+  var a = $('pdfSave'); if (a.href) URL.revokeObjectURL(a.href); a.href = URL.createObjectURL(file); a.download = file.name;
+  $('pdfOpen').textContent = pdfShareOk() ? 'Print or share' : 'Open';
+  openDlg('pdfDlg');
+}
+function pdfOpenLast(){
+  if (!pdfLast) return;
+  if (pdfShareOk()) navigator.share({files: [pdfLast]}).then(function(){ closeDlg('pdfDlg'); }, function(){});
+  else { window.open(URL.createObjectURL(pdfLast), '_blank'); closeDlg('pdfDlg'); }
 }
 /* ---- cal-hypo feeder settings (Manager, 2026-10-08): server saveFeeder; the result line works out live from the maker's
    table the server sends (DATA.feeder.table, same math as Code.gs feederLbDay_ / feederInfo_). */
@@ -4283,7 +4519,7 @@ function lockNow(msg){
   DATA.tests = []; DATA.chems = []; DATA.trackers = []; DATA.stock = {}; DATA.hasPrices = false; DATA.priceRows = []; DATA.chemicals = []; DATA.priceWarnings = []; DATA.noteIssues = []; DATA.calc = null; DATA.locked = true;
   $('printView').innerHTML = '';
   closeForm(); $('prList').innerHTML = ''; $('prChem').innerHTML = ''; $('prNote').textContent = '';
-  calcClear(); closeDlg('pricesDlg'); closeDlg('printDlg'); closeDlg('navDlg'); closeDlg('menuDlg'); closeDlg('viewDlg'); closeDlg('dateDlg');
+  calcClear(); closeDlg('pricesDlg'); closeDlg('printDlg'); closeDlg('pdfDlg'); closeDlg('navDlg'); closeDlg('menuDlg'); closeDlg('viewDlg'); closeDlg('dateDlg');
   setUnlocked(false); renderAll();
   showStatus(msg || '', false);
 }
@@ -5233,6 +5469,8 @@ document.addEventListener('DOMContentLoaded', function(){
   $('pChem').addEventListener('change', syncGroupOpt);
   $('pCancel').addEventListener('click', function(){ closeDlg('printDlg'); });
   $('pGo').addEventListener('click', doPrint);
+  $('pdfOpen').addEventListener('click', pdfOpenLast);
+  $('pdfClose').addEventListener('click', function(){ closeDlg('pdfDlg'); });
 
   $('pricesBtn').addEventListener('click', openPrices);
   $('tabCalc').addEventListener('click', function(){ showPricesTab('calc'); });
