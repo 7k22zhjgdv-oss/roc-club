@@ -323,6 +323,33 @@ dialog.pwdlg .row a.primary{border-radius:10px;border:1px solid var(--oak);backg
 dialog.pwdlg .memno{color:var(--paper);font-size:.95rem;line-height:1.5}
 dialog.pwdlg .memno a{color:var(--oak);font-weight:600}
 dialog.pwdlg .cur{font-size:.82rem;color:var(--paper-2);margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-line)}
+/* ---- Pop-up windows (DESIGN.md "Pop-up windows", 2026-10-09): header pinned at the top (title, grey line, round ×), the middle
+   scrolls, the main button pinned at the bottom. Same class names on every page; colors are Home's. */
+dialog.pwdlg.pop{padding:0;border-radius:22px;width:calc(100% - 16px);max-width:440px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;flex-direction:column}
+dialog.pwdlg.pop[open]{display:flex}
+dialog.pwdlg.pop.wide{max-width:560px}
+.pophead{flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:18px 14px 10px 20px;position:relative;z-index:1;transition:box-shadow .15s}
+.pophead.lined{box-shadow:0 1px 0 var(--glass-line)}
+dialog.pwdlg .pophead h3{margin:0;font-size:1.25rem;line-height:1.25}
+.pophead .popsub{display:block;font-size:.82rem;color:var(--paper-2);margin-top:3px;line-height:1.35}
+.popx{position:relative;border:0;background:rgba(255,248,236,.14);color:var(--paper);width:30px;height:30px;border-radius:50%;font-size:20px;line-height:1;flex:0 0 30px;cursor:pointer;padding:0;font-family:system-ui,sans-serif}
+.popx::after{content:"";position:absolute;inset:-7px}
+.popx:hover{background:rgba(255,248,236,.22)}
+.popx:focus-visible{outline:2px solid var(--oak);outline-offset:2px}
+.popbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 20px 16px}
+.popbody[hidden],.popfoot[hidden]{display:none}
+.popbody>:first-child,.popbody>form>:first-child{margin-top:0}
+.popsec{margin:16px 2px 4px;font-size:.78rem;font-weight:600;color:var(--paper-2);text-transform:uppercase;letter-spacing:.06em}
+.popbody>.popsec:first-child{margin-top:4px}
+.popfoot{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));box-shadow:0 -1px 0 var(--glass-line)}
+dialog.pwdlg .popfoot button,dialog.pwdlg .popfoot a{flex:1 1 0;min-height:46px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--glass-line);background:var(--glass);color:var(--paper);font-size:1rem;cursor:pointer;text-decoration:none;font-family:inherit}
+dialog.pwdlg .popfoot .primary{background:var(--oak);color:var(--bark);border-color:var(--oak);font-weight:600}
+dialog.pwdlg .popfoot button:disabled{opacity:.5;cursor:default}
+dialog.pwdlg .popfoot button[hidden]{display:none}
+dialog.pwdlg .popfoot .err,dialog.pwdlg .popfoot .ok{flex:1 0 100%;margin:0;min-height:0}
+dialog.pwdlg .popfoot .err:empty,dialog.pwdlg .popfoot .ok:empty{display:none}
+dialog.pwdlg .popbody .err:empty,dialog.pwdlg .popbody .ok:empty{min-height:0;margin:0}
+@media (prefers-reduced-motion:reduce){.pophead{transition:none}}
 
 /* Tall, narrow screens (phones): the photo is scaled so the beam inscription spans the screen width (minus 16px each side),
    then placed so the inscription (and the tree above it) is centered left-to-right and the tree sits mid-screen,
@@ -961,27 +988,22 @@ html.vid .ripples{display:none}
   </span>
 </div>
 
-<dialog id="memberDlg" class="pwdlg">
-  <div id="memAsk">
-    <h3>Are you a current year member?</h3>
-    <div class="row">
-      <button type="button" id="memNo">No</button>
-      <a class="primary" id="memYes" href="https://forms.gle/5uCfK53v96GDidWY9" target="_blank" rel="noopener">Yes</a>
-    </div>
-  </div>
-  <div id="memNoMsg" hidden>
-    <h3>Membership Required</h3>
+<dialog id="memberDlg" class="pwdlg pop" aria-labelledby="memH">
+  <div class="pophead"><h3 id="memH">Are you a current year member?</h3><button type="button" class="popx" id="memClose" aria-label="Close">×</button></div>
+  <div class="popbody" id="memNoMsg" hidden>
     <p class="memno">You must be a member to rent the clubhouse and pool. <span id="memFormLine">Download the form <a id="memFormLink" href="#" download>here</a>,</span> fill it out, and upload it here or return it to our membership coordinator. Thank you!</p>
-    <div class="row">
-      <button type="button" id="memClose">Close</button>
-      <button type="button" class="primary" id="memUpload">Upload form</button>
-    </div>
   </div>
+  <div class="popfoot" id="memAsk">
+    <button type="button" id="memNo">No</button>
+    <a class="primary" id="memYes" href="https://forms.gle/5uCfK53v96GDidWY9" target="_blank" rel="noopener">Yes</a>
+  </div>
+  <div class="popfoot" id="memNoFoot" hidden><button type="button" class="primary" id="memUpload">Upload form</button></div>
 </dialog>
 
-<dialog id="joinVolDlg" class="pwdlg">
-  <h3>Sign up to volunteer</h3>
-  <p>Thank you so much for volunteering with us! It takes a neighborhood to keep this place running. Someone on the board will contact you. Once you're approved, you sign in with your name and this password.</p>
+<dialog id="joinVolDlg" class="pwdlg pop" aria-labelledby="jvH">
+  <div class="pophead"><div><h3 id="jvH">Sign up to volunteer</h3><span class="popsub">Someone on the board will contact you</span></div><button type="button" class="popx" id="jvCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
+  <p>Thank you so much for volunteering with us! It takes a neighborhood to keep this place running. Once you're approved, you sign in with your name and this password.</p>
   <form id="joinVolForm" autocomplete="off">
     <label for="jvName">First and last name</label>
     <input type="text" class="plain" id="jvName" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
@@ -993,33 +1015,31 @@ html.vid .ripples{display:none}
     <span class="pw-wrap"><input type="text" class="secret" id="jvPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="jvPw">Show</button></span>
     <label for="jvPw2">Password again</label>
     <span class="pw-wrap"><input type="text" class="secret" id="jvPw2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="jvPw2">Show</button></span>
-    <div class="err" id="jvErr" role="alert"></div>
-    <div class="ok" id="jvOk"></div>
-    <div class="row">
-      <button type="button" id="jvCancel">Cancel</button>
-      <button type="submit" class="primary" id="jvGo">Sign up</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot"><div class="err" id="jvErr" role="alert"></div><div class="ok" id="jvOk"></div><button type="submit" form="joinVolForm" class="primary" id="jvGo">Sign up</button></div>
 </dialog>
 
-<dialog id="volDlg" class="pwdlg wide">
-  <h3>Volunteers</h3>
-  <p>People with their own login. Manager level can only be given on the ROC Access sheet.</p>
-  <div class="vol-list" id="volList"></div>
+<dialog id="volDlg" class="pwdlg pop wide" aria-labelledby="volH">
+  <div class="pophead"><div><h3 id="volH">Volunteers</h3><span class="popsub">People with their own login. Manager level is given only on the ROC Access sheet.</span></div><button type="button" class="popx" id="volClose" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="err" id="volErr" role="alert"></div>
   <div class="ok" id="volOk"></div>
-  <div class="row"><button type="button" class="primary" id="volClose">Close</button></div>
+  <div class="vol-list" id="volList"></div>
+  </div>
 </dialog>
 
-<dialog id="chgDlg" class="pwdlg">
-  <h3>My login</h3>
-  <label for="akaIn">Also goes by (other first names)</label>
+<dialog id="chgDlg" class="pwdlg pop" aria-labelledby="chgH">
+  <div class="pophead"><div><h3 id="chgH">My login</h3><span class="popsub">Your names and password</span></div><button type="button" class="popx" id="chgCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
+  <div class="popsec">Other first names</div>
+  <label for="akaIn">Also goes by</label>
   <input type="text" class="plain" id="akaIn" placeholder="Like Kayti, Kat" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
   <p style="margin:6px 0 0;font-size:.82rem">You can sign in with any of these and your last name.</p>
   <div class="row" style="margin-top:8px"><button type="button" id="akaSave">Save names</button></div>
   <div class="err" id="akaErr" role="alert"></div>
   <div class="ok" id="akaOk"></div>
-  <h3 style="margin-top:18px">Change password</h3>
+  <div class="popsec">Change password</div>
   <p>At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
   <form id="chgForm" autocomplete="off">
     <label for="chgCur">Current password</label>
@@ -1028,28 +1048,20 @@ html.vid .ripples{display:none}
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew">Show</button></span>
     <label for="chgNew2">New password again</label>
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew2">Show</button></span>
-    <div class="err" id="chgErr" role="alert"></div>
-    <div class="ok" id="chgOk"></div>
-    <div class="row">
-      <button type="button" id="chgCancel">Cancel</button>
-      <button type="submit" class="primary" id="chgGo">Change password</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot"><div class="err" id="chgErr" role="alert"></div><div class="ok" id="chgOk"></div><button type="submit" form="chgForm" class="primary" id="chgGo">Change password</button></div>
 </dialog>
 
-<dialog id="importDlg" class="pwdlg">
-  <h3>Update Rules &amp; Regulations PDF</h3>
-  <p>Choose the new PDF. It replaces the current one immediately.</p>
+<dialog id="importDlg" class="pwdlg pop" aria-labelledby="impH">
+  <div class="pophead"><div><h3 id="impH">Update Rules &amp; Regulations</h3><span class="popsub">The new PDF replaces the current one at once</span></div><button type="button" class="popx" id="importCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
   <form id="importForm" autocomplete="off">
     <input type="file" id="pdfIn" accept="application/pdf">
-    <div class="err" id="importErr" role="alert"></div>
-    <div class="ok" id="importOk"></div>
     <div class="cur" id="importCur"></div>
-    <div class="row">
-      <button type="button" id="importCancel">Cancel</button>
-      <button type="submit" class="primary" id="importSubmit">Upload</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot"><div class="err" id="importErr" role="alert"></div><div class="ok" id="importOk"></div><button type="submit" form="importForm" class="primary" id="importSubmit">Upload</button></div>
 </dialog>
 
 <script>
@@ -1121,10 +1133,11 @@ html.vid .ripples{display:none}
     if (!h || h === '#') e.preventDefault();
   });
 
+  document.addEventListener('scroll', function(e){ var b = e.target; if (b && b.classList && b.classList.contains('popbody') && b.previousElementSibling) b.previousElementSibling.classList.toggle('lined', b.scrollTop > 2); }, true);
   var memberDlg = $('memberDlg'), memAsk = $('memAsk'), memNoMsg = $('memNoMsg');
   $('signupCard').addEventListener('click', function(e){
     e.preventDefault();
-    memAsk.hidden = false; memNoMsg.hidden = true;
+    memAsk.hidden = false; memNoMsg.hidden = true; $('memNoFoot').hidden = true; $('memH').textContent = 'Are you a current year member?';
     memberDlg.showModal();
   });
   $('memYes').addEventListener('click', function(){ memberDlg.close(); });
@@ -1132,7 +1145,7 @@ html.vid .ripples{display:none}
     var h = rulesCard.getAttribute('href');
     if (h && h !== '#') $('memFormLink').setAttribute('href', h);
     else $('memFormLine').textContent = 'Download the membership form from the Rules & Regulations document,';
-    memAsk.hidden = true; memNoMsg.hidden = false;
+    memAsk.hidden = true; memNoMsg.hidden = false; $('memNoFoot').hidden = false; $('memH').textContent = 'Membership required';
   });
   $('memClose').addEventListener('click', function(){ memberDlg.close(); });
 
@@ -1457,7 +1470,7 @@ html.vid .ripples{display:none}
     ['jvName', 'jvAka', 'jvEmail', 'jvPw', 'jvPw2'].forEach(function(id){ $(id).value = ''; });
     $('jvName').value = nameIn.value.trim();
     pwShow($('jvPw'), false); pwShow($('jvPw2'), false);
-    $('jvErr').textContent = ''; $('jvOk').textContent = ''; $('jvGo').disabled = false; $('jvGo').hidden = false; $('jvCancel').textContent = 'Cancel';
+    $('jvErr').textContent = ''; $('jvOk').textContent = ''; $('jvGo').disabled = false; $('jvGo').hidden = false;
     joinVolDlg.showModal(); ($('jvName').value ? $('jvEmail') : $('jvName')).focus();
   });
   // ?signup (from the sign-up link on Chemistry / Pump, which leave the typed name in rocSignUpName): open the sign-up
@@ -1483,7 +1496,7 @@ html.vid .ripples{display:none}
       $('jvGo').disabled = false;
       if (!r || !r.ok){ err.textContent = (r && r.message) || 'Something went wrong. Try again.'; return; }
       $('jvOk').textContent = 'Thank you! Someone on the board will contact you soon.';
-      $('jvGo').hidden = true; $('jvCancel').textContent = 'Close';
+      $('jvGo').hidden = true;
       try { localStorage.setItem('rocSignAs', 'vol'); localStorage.setItem('rocLoginName', name); } catch(x){}
       nameIn.value = name;
     }).withFailureHandler(function(x){
