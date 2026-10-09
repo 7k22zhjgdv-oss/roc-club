@@ -367,6 +367,9 @@ dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 #feedDlg .fdgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:6px;align-items:center}
 #feedDlg .fdgrid span{font-size:12px;color:var(--muted)}
 #feedDlg input[type=time],#feedDlg input[type=number]{width:100%;min-width:0;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font:inherit}
+#feedDlg .fdgrid>*{min-width:0}
+#feedDlg input[type=time]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;height:40px;text-align:left}   /* iPhone draws time boxes wider than asked */
+#feedDlg input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
 #feedDlg .fdmore{margin-top:12px;font-size:14px}
 #feedDlg .fdmore summary{cursor:pointer;color:var(--ink2)}
 #feedDlg .fd2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -1502,7 +1505,7 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
 
-<dialog id="feedDlg" aria-labelledby="fdH">
+<dialog id="feedDlg" aria-labelledby="fdH" tabindex="-1" autofocus>
   <h2 id="fdH">Cal-hypo feeder</h2>
   <div class="fdres" id="fdRes" aria-live="polite"></div>
   <label for="fdLetter">Cartridge letter</label>
@@ -4098,7 +4101,7 @@ function feedOpen(){
   $('fdRows').innerHTML = rows;
   $('fdLetter').value = f.letter; $('fdTabs').value = f.tabs; $('fdDays').value = f.days == null ? '' : f.days;
   $('fdTabG').value = f.tabG; $('fdPct').value = f.pct; $('fdErr').textContent = '';
-  feedCalc(); openDlg('feedDlg');
+  feedCalc(); openMenu('feedDlg');   // opens with nothing focused (no letter picker popping up on iPhone)
 }
 function feedRead(){
   var ins = $('fdRows').querySelectorAll('input'), rows = [];
