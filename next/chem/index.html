@@ -358,21 +358,63 @@ dialog .chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-siz
 dialog .chk input{margin-top:3px}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
-/* cal-hypo feeder settings (2026-10-08) */
-#feedDlg .fdres{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.35}
-#feedDlg .fdres b{display:block;font-size:16px}
-#feedDlg .fdres b.d{margin-top:2px}
-#feedDlg .fdres span{color:var(--ink2)}
-#feedDlg .fdres .m{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
-#feedDlg .fdgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:6px;align-items:center}
-#feedDlg .fdgrid span{font-size:12px;color:var(--muted)}
-#feedDlg input[type=time],#feedDlg input[type=number]{width:100%;min-width:0;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px;font:inherit}
-#feedDlg .fdgrid>*{min-width:0}
-#feedDlg input[type=time]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;height:40px;text-align:left}   /* iPhone draws time boxes wider than asked */
-#feedDlg input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
-#feedDlg .fdmore{margin-top:12px;font-size:14px}
-#feedDlg .fdmore summary{cursor:pointer;color:var(--ink2)}
-#feedDlg .fd2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* cal-hypo feeder settings (2026-10-08, design pass 2026-10-09): a big "days per load", a 24-hour strip of how hard it
+   feeds, letter buttons, settings-style grouped rows on the soft grey */
+#feedDlg{padding:16px 14px 14px;max-width:440px;width:calc(100% - 16px);border-radius:22px;border:0}
+#feedDlg .fdhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+#feedDlg h2{margin:0;font-size:20px;letter-spacing:-.01em}
+#feedDlg .fdsub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+#feedDlg .fdx{border:0;background:var(--soft);color:var(--ink2);width:30px;height:30px;border-radius:50%;font-size:20px;line-height:1;flex:0 0 30px;cursor:pointer}
+#feedDlg .fdhero{background:color-mix(in srgb,var(--accent) 9%,var(--card));border-radius:18px;padding:14px 16px 12px}
+#feedDlg .fdbig{display:flex;align-items:baseline;gap:8px}
+#feedDlg .fdbig b{font-size:40px;line-height:1;font-weight:700;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums}
+#feedDlg .fdbig span{font-size:15px;color:var(--ink2);font-weight:500}
+#feedDlg .fdstats{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:14px;color:var(--ink2)}
+#feedDlg .fdstats b{color:var(--ink);font-weight:600}
+#feedDlg .fdday{display:flex;height:30px;margin-top:12px;border-radius:8px;overflow:hidden;gap:2px}
+#feedDlg .fdday i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:600;color:var(--accentInk);background:var(--accent);min-width:0;white-space:nowrap;overflow:hidden}
+#feedDlg .fdticks{position:relative;height:14px;margin-top:3px;font-size:10.5px;color:var(--muted)}
+#feedDlg .fdticks span{position:absolute;top:0;transform:translateX(-50%)}
+#feedDlg .fdticks span:first-child{transform:none}
+#feedDlg .fdticks span:last-child{transform:translateX(-100%)}
+#feedDlg .fdnote{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.35}
+#feedDlg .fdnote.warn{color:var(--ink2)}
+#feedDlg .fdsec{margin:18px 4px 6px;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+#feedDlg .fdgrp{background:var(--soft);border-radius:14px;padding:10px 8px}
+#feedDlg .fdhelp{font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.35}
+#feedDlg .fdhelp.out{margin:8px 6px 0}
+#feedDlg .fdlet{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+#feedDlg .fdlet button{height:40px;border-radius:10px;border:0;background:var(--card);color:var(--ink);font:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:0}
+#feedDlg .fdlet button.off{color:var(--muted);font-weight:400;background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+#feedDlg .fdlet button[aria-checked=true]{background:var(--accent);color:var(--accentInk);box-shadow:none}
+#feedDlg .fdcols,#feedDlg .fdr{display:grid;grid-template-columns:1.55fr 1fr 1fr 22px;gap:6px;align-items:center}
+#feedDlg .fdcols{font-size:11.5px;color:var(--muted);padding:0 4px 4px}
+#feedDlg .fdr{margin-bottom:6px}
+#feedDlg .fdr>*{min-width:0}
+#feedDlg .fdin{position:relative;display:flex;align-items:center;background:var(--card);border-radius:10px;height:40px;padding:0 9px;min-width:0}
+#feedDlg .fdin input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;width:100%;min-width:0;padding:0;outline:0;-webkit-appearance:none;appearance:none;font-variant-numeric:tabular-nums}
+#feedDlg .fdin:focus-within{box-shadow:0 0 0 2px var(--accent)}
+#feedDlg .fdin i{font-style:normal;font-size:12px;color:var(--muted);margin-left:3px;flex:0 0 auto}
+#feedDlg .fdin input[type=time]{display:block;height:40px;text-align:left}
+#feedDlg .fdin input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
+#feedDlg .fdin input[type=time]::-webkit-calendar-picker-indicator{display:none}
+#feedDlg .fdrm{border:0;background:transparent;color:var(--muted);font-size:18px;width:22px;height:40px;cursor:pointer;padding:0}
+#feedDlg .fdadd{border:0;background:transparent;color:var(--accent);font:inherit;font-size:15px;font-weight:500;padding:6px 4px 2px;cursor:pointer}
+#feedDlg .fdlist{padding:0 12px}
+#feedDlg .fdli{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;margin:0;font-size:15px;color:var(--ink);border-top:1px solid var(--line)}
+#feedDlg .fdlist>.fdli:first-child{border-top:0}
+#feedDlg .fdli small{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+#feedDlg .fdli .fdin{width:104px;flex:0 0 104px}
+#feedDlg .fdmore{display:block;padding:0}
+#feedDlg .fdmore summary{display:flex;align-items:center;justify-content:space-between;min-height:52px;cursor:pointer;list-style:none;color:var(--ink)}
+#feedDlg .fdmore summary::-webkit-details-marker{display:none}
+#feedDlg .fdmore summary::after{content:"›";display:inline-block;color:var(--muted);font-size:20px;margin-left:8px;transition:transform .15s}
+#feedDlg .fdmore[open] summary::after{transform:rotate(90deg)}
+#feedDlg .fdsum{margin-left:auto;color:var(--muted);font-size:14px}
+#feedDlg .fdmore .fdhelp{margin:4px 0 12px}
+#feedDlg .err{margin-top:10px}
+#feedDlg .row{margin-top:16px}
+#feedDlg .row .btn{flex:1;min-height:46px;border-radius:12px;font-size:16px}
 .jfeed{margin:8px 0 2px;font-size:13px;line-height:1.35}
 .jfeed b{display:block}
 .jfeed b.e{color:var(--red, #b3261e)}
@@ -1505,24 +1547,27 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
 
-<dialog id="feedDlg" aria-labelledby="fdH" tabindex="-1" autofocus>
-  <h2 id="fdH">Cal-hypo feeder</h2>
-  <div class="fdres" id="fdRes" aria-live="polite"></div>
-  <label for="fdLetter">Cartridge letter</label>
-  <select id="fdLetter"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select>
-  <label>Pump schedule</label>
-  <div class="fdgrid" id="fdRows"></div>
-  <p class="hint">Feeder gpm = the reading on the feeder's own flow meter at that pump speed. Each speed runs until the next start time. Leave a row empty if not used.</p>
-  <label for="fdTabs">Tablets in a full load</label>
-  <input type="number" id="fdTabs" inputmode="numeric" min="1" max="30" step="1">
-  <label for="fdDays">A full load lasts (days)</label>
-  <input type="number" id="fdDays" inputmode="decimal" min="1" max="60" step="0.5" placeholder="From the maker's table">
-  <p class="hint">Leave blank to use the maker's table. Fill it in once you've seen how long a load really lasts; the pump schedule still decides the hours.</p>
-  <details class="fdmore"><summary>Tablets</summary>
-    <div class="fd2"><span><label for="fdTabG">Weight of one (g)</label><input type="number" id="fdTabG" inputmode="numeric" min="50" max="1000" step="1"></span>
-    <span><label for="fdPct">Strength (%)</label><input type="number" id="fdPct" inputmode="decimal" min="20" max="100" step="0.5"></span></div>
-    <p class="hint">CCH Endurance: 265 g, 68% (maker's sheet).</p>
-  </details>
+<dialog id="feedDlg" class="fd" aria-labelledby="fdH" tabindex="-1" autofocus>
+  <div class="fdhead"><div><h2 id="fdH">Cal-hypo feeder</h2><span class="fdsub">CCH Endurance · one setting for everyone</span></div>
+    <button type="button" class="fdx" id="fdX" aria-label="Close">×</button></div>
+  <div class="fdhero" id="fdRes" aria-live="polite"></div>
+  <div class="fdsec">Cartridge letter</div>
+  <div class="fdgrp"><input type="hidden" id="fdLetter"><div class="fdlet" id="fdLets" role="radiogroup" aria-label="Cartridge letter"></div>
+    <p class="fdhelp" id="fdLetHelp"></p></div>
+  <div class="fdsec">Pump schedule</div>
+  <div class="fdgrp"><div class="fdcols" aria-hidden="true"><span>Starts</span><span>Pump rpm</span><span>Feeder gpm</span><span></span></div>
+    <div id="fdRows"></div><button type="button" class="fdadd" id="fdAdd">+ Add a speed</button></div>
+  <p class="fdhelp out">Feeder gpm = the reading on the feeder's own flow meter at that pump speed. Each speed runs until the next one starts.</p>
+  <div class="fdsec">Load</div>
+  <div class="fdgrp fdlist">
+    <label class="fdli"><span>Tablets in a full load</span><span class="fdin"><input type="number" id="fdTabs" inputmode="numeric" min="1" max="30" step="1"></span></label>
+    <label class="fdli"><span>A full load lasts<small>Blank = from the maker's table</small></span><span class="fdin"><input type="number" id="fdDays" inputmode="decimal" min="1" max="60" step="0.5"><i>days</i></span></label>
+    <details class="fdli fdmore"><summary><span>Tablet weight &amp; strength</span><span class="fdsum" id="fdTabSum"></span></summary>
+      <label class="fdli"><span>Weight of one</span><span class="fdin"><input type="number" id="fdTabG" inputmode="numeric" min="50" max="1000" step="1"><i>g</i></span></label>
+      <label class="fdli"><span>Strength</span><span class="fdin"><input type="number" id="fdPct" inputmode="decimal" min="20" max="100" step="0.5"><i>%</i></span></label>
+      <p class="fdhelp">CCH Endurance tablets: 265 g, 68% (maker's sheet).</p>
+    </details>
+  </div>
   <div class="err" id="fdErr" role="alert"></div>
   <div class="row"><button class="btn" type="button" id="fdCancel">Cancel</button><button class="btn primary" type="button" id="fdSave">Save</button></div>
 </dialog>
@@ -4089,26 +4134,28 @@ function doPrint(){
 /* ---- cal-hypo feeder settings (Manager, 2026-10-08): server saveFeeder; the result line works out live from the maker's
    table the server sends (DATA.feeder.table, same math as Code.gs feederLbDay_ / feederInfo_). */
 var FEED_ROWS = 4, feedBusy = false;
+function feedRowHtml(r){
+  r = r || {};
+  return '<div class="fdr"><span class="fdin"><input type="time" step="60" data-fd="at" value="' + esc(r.at || '') + '" aria-label="Starts"></span>' +
+    '<span class="fdin"><input type="number" data-fd="rpm" inputmode="numeric" min="0" max="4000" step="50" value="' + (r.rpm != null ? r.rpm : '') + '" aria-label="Pump rpm"></span>' +
+    '<span class="fdin"><input type="number" data-fd="gpm" inputmode="decimal" min="0" max="6" step="0.1" value="' + (r.gpm != null ? r.gpm : '') + '" aria-label="Feeder gpm"></span>' +
+    '<button type="button" class="fdrm" data-fdrm="1" aria-label="Remove this speed">×</button></div>';
+}
 function feedOpen(){
   var F = DATA.feeder; if (!F) return;
-  var f = F.set, rows = '<span>Starts</span><span>Pump rpm</span><span>Feeder gpm</span>';
-  for (var i = 0; i < FEED_ROWS; i++) {
-    var r = f.rows[i] || {};
-    rows += '<input type="time" step="60" data-fd="at" value="' + esc(r.at || '') + '" aria-label="Start time ' + (i + 1) + '">' +
-      '<input type="number" data-fd="rpm" inputmode="numeric" min="0" max="4000" step="50" value="' + (r.rpm != null ? r.rpm : '') + '" aria-label="Pump rpm ' + (i + 1) + '">' +
-      '<input type="number" data-fd="gpm" inputmode="decimal" min="0" max="6" step="0.1" value="' + (r.gpm != null ? r.gpm : '') + '" aria-label="Feeder gpm ' + (i + 1) + '">';
-  }
-  $('fdRows').innerHTML = rows;
+  var f = F.set;
+  $('fdRows').innerHTML = f.rows.map(feedRowHtml).join('');
+  $('fdLets').innerHTML = Object.keys(F.table).map(function(L){ return '<button type="button" role="radio" data-fdl="' + L + '">' + L + '</button>'; }).join('');
   $('fdLetter').value = f.letter; $('fdTabs').value = f.tabs; $('fdDays').value = f.days == null ? '' : f.days;
   $('fdTabG').value = f.tabG; $('fdPct').value = f.pct; $('fdErr').textContent = '';
-  feedCalc(); openMenu('feedDlg');   // opens with nothing focused (no letter picker popping up on iPhone)
+  feedAddVis(); feedCalc(); openMenu('feedDlg');   // opens with nothing focused (no picker popping up on iPhone)
 }
 function feedRead(){
-  var ins = $('fdRows').querySelectorAll('input'), rows = [];
-  for (var i = 0; i < ins.length; i += 3) {
-    var at = ins[i].value, rpm = ins[i + 1].value, gpm = ins[i + 2].value;
+  var rows = [];
+  $('fdRows').querySelectorAll('.fdr').forEach(function(el){
+    var g = function(k){ return el.querySelector('[data-fd=' + k + ']').value; }, at = g('at'), rpm = g('rpm'), gpm = g('gpm');
     if (at || rpm || gpm) rows.push({at: at, rpm: rpm === '' ? null : +rpm, gpm: gpm === '' ? null : +gpm});
-  }
+  });
   return {letter: $('fdLetter').value, rows: rows, tabs: +$('fdTabs').value, tabG: +$('fdTabG').value, pct: +$('fdPct').value, days: $('fdDays').value === '' ? '' : +$('fdDays').value};
 }
 function feedLb(letter, gpm){
@@ -4121,27 +4168,61 @@ function feedLb(letter, gpm){
   else for (var j = 1; j < n; j++) if (gpm <= G[j]) { var a = cell(j - 1), b = cell(j); v = a + (b - a) * (gpm - G[j - 1]) / (G[j] - G[j - 1]); break; }
   return {lb: v, rated: rated};
 }
+function feedHour(m){ var h = Math.floor(m / 60) % 24, mm = m % 60; return (h % 12 || 12) + (mm ? ':' + ('0' + mm).slice(-2) : '') + (h < 12 ? 'a' : 'p'); }
 function feedCalc(){
-  var f = feedRead(), segs = f.rows.filter(function(r){ return /^\d{1,2}:\d{2}$/.test(r.at) && r.gpm >= 0; }).map(function(r){ var p = r.at.split(':'); return {m: +p[0] * 60 + +p[1], gpm: r.gpm, rpm: r.rpm}; });
+  if (!DATA || !DATA.feeder) return;     // data refreshed without the feeder (signed out): leave the window as it is
+  var f = feedRead(), T = DATA.feeder.table;
+  var segs = f.rows.filter(function(r){ return /^\d{1,2}:\d{2}$/.test(r.at) && r.gpm >= 0; }).map(function(r){ var p = r.at.split(':'); return {m: +p[0] * 60 + +p[1], gpm: r.gpm, rpm: r.rpm}; });
   segs.sort(function(a, b){ return a.m - b.m; });
-  var el = $('fdRes');
-  if (!segs.length || !(f.tabs > 0) || !(f.tabG > 0) || !(f.pct > 0)) { el.innerHTML = '<span class="m">Fill in the pump schedule to see what it works out to.</span>'; return; }
-  var sum = 0, rated = true, parts = [];
-  segs.forEach(function(s, i){
-    var mins = segs.length === 1 ? 1440 : ((segs[(i + 1) % segs.length].m - s.m) % 1440 + 1440) % 1440, v = feedLb(f.letter, s.gpm);
-    if (!v.rated) rated = false;
-    sum += v.lb * mins; s.lb = v.lb; s.mins = mins;
+  // letter buttons: chosen one filled; letters the maker doesn't rate at these flows greyed
+  $('fdLets').querySelectorAll('[data-fdl]').forEach(function(bt){
+    var L = bt.getAttribute('data-fdl'), ok = segs.length ? segs.every(function(s){ return feedLb(L, s.gpm).rated; }) : true;
+    bt.setAttribute('aria-checked', L === f.letter); bt.classList.toggle('off', !ok);
   });
-  var tableLb = sum / 1440, full = f.tabs * f.tabG / 453.59237 * f.pct / 100, days = f.days > 0 ? f.days : tableLb > 0 ? full / tableLb : null;
-  var lb = days ? full / days : 0, ppm = lb * 453.59237 * 1000 / (48000 * 3.785411784);
-  el.innerHTML = '<b>About ' + fmtNum(Math.round(lb * 100) / 100) + ' lb chlorine a day</b> <span>(FC +' + fmtNum(Math.round(ppm * 10) / 10) + ' a day)</span>' +
-    '<b class="d">A full load lasts about ' + (days ? fmtNum(Math.round(days * 10) / 10) : '–') + ' days</b>' +
-    '<span class="m">' + (f.days > 0 ? 'Using your "lasts ' + fmtNum(f.days) + ' days"; the table alone says about ' + fmtNum(Math.round((tableLb > 0 ? full / tableLb : 0) * 10) / 10) + '.'
-      : rated ? 'From the maker\'s table.' : 'Letter ' + esc(f.letter) + ' isn\'t in the maker\'s table at this low a flow, so these use the nearest rated numbers. Treat it as a guess until you\'ve seen how long a load lasts.') + '</span>';
+  var okL = Object.keys(T).filter(function(L){ return segs.length && segs.every(function(s){ return feedLb(L, s.gpm).rated; }); });
+  $('fdLetHelp').textContent = !segs.length ? '' : okL.length ? 'At these flows the maker rates ' + (okL.length === 1 ? okL[0] : okL.slice(0, -1).join(', ') + ' and ' + okL[okL.length - 1]) +
+    (okL.length > 1 ? ' (' + okL[0] + ' gives the least, ' + okL[okL.length - 1] + ' the most).' : '.') : 'No letter is rated at these flows.';
+  $('fdTabSum').textContent = (f.tabG || '–') + ' g · ' + (f.pct || '–') + '%';
+  var el = $('fdRes');
+  if (!segs.length || !(f.tabs > 0) || !(f.tabG > 0) || !(f.pct > 0)) { el.innerHTML = '<p class="fdnote">Fill in the pump schedule to see what it works out to.</p>'; return; }
+  var sum = 0, rated = true, maxLb = 0;
+  segs.forEach(function(s, i){
+    s.mins = segs.length === 1 ? 1440 : ((segs[(i + 1) % segs.length].m - s.m) % 1440 + 1440) % 1440;
+    var v = feedLb(f.letter, s.gpm); if (!v.rated) rated = false;
+    s.lb = v.lb; sum += v.lb * s.mins; if (v.lb > maxLb) maxLb = v.lb;
+  });
+  var tableLb = sum / 1440, full = f.tabs * f.tabG / 453.59237 * f.pct / 100, tableDays = tableLb > 0 ? full / tableLb : null;
+  var days = f.days > 0 ? f.days : tableDays, k = days && tableLb > 0 ? (full / days) / tableLb : 1, lb = tableLb * k;
+  var ppm = lb * 453.59237 * 1000 / (48000 * 3.785411784), r1 = function(v){ return fmtNum(Math.round(v * 10) / 10); };
+  // 24-hour strip from midnight: one block per pump speed, as wide as its hours, as strong as its output
+  var parts = [], ticks = [], start = segs[0].m;
+  var pieces = segs.map(function(s){ return {from: s.m, mins: s.mins, lb: s.lb * k}; });
+  if (start > 0) pieces.unshift({from: 0, mins: start, lb: segs[segs.length - 1].lb * k});   // the last speed runs on past midnight
+  var tot = 0; pieces.forEach(function(p){ if (tot + p.mins > 1440) p.mins = 1440 - tot; tot += p.mins; });
+  pieces.filter(function(p){ return p.mins > 0; }).forEach(function(p){
+    var op = maxLb > 0 ? 0.35 + 0.65 * (p.lb / (maxLb * k)) : 1;
+    parts.push('<i style="flex:' + p.mins + ' 0 0;opacity:' + op.toFixed(2) + '">' + (p.mins >= 300 ? fmtNum(Math.round(p.lb * 100) / 100) + ' lb' : '') + '</i>');
+    ticks.push('<span style="left:' + (p.from / 1440 * 100).toFixed(2) + '%">' + feedHour(p.from) + '</span>');
+  });
+  ticks.push('<span style="left:100%">12a</span>');
+  el.innerHTML = '<div class="fdbig"><b>' + (days ? r1(days) : '–') + '</b><span>days per full load</span></div>' +
+    '<div class="fdstats"><span><b>' + fmtNum(Math.round(lb * 100) / 100) + ' lb</b> chlorine a day</span><span><b>FC +' + r1(ppm) + '</b> a day</span></div>' +
+    '<div class="fdday" role="img" aria-label="How much it feeds through the day">' + parts.join('') + '</div><div class="fdticks">' + ticks.join('') + '</div>' +
+    '<p class="fdnote' + (rated || f.days > 0 ? '' : ' warn') + '">' + (f.days > 0 ? 'Using your “lasts ' + fmtNum(f.days) + ' days”. The maker\'s table alone says about ' + (tableDays ? r1(tableDays) : '–') + '.'
+      : rated ? 'From the maker\'s table (the manual that came with the feeder).' : 'Letter ' + esc(f.letter) + ' isn\'t rated at this low a flow, so this borrows the nearest rated numbers. Treat it as a guess.') + '</p>';
 }
 function feedWire(){
-  $('feedDlg').addEventListener('input', feedCalc);
-  $('feedDlg').addEventListener('change', feedCalc);
+  var dlg = $('feedDlg');
+  dlg.addEventListener('input', feedCalc);
+  dlg.addEventListener('change', feedCalc);
+  dlg.addEventListener('click', function(e){
+    var lb = e.target.closest('[data-fdl]');
+    if (lb) { $('fdLetter').value = lb.getAttribute('data-fdl'); feedCalc(); return; }
+    var rm = e.target.closest('[data-fdrm]');
+    if (rm) { rm.closest('.fdr').remove(); feedAddVis(); feedCalc(); return; }
+  });
+  $('fdAdd').addEventListener('click', function(){ $('fdRows').insertAdjacentHTML('beforeend', feedRowHtml()); feedAddVis(); var ins = $('fdRows').querySelectorAll('.fdr'); ins[ins.length - 1].querySelector('input').focus(); });
+  $('fdX').addEventListener('click', function(){ closeDlg('feedDlg'); });
   $('fdCancel').addEventListener('click', function(){ closeDlg('feedDlg'); });
   $('fdSave').addEventListener('click', function(){
     if (feedBusy) return;
@@ -4154,6 +4235,7 @@ function feedWire(){
     }, function(err){ feedBusy = false; $('fdSave').textContent = 'Save'; $('fdErr').textContent = 'Could not reach the server: ' + (err && err.message || err); });
   });
 }
+function feedAddVis(){ $('fdAdd').hidden = $('fdRows').querySelectorAll('.fdr').length >= FEED_ROWS; }
 function openDlg(id){ var d = $(id); if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', ''); }
 // menus open with nothing outlined (no auto-focus ring on the first row)
 function openMenu(id){ openDlg(id); var d = $(id); d.setAttribute('tabindex', '-1'); try { d.focus({preventScroll:true}); } catch(e){ d.focus(); } }
