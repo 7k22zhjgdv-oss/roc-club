@@ -907,9 +907,11 @@ body{padding-top:calc(var(--barH) + var(--barTop) + 14px)}
 #menuDlg .mninfo div{white-space:nowrap}
 /* ---- + button: log a test / add a note (named people + Manager), 2026-10-05 ---- */
 :root{--water:#a8541f;--escrim:rgba(20,20,18,.30);--eshadow:0 6px 22px rgba(0,0,0,.16);
-  --glass:rgba(255,255,255,.52);--glassEdge:rgba(255,255,255,.75);--glassHi:rgba(255,255,255,.55);--glassFill:rgba(255,255,255,.38)}
+  --glass:rgba(255,255,255,.52);--glassEdge:rgba(255,255,255,.75);--glassHi:rgba(255,255,255,.55);--glassFill:rgba(255,255,255,.38);
+  --frost:rgba(255,255,255,.62);--frostLine:rgba(60,60,67,.12)}
 @media (prefers-color-scheme: dark){:root{--water:#c9803a;--escrim:rgba(0,0,0,.45);--eshadow:0 6px 22px rgba(0,0,0,.5);
-  --glass:rgba(36,36,35,.50);--glassEdge:rgba(255,255,255,.18);--glassHi:rgba(255,255,255,.10);--glassFill:rgba(255,255,255,.07)}}
+  --glass:rgba(36,36,35,.50);--glassEdge:rgba(255,255,255,.18);--glassHi:rgba(255,255,255,.10);--glassFill:rgba(255,255,255,.07);
+  --frost:rgba(58,58,60,.55);--frostLine:rgba(255,255,255,.10)}}
 #entryUi{display:none}
 body.can-enter #entryUi{display:block}
 /* closed: clear AND not visible - Safari tints its toolbar from full-screen layers even at opacity 0, which left the bar grey */
@@ -1089,6 +1091,87 @@ html.app #entryUi.menu .macts{display:flex}
 .ectot{margin:0 0 8px;color:var(--ink2)}
 .ectot .top{font-weight:600;font-size:13px;margin-bottom:4px}
 .ecadd{width:100%;height:46px;border:1.5px dashed var(--glassEdge);border-radius:14px;background:none;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+/* ---- + panels refresh (2026-10-09, mockup artifact "Pool Log Test Panel"): the frosted glass stays; inside, frosted cards
+   (--frost) instead of colored tints, the reading's color as a dot + name; header like the other pop-ups (bold title, a blue
+   "Today, 7:42 PM · Carla" line that opens the date / time row, round ×). Log test: CSI box at the top, a status pill per box,
+   Temp / Salt / Borates folded. */
+.egrow{box-shadow:inset 0 0 0 .5px var(--glassEdge),inset 0 1px 0 var(--glassHi),var(--eshadow);border-color:transparent}
+.ghead{align-items:flex-start;padding:7px 8px 6px}
+.egrow.big .ghead{padding:16px 14px 8px 18px}
+.egrow.big #eIcon{display:none}
+.gtitle{flex:1;min-width:0}
+.ghead .gtitle h2{flex:none}
+.egrow.big .ghead h2{font-size:22px;font-weight:700;letter-spacing:-.015em;line-height:1.15}
+.egrow:not(.big) .gtitle{align-self:center}
+.gwhen{display:none;margin:4px 0 0;border:0;background:none;padding:0;font:inherit;font-size:14px;color:var(--accent);cursor:pointer;text-align:left}
+.gwhen small{color:var(--muted);font-size:14px}
+.egrow.big .gwhen:not(:empty){display:block}
+.egrow.big .gx{width:30px;height:30px;flex:0 0 30px;border:0;background:var(--glassFill);box-shadow:inset 0 0 0 .5px var(--glassEdge);color:var(--ink2);position:relative}
+.egrow.big .gx::after{content:"";position:absolute;inset:-7px}
+.egrow.big .gx svg{width:16px;height:16px}
+.gfoot{border-top:0;box-shadow:0 -.5px 0 var(--glassEdge)}
+.ewho{display:none}
+.ewhen{display:none;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);border-radius:14px;margin:0 0 8px}
+.egrow.whenopen .ewhen{display:flex}
+.ewhen label+label{border-left-color:var(--frostLine)}
+.egrp{margin:16px 6px 6px}
+.egrp b{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.etile{border:0;border-radius:16px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:9px 10px 8px;transition:box-shadow .15s}
+.etile:focus-within{background:var(--frost);box-shadow:inset 0 0 0 2px var(--c)}
+.etile .nm{align-items:center;justify-content:flex-start;gap:5px;font-size:12.5px}
+.etile .nm::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--c)}
+.etile .nm i{margin-left:auto;font-size:11px}
+.etile input{font-size:26px;font-weight:650;letter-spacing:-.01em;padding-top:2px}
+.etile input::placeholder{color:color-mix(in srgb,var(--muted) 45%,transparent);font-weight:400}
+.etile .ls{min-height:17px}
+.etile.odd{background:var(--frost);box-shadow:inset 0 0 0 2px var(--yellow)}
+.eci .etile{background:var(--card)}
+.epill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 6px;margin-right:4px;letter-spacing:.01em;vertical-align:1px}
+.epill.green{background:color-mix(in srgb,var(--green) 18%,transparent);color:color-mix(in srgb,var(--green) 70%,var(--ink))}
+.epill.yellow{background:color-mix(in srgb,var(--yellow) 32%,transparent);color:color-mix(in srgb,var(--yellow) 40%,var(--ink))}
+.epill.red{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}
+.epill.purple{background:color-mix(in srgb,var(--purple) 18%,transparent);color:var(--purple)}
+.epill.none{background:var(--glassFill);color:var(--muted)}
+/* CSI box at the top of Log test */
+.ecsi{border:0;border-radius:20px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:12px 14px;color:var(--muted)}
+.ecsi.hero{margin-top:0}
+.ecsi.hero .r1{display:flex;align-items:center;gap:8px}
+.ecsi.hero .lbl{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.ecsi.hero .epill{font-size:12px;padding:2px 8px}
+.ecsi.hero b{display:block;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.ebar{position:relative;height:6px;border-radius:3px;background:color-mix(in srgb,var(--muted) 22%,transparent);margin:8px 0 6px}
+.ebar .ok{position:absolute;top:0;bottom:0;border-radius:3px;background:color-mix(in srgb,var(--green) 45%,transparent)}
+.ebar .dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:var(--k-csi);box-shadow:0 0 0 2px var(--card);transform:translate(-50%,-50%);transition:left .25s}
+.ebar .dot[hidden]{display:none}
+.ecsi.hero .from{font-size:12.5px;line-height:1.35}
+/* Temp / Salt / Borates folded behind one row */
+.efold{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;margin-top:6px;border:0;border-radius:16px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:0 14px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer;text-align:left}
+.efold span{margin-left:auto;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.efold::after{content:"›";color:var(--muted);font-size:20px;transition:transform .15s}
+.efold[aria-expanded=true]::after{transform:rotate(90deg)}
+.etiles.fold{margin-top:6px}
+.etiles[hidden]{display:none}
+/* settings-style rows: note + switches */
+.elist{border-radius:16px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:0 14px}
+.elist .etext{display:block;background:none;border:0;border-radius:0;padding:14px 0;min-height:50px;resize:none}
+.elist .echk{justify-content:space-between;min-height:50px;margin:0;border-top:1px solid var(--frostLine);color:var(--ink);font-size:15px}
+.esw{-webkit-appearance:none;appearance:none;flex:0 0 51px;width:51px;height:31px;margin:0;border-radius:16px;background:color-mix(in srgb,var(--muted) 35%,transparent);position:relative;cursor:pointer;transition:background .15s}
+.esw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.echk input.esw{width:51px;height:31px}
+.esw:checked{background:#34c759}.esw:checked::after{transform:translateX(20px)}
+.etext{background:var(--frost);border:0;box-shadow:inset 0 0 0 .5px var(--frostLine);border-radius:16px}
+.etext:focus{box-shadow:inset 0 0 0 2px var(--muted)}
+.elist .etext,.elist .etext:focus{box-shadow:none}
+/* note, pump and chemical panels: the same frosted cards */
+.eseg{background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine)}
+.ecsi.ep{color:var(--ink2)}
+.erec{border-radius:16px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:2px 12px}
+.erec .r{border-bottom-color:var(--frostLine)}
+.ecpick button{border:0;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine)}
+.ecpick button.more{background:var(--glassFill)}
+.eci{border:0;border-radius:18px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine),inset 4px 0 0 var(--c)}
+.esave:disabled{background:var(--glassFill);box-shadow:inset 0 0 0 .5px var(--glassEdge)}
+@media (prefers-reduced-motion:reduce){.etile,.ebar .dot,.efold::after,.esw,.esw::after{transition:none}}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
 #emBody{display:contents}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
@@ -5738,7 +5821,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="egrow" id="eGrow" role="dialog" aria-modal="true" aria-labelledby="eTitle" hidden>
     <div class="ghead">
       <span class="ei44" id="eIcon"></span>
-      <h2 id="eTitle">Log test</h2>
+      <div class="gtitle"><h2 id="eTitle">Log test</h2><button type="button" class="gwhen" id="eWhen" aria-expanded="false" aria-label="Change the date and time"></button></div>
       <button type="button" class="gx" id="eX" aria-label="Close without saving"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="gbody" id="eBody"></div>
@@ -5779,6 +5862,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var BORROW = {tempF: 7, ta: 30, ch: 30, cya: 30, salt: 90, bor: 90};      // same as CSI_BORROW_DAYS in Code.gs
   var BLABEL = {tempF: 'Temp', ta: 'TA', ch: 'CH', cya: 'CYA', salt: 'Salt', bor: 'Borates'};
   var DUP_MS = 30 * 60000;
+  var ENTRY_ST = {green: 'In range', yellow: 'Watch', red: 'Out', purple: 'High'};
 
   var ui = $('entryUi'), fab = $('eFab'), grow = $('eGrow'), body = $('eBody'), save = $('eSave'), msg = $('eMsg');
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5820,6 +5904,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eChemBtn').addEventListener('click', function(){ openPanel('chem', null, $('eChemBtn')); });
   $('ePrices').addEventListener('click', function(){ setOpen(false); openPrices(); });
   $('eX').addEventListener('click', function(){ closePanel(); });
+  $('eWhen').addEventListener('click', function(){ var o = grow.classList.toggle('whenopen'); this.setAttribute('aria-expanded', String(o)); if (o) body.scrollTop = 0; });
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
     if (!grow.hidden && !busy) closePanel(); else if (ui.classList.contains('open')) setOpen(false); else if (ui.classList.contains('menu')) setMenu(false);
@@ -5932,7 +6017,9 @@ document.addEventListener('DOMContentLoaded', function(){
   function stamp(iso){ return new Date(iso).toLocaleString('en-US', {timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'}); }
   function pumpBody(){
     var n = nowLocal();
-    return '<div class="eseg" role="group" aria-label="Which meter">' +
+    return '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + n.day + '"></label>' +
+        '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
+      '<div class="eseg" role="group" aria-label="Which meter">' +
         '<button type="button" data-pt="well" style="--c:var(--water)">Well<small>Groundwater meter</small></button>' +
         '<button type="button" data-pt="pool" style="--c:var(--k-ch)">Pool<small>Pool-fill meter</small></button></div>' +
       '<div class="etiles two">' +
@@ -5942,8 +6029,6 @@ document.addEventListener('DOMContentLoaded', function(){
           '<input id="epTank" inputmode="decimal" enterkeyhint="done" placeholder="–" autocomplete="off"><span class="ls" id="epTankLs">optional</span></label>' +
       '</div>' +
       '<div class="ecsi ep" id="epInfo"></div>' +
-      '<div class="ewhen" style="margin-top:10px">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + n.day + '"></label>' +
-        '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>' +
       '<div class="egrp"><b>Note</b><span id="epNoteHd"></span></div>' +
       '<input class="etext" id="epNote" maxlength="500" style="min-height:0" placeholder="Anything worth flagging" autocomplete="off">' +
       '<div class="egrp"><b>Last readings</b><span id="epRecHd"></span></div><div class="erec" id="epRec"><div class="none">Loading…</div></div>';
@@ -6266,19 +6351,37 @@ document.addEventListener('DOMContentLoaded', function(){
     var n = t ? {day: t.day, time: to24(t.time)} : nowLocal();
     var h = '<div class="ewhen">' + WHEN_ICO + '<label for="eDate">Date<input id="eDate" type="date" value="' + n.day + '" max="' + nowLocal().day + '"></label>' +
       '<label for="eTime">Time<input id="eTime" type="time" value="' + n.time + '"></label></div>';
-    GROUPS.forEach(function(g){
-      h += '<div class="egrp"><b>' + g[0] + '</b><span>' + g[1] + '</span></div><div class="etiles">';
-      g[2].forEach(function(f){
-        h += '<label class="etile" id="ew_' + f[0] + '" style="--c:var(--k-' + f[0] + ')"><span class="nm">' + f[1] + '<i>' + f[2] + '</i></span>' +
-          '<input id="ei_' + f[0] + '" inputmode="decimal" enterkeyhint="next" placeholder="–" autocomplete="off" value="' + (t && isNum(t[f[0]]) ? fmtNum(t[f[0]]) : '') + '">' +
-          '<span class="ls" id="el_' + f[0] + '"></span></label>';
-      });
-      h += '</div>';
+    // the answer first: CSI worked out as you type (2026-10-09)
+    h += '<div class="ecsi hero" aria-live="polite"><div class="r1"><span class="lbl">Balance (CSI)</span><span class="epill none" id="eCsiPill">Waiting</span></div>' +
+      '<b id="eCsi">–</b><div class="ebar"><span class="ok" id="eCsiOk"></span><span class="dot" id="eCsiDot" hidden></span></div><div class="from" id="eCsiFrom"></div></div>';
+    function tile(f){
+      return '<label class="etile" id="ew_' + f[0] + '" style="--c:var(--k-' + f[0] + ')"><span class="nm">' + f[1] + (f[2] ? '<i>' + f[2] + '</i>' : '') + '</span>' +
+        '<input id="ei_' + f[0] + '" inputmode="decimal" enterkeyhint="next" placeholder="–" autocomplete="off" value="' + (t && isNum(t[f[0]]) ? fmtNum(t[f[0]]) : '') + '">' +
+        '<span class="ls" id="el_' + f[0] + '"></span></label>';
+    }
+    GROUPS.forEach(function(g, gi){
+      if (gi === GROUPS.length - 1){
+        // Temp, Salt, Borates: rarely typed, folded behind one row with their last values (open when editing a test that has one)
+        var open = !!(t && g[2].some(function(f){ return isNum(t[f[0]]); }));
+        h += '<button type="button" class="efold" id="eFold" aria-expanded="' + open + '" aria-controls="eOther">' + g[2].map(function(f){ return f[1]; }).join(', ').replace(/^(\w)(.*)$/, function(m, a, b){ return a + b.toLowerCase(); }) +
+          '<span id="eFoldSum"></span></button><div class="etiles fold" id="eOther"' + (open ? '' : ' hidden') + '>' + g[2].map(tile).join('') + '</div>';
+        return;
+      }
+      h += '<div class="egrp"><b>' + g[0] + '</b><span>' + g[1] + '</span></div><div class="etiles">' + g[2].map(tile).join('') + '</div>';
     });
-    h += '<div class="ecsi"><div class="top"><span>CSI, worked out from your numbers</span><b id="eCsi">–</b></div><div class="from" id="eCsiFrom"></div></div>';
-    if (!t) h += '<div class="egrp"><b>Note</b><span>optional</span></div><textarea class="etext" id="eNote" maxlength="1000" placeholder="Anything you noticed"></textarea>' +
-      '<label class="echk"><input type="checkbox" id="eStore"> Tested at Leslie\'s / pool store</label>';
+    if (!t) h += '<div class="egrp"><b>Also</b></div><div class="elist"><textarea class="etext" id="eNote" maxlength="1000" placeholder="Note: anything you noticed" aria-label="Note"></textarea>' +
+      '<label class="echk" for="eStore"><span>Tested at Leslie\'s / pool store</span><input type="checkbox" class="esw" role="switch" id="eStore"></label></div>';
     return h;
+  }
+  /** The blue line under the title: "Today, 7:42 PM · Carla" (tap: the date / time row). */
+  function whenLine(){
+    var d = $('eDate'), t = $('eTime'); if (!d || !t) return '';
+    var today = nowLocal().day, day = d.value, hm = t.value;
+    var dw = !day ? 'Pick a date' : day === today ? 'Today' : day === addDays(today, -1) ? 'Yesterday' : fmtDayRel(day);
+    var tw = '';
+    if (hm){ var hh = +hm.slice(0, 2), mm = hm.slice(3, 5); tw = (hh % 12 || 12) + ':' + mm + (hh < 12 ? ' AM' : ' PM'); }
+    var who = editing ? 'entered by ' + firstName(editing.by) : firstName(DATA.me || WHO);
+    return esc(dw + (tw ? ', ' + tw : '')) + (who ? ' <small>· ' + esc(who) + '</small>' : '');
   }
   function noteBody(n){
     var w = n ? {day: n.day, time: to24(n.time)} : nowLocal();
@@ -6300,6 +6403,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function refresh(){
     msg.textContent = ''; msg.className = 'emsg'; dupOk = false;
+    $('eWhen').innerHTML = whenLine();
     if (mode === 'vols') return;
     if (!busy) save.textContent = editing ? 'Save changes' : KIND[mode][2];
     if (mode === 'note') { save.disabled = busy || !$('eNote').value.trim(); return; }
@@ -6318,12 +6422,30 @@ document.addEventListener('DOMContentLoaded', function(){
       tile.classList.toggle('odd', odd);
       var last = lastOf(f[0], 0, skip);
       if (odd) anyOdd = true;
-      $('el_' + f[0]).textContent = odd ? 'Check this' : last ? 'Last ' + fmtNum(last[f[0]]) + ' · ' + agoShort(last.ms) : 'No reading yet';
+      var lastTxt = last ? 'Last ' + fmtNum(last[f[0]]) + ' · ' + agoShort(last.ms) : 'No reading yet';
+      // a typed number gets its status right away, in the history's colors (2026-10-09)
+      var col = has && !odd && COLBY[f[0]] && COLBY[f[0]][2] ? colorOf(COLBY[f[0]][2], v) : '';
+      $('el_' + f[0]).innerHTML = odd ? 'Check this' : col ? '<span class="epill ' + col + '">' + ENTRY_ST[col] + '</span>' + (last ? 'was ' + esc(fmtNum(last[f[0]])) : '') : esc(lastTxt);
     });
+    var fs = $('eFoldSum');
+    if (fs) fs.textContent = GROUPS[GROUPS.length - 1][2].map(function(f){
+      var v = r.v[f[0]], last = lastOf(f[0], 0, skip), x = isNum(v) ? v : last ? last[f[0]] : null;
+      return x === null ? '–' : fmtNum(x) + (f[0] === 'tempF' ? '°' : '');
+    }).join(' · ');
     var p = anyOdd ? {text: 'Check the yellow box first.'} : csiPreview(r.v, w ? w.ms : Date.now(), skip);
     $('eCsi').textContent = p.csi === undefined ? '–' : fmtNum(p.csi);
     $('eCsiFrom').textContent = p.text;
-    save.disabled = busy || !Object.keys(r.v).length;
+    var cg = nowGreen('CSI') || {lo: -0.1, hi: 0.3}, px = function(x){ return Math.max(0, Math.min(100, (x + 0.6) / 1.2 * 100)); };
+    $('eCsiOk').style.left = px(cg.lo) + '%'; $('eCsiOk').style.width = (px(cg.hi) - px(cg.lo)) + '%';
+    var cc = p.csi === undefined ? '' : colorOf('CSI', p.csi), pill = $('eCsiPill');
+    pill.className = 'epill ' + (cc || 'none');
+    pill.textContent = p.csi === undefined ? 'Waiting' : cc === 'green' ? 'Balanced' : cc === 'purple' ? 'High: may scale' :
+      cc === 'yellow' ? (p.csi < 0 ? 'A little low' : 'A little high') : cc === 'red' ? (p.csi < 0 ? 'Low: eats plaster' : 'Too high') : 'Worked out';
+    $('eCsi').style.color = cc ? 'var(--k-csi)' : 'var(--muted)';
+    $('eCsiDot').hidden = p.csi === undefined; if (p.csi !== undefined) $('eCsiDot').style.left = px(p.csi) + '%';
+    var nR = Object.keys(r.v).length;
+    save.disabled = busy || !nR;
+    if (!busy) save.textContent = editing ? 'Save changes' : nR ? 'Save ' + nR + ' reading' + (nR === 1 ? '' : 's') : 'Type a reading';
   }
   function place(r, rad){ grow.style.top = r.top + 'px'; grow.style.left = r.left + 'px'; grow.style.width = r.width + 'px'; grow.style.height = r.height + 'px'; grow.style.borderRadius = typeof rad === 'number' ? rad + 'px' : rad; }
   /** Panel corners: top rounded around the × (its 22 px radius + the 7 px padding); bottom follows the screen's own corner in the
@@ -6359,10 +6481,15 @@ document.addEventListener('DOMContentLoaded', function(){
     $('eIcon').innerHTML = ICON[kind];
     $('eTitle').textContent = kind === 'vols' ? 'Volunteers' : kind === 'chem' ? (item ? 'Edit chemical' : 'Add chemical') : (item ? 'Edit ' : kind === 'note' ? 'Add a ' : 'Log ') + KIND[kind][0];
     grow.classList.toggle('nofoot', kind === 'vols');
+    grow.classList.remove('whenopen'); $('eWhen').setAttribute('aria-expanded', 'false');
     save.textContent = item ? 'Save changes' : KIND[kind][2];
     $('eWho').innerHTML = item ? 'Entered by<br>' + esc(firstName(item.by)) : whoText();
     body.innerHTML = kind === 'vols' ? '<div class="vlist" id="vList">Loading…</div>' : kind === 'test' ? testBody(item) : kind === 'pump' ? pumpBody() : kind === 'chem' ? chemBody(item) : noteBody(item);
     if (kind === 'vols') volLoad('');
+    if ($('eFold')) $('eFold').addEventListener('click', function(){
+      var o = $('eOther'); o.hidden = !o.hidden; this.setAttribute('aria-expanded', String(!o.hidden));
+      if (!o.hidden) { var f = $('ei_tempF'); if (f) setTimeout(function(){ try { f.focus(); } catch(e){} }, 30); }
+    });
     if (kind === 'chem') chemDraw();
     body.querySelectorAll('input,textarea').forEach(function(el){ el.addEventListener('input', refresh); });
     if (kind === 'pump') {
@@ -6378,7 +6505,9 @@ document.addEventListener('DOMContentLoaded', function(){
       var el = $('ei_' + f[0]); if (!el) return;
       el.addEventListener('keydown', function(e){
         if (e.key !== 'Enter') return;
-        e.preventDefault(); var nx = FIELDS[i + 1]; var to = nx ? $('ei_' + nx[0]) : $('eNote'); if (to) to.focus(); else el.blur();
+        e.preventDefault(); var nx = FIELDS[i + 1]; var to = nx ? $('ei_' + nx[0]) : $('eNote');
+        if (to && to.offsetParent === null) to = $('eNote');   // folded Temp / Salt / Borates: on to the note
+        if (to) to.focus(); else el.blur();
       });
     });
     refresh();
