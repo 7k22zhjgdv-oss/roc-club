@@ -1491,6 +1491,15 @@ dialog.pop.wide{max-width:1040px}
 #printDlg .ppgs i{display:block;height:2px;border-radius:1px;background:color-mix(in srgb,var(--accent) 35%,var(--line))}
 #printDlg .ppgs i:first-child{background:var(--accent);height:3px;width:70%}
 #printDlg .pophero.busy .popbig b{opacity:.45}
+/* home-screen app on a phone (DESIGN.md "Pop-up windows"): pop-ups sit at the bottom like the + panel's Log test window, 6 px
+   from the sides and the bottom; the bottom corners follow the screen's own (--cornerR minus the 6 px gap) and the buttons are
+   pills so they clear the curve. */
+@media (max-width:720px){
+  html.app dialog.pop{margin:auto 6px 6px;width:calc(100% - 12px);max-width:none;border-radius:30px 30px calc(var(--cornerR,54px) - 6px) calc(var(--cornerR,54px) - 6px);max-height:calc(100dvh - env(safe-area-inset-top,0px) - 20px)}
+  html.app .popfoot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px))}
+  html.app .popfoot .btn,html.app .popfoot a.btn{border-radius:23px}
+  html.app .popbody:last-child{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+}
 /* small menus (page switcher, ⋯): a compact top row with their name and the × */
 .mhead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:4px 0 2px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .mhead .popx{width:28px;height:28px;flex-basis:28px;font-size:18px;text-transform:none}
