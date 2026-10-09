@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","saveFeeder","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
@@ -358,6 +358,65 @@ dialog .chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-siz
 dialog .chk input{margin-top:3px}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
+/* cal-hypo feeder settings (2026-10-08, design pass 2026-10-09): a big "days per load", a 24-hour strip of how hard it
+   feeds, letter buttons, settings-style grouped rows on the soft grey */
+#feedDlg .fdhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+#feedDlg h2{margin:0;font-size:20px;letter-spacing:-.01em}
+#feedDlg .fdsub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+#feedDlg .fdx{border:0;background:var(--soft);color:var(--ink2);width:30px;height:30px;border-radius:50%;font-size:20px;line-height:1;flex:0 0 30px;cursor:pointer}
+#feedDlg .fdhero{background:color-mix(in srgb,var(--accent) 9%,var(--card));border-radius:18px;padding:14px 16px 12px}
+#feedDlg .fdbig{display:flex;align-items:baseline;gap:8px}
+#feedDlg .fdbig b{font-size:40px;line-height:1;font-weight:700;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums}
+#feedDlg .fdbig span{font-size:15px;color:var(--ink2);font-weight:500}
+#feedDlg .fdstats{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:14px;color:var(--ink2)}
+#feedDlg .fdstats b{color:var(--ink);font-weight:600}
+#feedDlg .fdday{display:flex;height:30px;margin-top:12px;border-radius:8px;overflow:hidden;gap:2px}
+#feedDlg .fdday i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:600;color:var(--accentInk);background:var(--accent);min-width:0;white-space:nowrap;overflow:hidden}
+#feedDlg .fdticks{position:relative;height:14px;margin-top:3px;font-size:10.5px;color:var(--muted)}
+#feedDlg .fdticks span{position:absolute;top:0;transform:translateX(-50%)}
+#feedDlg .fdticks span:first-child{transform:none}
+#feedDlg .fdticks span:last-child{transform:translateX(-100%)}
+#feedDlg .fdnote{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.35}
+#feedDlg .fdnote.warn{color:var(--ink2)}
+#feedDlg .fdsec{margin:18px 4px 6px;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+#feedDlg .fdgrp{background:var(--soft);border-radius:14px;padding:10px 8px}
+#feedDlg .fdhelp{font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.35}
+#feedDlg .fdhelp.out{margin:8px 6px 0}
+#feedDlg .fdlet{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+#feedDlg .fdlet button{height:40px;border-radius:10px;border:0;background:var(--card);color:var(--ink);font:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:0}
+#feedDlg .fdlet button.off{color:var(--muted);font-weight:400;background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+#feedDlg .fdlet button[aria-checked=true]{background:var(--accent);color:var(--accentInk);box-shadow:none}
+#feedDlg .fdcols,#feedDlg .fdr{display:grid;grid-template-columns:1.55fr 1fr 1fr 22px;gap:6px;align-items:center}
+#feedDlg .fdcols{font-size:11.5px;color:var(--muted);padding:0 4px 4px}
+#feedDlg .fdr{margin-bottom:6px}
+#feedDlg .fdr>*{min-width:0}
+#feedDlg .fdin{position:relative;display:flex;align-items:center;background:var(--card);border-radius:10px;height:40px;padding:0 9px;min-width:0}
+#feedDlg .fdin input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;width:100%;min-width:0;padding:0;outline:0;-webkit-appearance:none;appearance:none;font-variant-numeric:tabular-nums}
+#feedDlg .fdin:focus-within{box-shadow:0 0 0 2px var(--accent)}
+#feedDlg .fdin i{font-style:normal;font-size:12px;color:var(--muted);margin-left:3px;flex:0 0 auto}
+#feedDlg .fdin input[type=time]{display:block;height:40px;text-align:left}
+#feedDlg .fdin input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
+#feedDlg .fdin input[type=time]::-webkit-calendar-picker-indicator{display:none}
+#feedDlg .fdrm{border:0;background:transparent;color:var(--muted);font-size:18px;width:22px;height:40px;cursor:pointer;padding:0}
+#feedDlg .fdadd{border:0;background:transparent;color:var(--accent);font:inherit;font-size:15px;font-weight:500;padding:6px 4px 2px;cursor:pointer}
+#feedDlg .fdlist{padding:0 12px}
+#feedDlg .fdli{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;margin:0;font-size:15px;color:var(--ink);border-top:1px solid var(--line)}
+#feedDlg .fdlist>.fdli:first-child{border-top:0}
+#feedDlg .fdli small{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+#feedDlg .fdli .fdin{width:104px;flex:0 0 104px}
+#feedDlg .fdmore{display:block;padding:0}
+#feedDlg .fdmore summary{display:flex;align-items:center;justify-content:space-between;min-height:52px;cursor:pointer;list-style:none;color:var(--ink)}
+#feedDlg .fdmore summary::-webkit-details-marker{display:none}
+#feedDlg .fdmore summary::after{content:"›";display:inline-block;color:var(--muted);font-size:20px;margin-left:8px;transition:transform .15s}
+#feedDlg .fdmore[open] summary::after{transform:rotate(90deg)}
+#feedDlg .fdsum{margin-left:auto;color:var(--muted);font-size:14px}
+#feedDlg .fdmore .fdhelp{margin:4px 0 12px}
+.jfeed{margin:8px 0 2px;font-size:13px;line-height:1.35}
+.jfeed b{display:block}
+.jfeed b.e{color:var(--red, #b3261e)}
+.jfeed b span{font-weight:400;color:var(--muted)}
+.jfeed .m{display:block;color:var(--muted);font-size:12px}
+.jfeed .trkebtn{margin-top:6px}
 #codeIn,#nameIn{font-size:16px}
 #nameIn,#codeIn:not(.secret){width:100%;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:40px}
 #unlockDlg .si-q{margin:0 0 12px;font-size:18px;font-weight:600}
@@ -617,7 +676,9 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
   #printView{display:block}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-#printView{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#000;background:#fff}
+/* the report is laid out in the PDF's own fonts (Inter + RocSym for ✕ and the like, loaded by pdfLoad) so the PDF matches it exactly;
+   no kerning or ligatures, which the PDF does not use either */
+#printView{font-family:RocPrint,RocSym,sans-serif;color:#000;background:#fff;font-kerning:none;font-variant-ligatures:none;font-synthesis:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #printView h1{font-size:16pt;margin:0}
 #printView .ptitle{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:5px}
 #printView .ptitle h1{font-size:15pt}
@@ -675,7 +736,7 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 #printView tr.predrow td{color:#777;font-style:italic;background:linear-gradient(90deg,#777 50%,transparent 0) top left/6px 1px repeat-x #fff;white-space:nowrap}
 #printView tr.dim td.green,#printView tr.dim td.yellow,#printView tr.dim td.red,#printView tr.dim td.purple{background:#fff;font-weight:400}
 #printView tr.dim td[class*=" "]{}
-#printView .ppage{display:flex;flex-direction:column;height:9.55in;break-after:page;page-break-after:always}
+#printView .ppage{display:flex;flex-direction:column;height:10in;break-after:page;page-break-after:always}
 #printView .ppage.last{break-after:auto;page-break-after:auto}
 #printView .ppage table{flex:0 0 auto}
 #printView .pgap{flex:0 0 auto}
@@ -712,13 +773,13 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 .summary.hascost:not(.open) .sumdet{display:none}
 dialog.sheet{margin:auto 0 0 0;width:100%;max-width:100%;border-radius:22px 22px 0 0;border-bottom:0;padding:10px 16px max(22px,env(safe-area-inset-bottom))}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
-.sheet .seg{display:flex;width:100%;align-self:stretch}
-.sheet .seg button{flex:1;min-height:44px}
-.sheet .presets{margin-bottom:12px}
-.sheet .presets .pill{min-height:44px;padding:0 16px;font-size:15px}
-.sheet .dates{gap:10px}
-.sheet .dates label{flex:1;display:flex;flex-direction:column;gap:4px}
-.sheet .dates input{min-height:44px;width:100%}
+.sheet .seg,.sheetpop .seg{display:flex;width:100%;align-self:stretch}
+.sheet .seg button,.sheetpop .seg button{flex:1;min-height:44px}
+.sheet .presets,.sheetpop .presets{margin-bottom:12px}
+.sheet .presets .pill,.sheetpop .presets .pill{min-height:44px;padding:0 16px;font-size:15px}
+.sheet .dates,.sheetpop .dates{gap:10px}
+.sheet .dates label,.sheetpop .dates label{flex:1;display:flex;flex-direction:column;gap:4px}
+.sheet .dates input,.sheetpop .dates input{min-height:44px;width:100%}
 .sheet .go{width:100%;margin-top:16px;min-height:48px;font-size:16px}
 .mrow{display:flex;align-items:center;width:100%;min-height:54px;background:none;border:0;border-bottom:1px solid var(--line);font-size:17px;text-align:left;cursor:pointer;padding:0}
 .vrow{display:flex;align-items:center;justify-content:space-between;min-height:48px;margin-top:12px;font-size:16px}
@@ -1029,22 +1090,19 @@ html.app #entryUi.menu .macts{display:flex}
 .ectot .top{font-weight:600;font-size:13px;margin-bottom:4px}
 .ecadd{width:100%;height:46px;border:1.5px dashed var(--glassEdge);border-radius:14px;background:none;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
-#entryMenu .emsub{margin:-6px 0 8px;color:var(--muted);font-size:13px}
+#emBody{display:contents}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
 .emk:hover{color:var(--ink);background:var(--soft)}
 /* Remove test (test ⋯) and Review removed tests (top ⋯), Manager */
 .mkrm{display:flex;gap:8px;margin-top:10px}
 .mkrm .btn{flex:1}
 .mkrm .btn.danger,#entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
-.rmhint{margin:2px 0 10px;color:var(--muted);font-size:14px}
 .rmrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .rmrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .rmrow span{font-size:13px;color:var(--muted)}
 .rmrow .btn{flex:none}
 .rmnone{color:var(--muted)}
 .rmerr{color:var(--red)}
-#entryMenu .row{display:flex;gap:8px;margin-top:12px}
-#entryMenu .row button{flex:1}
 #entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
 @media (prefers-reduced-motion: reduce){.eact,.escrim,.efab svg,.egrow,.gbody,.gfoot,.gx{transition:none!important}}
 @media print{#entryUi,.emk{display:none!important}}
@@ -1380,6 +1438,72 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
 .status{background:var(--card)}
 .skel .sk{background:var(--card)}
 .btn:hover,.navbtn:hover,.impx:hover{background:color-mix(in srgb,var(--ink) 7%,var(--card))}
+/* ---- Pop-up windows (DESIGN.md "Pop-up windows", 2026-10-09): header pinned at the top (title, grey line, round ×), the
+   middle scrolls, the main button pinned at the bottom. <dialog class="pop"> .pophead (h2, .popsub, .popx) / .popbody / .popfoot */
+dialog.pop{padding:0;border:0;border-radius:22px;width:calc(100% - 16px);max-width:440px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;flex-direction:column}
+dialog.pop[open]{display:flex}
+dialog.pop.wide{max-width:1040px}
+.pophead{flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:16px 14px 10px 18px;background:var(--card);position:relative;z-index:1;transition:box-shadow .15s}
+.pophead.lined{box-shadow:0 1px 0 var(--line)}
+.pophead h2,dialog .pophead h2{margin:0;font-size:20px;letter-spacing:-.01em;line-height:1.2;font-weight:700}
+.pophead .popsub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.popx{position:relative;border:0;background:var(--soft);color:var(--ink2);width:30px;height:30px;border-radius:50%;font-size:20px;line-height:1;flex:0 0 30px;cursor:pointer;padding:0;font-family:inherit}
+.popx::after{content:"";position:absolute;inset:-7px}
+.popx:hover{background:color-mix(in srgb,var(--ink) 10%,var(--card))}
+.popbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 18px 16px}
+.popbody>:first-child{margin-top:0}
+.popfoot{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));background:var(--card);box-shadow:0 -1px 0 var(--line)}
+.popfoot .btn{flex:1 1 0;min-height:46px;border-radius:12px;font-size:16px}
+.popfoot .err{flex:1 0 100%;margin:0;min-height:0}
+.popfoot .err:empty{display:none}
+.popbody .err:empty{min-height:0;margin:0}
+.poplink{display:block;flex:1 0 100%;border:0;background:none;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:2px 4px;text-align:center}
+.poplink[disabled]{color:var(--muted);cursor:default}
+.pophero{background:color-mix(in srgb,var(--accent) 9%,var(--card));border-radius:18px;padding:14px 16px 12px}
+.popbig{display:flex;align-items:baseline;gap:8px}
+.popbig b{font-size:40px;line-height:1;font-weight:700;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums}
+.popbig span{font-size:15px;color:var(--ink2);font-weight:500}
+.popstats{display:flex;gap:4px 16px;flex-wrap:wrap;margin-top:6px;font-size:14px;color:var(--ink2)}
+.popstats b{color:var(--ink);font-weight:600}
+.popsec{margin:18px 4px 6px;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.popgrp{background:var(--soft);border-radius:14px;padding:8px}
+.poplist{padding:0 12px}
+.popli,dialog label.popli{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;margin:0;font-size:15px;color:var(--ink);border-top:1px solid var(--line)}
+.poplist>.popli:first-child{border-top:0}
+.popli small{display:block;font-size:12px;color:var(--muted);margin-top:1px;line-height:1.3}
+.popli.sub{padding-left:16px}
+.popli.off{opacity:.4}
+.pophelp{font-size:12px;color:var(--muted);margin:8px 6px 0;line-height:1.35}
+.popsw{-webkit-appearance:none;appearance:none;flex:0 0 51px;width:51px;height:31px;margin:0;border-radius:16px;background:color-mix(in srgb,var(--muted) 35%,transparent);position:relative;cursor:pointer;transition:background .15s}
+.popsw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.popsw:checked{background:#34c759}
+.popsw:checked::after{transform:translateX(20px)}
+.popsw:focus-visible,.popx:focus-visible,.popchips button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.popchips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.popchips button{min-height:40px;border-radius:10px;border:0;background:var(--card);color:var(--ink);font:inherit;font-size:14.5px;font-weight:500;cursor:pointer;padding:6px 8px}
+.popchips button[aria-pressed=true]{background:var(--accent);color:var(--accentInk)}
+.popdates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-top:6px}
+.popdates[hidden],.popfoot[hidden]{display:none}
+.popdates label,dialog .popdates label{display:flex;flex-direction:column;gap:3px;margin:0;font-size:12px;color:var(--muted)}
+.popdates input,dialog .popdates input[type=date]{height:40px;min-height:40px;border:0;border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;padding:0 9px;min-width:0;width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none}
+#printDlg .ppgs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#printDlg .ppgs span{width:30px;height:39px;border-radius:4px;background:var(--card);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,var(--line));padding:5px 4px;display:flex;flex-direction:column;gap:3px;box-sizing:border-box}
+#printDlg .ppgs i{display:block;height:2px;border-radius:1px;background:color-mix(in srgb,var(--accent) 35%,var(--line))}
+#printDlg .ppgs i:first-child{background:var(--accent);height:3px;width:70%}
+#printDlg .pophero.busy .popbig b{opacity:.45}
+/* home-screen app on a phone (DESIGN.md "Pop-up windows"): pop-ups sit at the bottom like the + panel's Log test window, 6 px
+   from the sides and the bottom; the bottom corners follow the screen's own (--cornerR minus the 6 px gap) and the buttons are
+   pills so they clear the curve. */
+@media (max-width:720px){
+  html.app dialog.pop{margin:auto 6px 6px;width:calc(100% - 12px);max-width:none;border-radius:30px 30px calc(var(--cornerR,54px) - 6px) calc(var(--cornerR,54px) - 6px);max-height:calc(100dvh - env(safe-area-inset-top,0px) - 20px)}
+  html.app .popfoot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px))}
+  html.app .popfoot .btn,html.app .popfoot a.btn{border-radius:23px}
+  html.app .popbody:last-child{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+}
+/* small menus (page switcher, ⋯): a compact top row with their name and the × */
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:4px 0 2px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.mhead .popx{width:28px;height:28px;flex-basis:28px;font-size:18px;text-transform:none}
+@media (prefers-reduced-motion:reduce){.popsw,.popsw::after,.pophead{transition:none}}
 </style>
 </head>
 <body>
@@ -1465,17 +1589,19 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
 </div>
 
 <dialog id="navDlg" class="sheet" aria-label="Switch page">
+  <div class="mhead"><span>Switch page</span><button type="button" class="popx" id="navX" aria-label="Close">×</button></div>
   <div class="mrow here" aria-current="page">Pool Chemistry Dashboard</div>
   <a class="mrow" href="../pump/" target="_top" rel="noopener" style="border-bottom:0">Pump Dashboard</a>
 </dialog>
 
 <dialog id="menuDlg" class="sheet" aria-label="More actions">
-  <div class="grab"></div>
+  <div class="mhead"><span>Menu</span><button type="button" class="popx" id="menuX" aria-label="Close">×</button></div>
   <button type="button" class="mrow pub appOnly" id="mnSignIn">Sign in</button>
   <button type="button" class="mrow appOnly" id="mnRefresh">Refresh</button>
   <button type="button" class="mrow mobonly priv brd" id="mnPrint">Print</button>
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
+  <button type="button" class="mrow priv mgr" id="mnFeeder">Cal-hypo feeder</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
   <button type="button" class="mrow priv mgr" id="mnVols">Volunteers</button>
   <button type="button" class="mrow priv volonly" id="mnChgPw">My login</button>
@@ -1483,68 +1609,118 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
 
-<dialog id="removedDlg" class="sheet" aria-labelledby="rmH">
-  <div class="grab"></div>
-  <h2 id="rmH">Removed tests</h2>
-  <p class="rmhint">Removed tests are left out for everyone. Bring one back to show and count it again.</p>
-  <div id="rmList"></div>
-  <button type="button" class="btn primary go" id="rmDone">Done</button>
+<dialog id="feedDlg" class="fd pop" aria-labelledby="fdH" tabindex="-1" autofocus>
+  <div class="pophead"><div><h2 id="fdH">Cal-hypo feeder</h2><span class="popsub">CCH Endurance · one setting for everyone</span></div>
+    <button type="button" class="popx" id="fdX" aria-label="Close">×</button></div>
+  <div class="popbody">
+  <div class="fdhero" id="fdRes" aria-live="polite"></div>
+  <div class="fdsec">Cartridge letter</div>
+  <div class="fdgrp"><input type="hidden" id="fdLetter"><div class="fdlet" id="fdLets" role="radiogroup" aria-label="Cartridge letter"></div>
+    <p class="fdhelp" id="fdLetHelp"></p></div>
+  <div class="fdsec">Pump schedule</div>
+  <div class="fdgrp"><div class="fdcols" aria-hidden="true"><span>Starts</span><span>Pump rpm</span><span>Feeder gpm</span><span></span></div>
+    <div id="fdRows"></div><button type="button" class="fdadd" id="fdAdd">+ Add a speed</button></div>
+  <p class="fdhelp out">Feeder gpm = the reading on the feeder's own flow meter at that pump speed. Each speed runs until the next one starts.</p>
+  <div class="fdsec">Load</div>
+  <div class="fdgrp fdlist">
+    <label class="fdli"><span>Tablets in a full load</span><span class="fdin"><input type="number" id="fdTabs" inputmode="numeric" min="1" max="30" step="1"></span></label>
+    <label class="fdli"><span>A full load lasts<small>Blank = from the maker's table</small></span><span class="fdin"><input type="number" id="fdDays" inputmode="decimal" min="1" max="60" step="0.5"><i>days</i></span></label>
+    <details class="fdli fdmore"><summary><span>Tablet weight &amp; strength</span><span class="fdsum" id="fdTabSum"></span></summary>
+      <label class="fdli"><span>Weight of one</span><span class="fdin"><input type="number" id="fdTabG" inputmode="numeric" min="50" max="1000" step="1"><i>g</i></span></label>
+      <label class="fdli"><span>Strength</span><span class="fdin"><input type="number" id="fdPct" inputmode="decimal" min="20" max="100" step="0.5"><i>%</i></span></label>
+      <p class="fdhelp">CCH Endurance tablets: 265 g, 68% (maker's sheet).</p>
+    </details>
+  </div>
+  </div>
+  <div class="popfoot"><div class="err" id="fdErr" role="alert"></div><button class="btn primary" type="button" id="fdSave">Save</button></div>
 </dialog>
 
-<dialog id="dateDlg" class="sheet" aria-labelledby="dateH">
-  <div class="grab"></div>
-  <h2 id="dateH">Date range</h2>
+<dialog id="removedDlg" class="pop" aria-labelledby="rmH">
+  <div class="pophead"><div><h2 id="rmH">Removed tests</h2><span class="popsub">Left out for everyone until brought back</span></div><button type="button" class="popx" id="rmDone" aria-label="Close">×</button></div>
+  <div class="popbody"><div id="rmList"></div></div>
+</dialog>
+
+<dialog id="dateDlg" class="pop sheetpop" aria-labelledby="dateH">
+  <div class="pophead"><div><h2 id="dateH">Date range</h2><span class="popsub">What the history shows</span></div><button type="button" class="popx" id="dateGo" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="presets" id="presets2"></div>
   <div class="dates">
     <label>From <input type="date" id="from2"></label>
     <label>To <input type="date" id="to2"></label>
   </div>
-  <button type="button" class="btn primary go" id="dateGo">Done</button>
+  </div>
 </dialog>
 
-<dialog id="viewDlg" class="sheet" aria-labelledby="viewH">
-  <div class="grab"></div>
-  <h2 id="viewH">View</h2>
+<dialog id="viewDlg" class="pop sheetpop" aria-labelledby="viewH">
+  <div class="pophead"><div><h2 id="viewH">View</h2><span class="popsub">What the history shows</span></div><button type="button" class="popx" id="viewGo" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="seg" role="group" aria-label="What to show">
     <button type="button" id="vRead" class="on">Readings</button>
     <button type="button" id="vChem">Chemicals</button>
     <button type="button" id="vBoth">Both</button>
   </div>
   <div class="vrow" id="vPredRow"><span>Predictions</span><button type="button" class="tgl" id="vPred" role="switch" aria-checked="false" aria-label="Predictions"></button></div>
-  <button type="button" class="btn primary go" id="viewGo">Done</button>
-</dialog>
-
-<dialog id="printDlg">
-  <h2>Print for the board</h2>
-  <label for="pRange">Date range</label>
-  <select id="pRange"></select>
-  <div id="pCustom" style="display:none">
-    <label>From <input type="date" id="pFrom"></label>
-    <label>To <input type="date" id="pTo"></label>
-  </div>
-  <label class="chk"><input type="checkbox" id="pChem"><span>Include chemical additions</span></label>
-  <label class="chk"><input type="checkbox" id="pTint"><span>Color-tint chemical rows<div class="hint">Off = light gray rows.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pGroup"><span>List chemical additions separately<div class="hint">Test log first, then the chemical additions in their own table.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pEst"><span>Include estimate rows<div class="hint">The gray "Estimate" rows of predicted water chemistry.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pTrk"><span>Include chemicals to add next<div class="hint">The dashboard's top cards (Trackers tab): when each was last added and when it is due.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pStock"><span>Include chemical stock<div class="hint">How much of each active chemical is on hand, with low / out of stock marked.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pFit"><span>Fit on 2 pages when possible<div class="hint">Leaves out readings taken close together on the same day (never red or Leslie's readings) until the report fits.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pWhole"><span>Print the whole log, with the chosen range highlighted<div class="hint">Other rows print in gray without colors.</div></span></label>
-  <div class="row">
-    <button class="btn mgr" type="button" id="pSave" style="margin-right:auto" title="Open the print dialog with these choices next time (any device)">Remember settings</button>
-    <button class="btn" type="button" id="pCancel">Cancel</button>
-    <button class="btn primary" type="button" id="pGo">Print</button>
   </div>
 </dialog>
 
-<dialog id="chgDlg">
-  <h2>My login</h2>
-  <label for="akaIn">Also goes by (other first names)</label>
+<dialog id="printDlg" class="pop" aria-labelledby="pH">
+  <div class="pophead"><div><h2 id="pH">Print for the board</h2><span class="popsub">Makes a PDF · US Letter</span></div>
+    <button type="button" class="popx" id="pCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
+    <div class="pophero" aria-live="polite">
+      <div class="popbig"><b id="pN">…</b><span id="pNw">pages</span></div>
+      <div class="popstats" id="pStats"></div>
+      <div class="ppgs" id="pPgs" aria-hidden="true"></div>
+    </div>
+    <div class="popsec">Dates</div>
+    <div class="popgrp">
+      <div class="popchips" id="pRange" role="group" aria-label="Dates"></div>
+      <div class="popdates" id="pCustom" hidden>
+        <label for="pFrom">From<input type="date" id="pFrom"></label>
+        <label for="pTo">To<input type="date" id="pTo"></label>
+      </div>
+    </div>
+    <div class="popsec">In the report</div>
+    <div class="popgrp poplist">
+      <label class="popli" for="pChem"><span>Chemical additions</span><input type="checkbox" class="popsw" role="switch" id="pChem"></label>
+      <label class="popli sub" for="pTint" data-need="pChem"><span>Color-tint them<small>Off = light grey rows</small></span><input type="checkbox" class="popsw" role="switch" id="pTint"></label>
+      <label class="popli sub" for="pGroup" data-need="pChem"><span>In their own table<small>After the readings, instead of mixed in</small></span><input type="checkbox" class="popsw" role="switch" id="pGroup"></label>
+      <label class="popli" for="pTrk"><span>Chemicals to add next<small>The due-job tiles at the top</small></span><input type="checkbox" class="popsw" role="switch" id="pTrk"></label>
+      <label class="popli" for="pStock"><span>Chemical stock<small>On hand, with low and out of stock marked</small></span><input type="checkbox" class="popsw" role="switch" id="pStock"></label>
+      <label class="popli" for="pEst"><span>Estimate rows<small>Predicted water after each addition</small></span><input type="checkbox" class="popsw" role="switch" id="pEst"></label>
+    </div>
+    <div class="popsec">Fitting</div>
+    <div class="popgrp poplist">
+      <label class="popli" for="pFit"><span>Fit on 2 pages<small>Leaves out close-together retests, never red or Leslie's</small></span><input type="checkbox" class="popsw" role="switch" id="pFit"></label>
+      <label class="popli" for="pWhole"><span>Whole log<small>These dates highlighted, the rest in grey</small></span><input type="checkbox" class="popsw" role="switch" id="pWhole"></label>
+    </div>
+    <p class="pophelp" id="pHow"></p>
+  </div>
+  <div class="popfoot">
+    <div class="err" id="pErr" role="alert"></div>
+    <button class="btn primary" type="button" id="pGo">Make the PDF</button>
+    <button class="poplink mgr" type="button" id="pSave" title="Open the Print window with these choices next time (any device)">Remember these settings</button>
+  </div>
+</dialog>
+
+<dialog id="pdfDlg" class="pop" aria-labelledby="pdfH">
+  <div class="pophead"><div><h2 id="pdfH">Report ready</h2><span class="popsub" id="pdfInfo"></span></div><button type="button" class="popx" id="pdfClose" aria-label="Close">×</button></div>
+  <div class="popfoot">
+    <a class="btn" id="pdfSave" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Save a copy</a>
+    <button class="btn primary" type="button" id="pdfOpen">Open</button>
+  </div>
+</dialog>
+
+<dialog id="chgDlg" class="pop" aria-labelledby="chgH">
+  <div class="pophead"><div><h2 id="chgH">My login</h2><span class="popsub">Your names and password</span></div><button type="button" class="popx" id="chgCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
+  <div class="popsec" style="margin-top:4px">Other first names</div>
+  <label for="akaIn">Also goes by</label>
   <input type="text" id="akaIn" placeholder="Like Kayti, Kat" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
   <p class="hint" style="margin:6px 0 0">You can sign in with any of these and your last name.</p>
   <div class="row" style="margin-top:8px"><button class="btn" type="button" id="akaSave">Save names</button></div>
   <div class="err" id="akaErr" role="alert"></div>
-  <h2 style="margin-top:18px">Change password</h2>
+  <div class="popsec">Change password</div>
   <p class="hint" style="margin:0 0 6px">At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
   <form id="chgForm" autocomplete="off">
     <label for="chgCur">Current password</label>
@@ -1553,24 +1729,21 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew">Show</button></span>
     <label for="chgNew2">New password again</label>
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew2">Show</button></span>
-    <div class="err" id="chgErr" role="alert"></div>
-    <div class="row">
-      <button class="btn" type="button" id="chgCancel">Cancel</button>
-      <button class="btn primary" type="submit" id="chgGo">Change password</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot"><div class="err" id="chgErr" role="alert"></div><button class="btn primary" type="submit" form="chgForm" id="chgGo">Change password</button></div>
 </dialog>
 
-<dialog id="unlockDlg">
+<dialog id="unlockDlg" class="pop" aria-labelledby="siHead">
+  <div class="pophead"><div><h2 id="siHead">Who's signing in?</h2><span class="popsub" id="siSub">Pool members and volunteers</span></div><button type="button" class="popx" id="pickCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div id="siPick">
-    <h2 class="si-q">Who's signing in?</h2>
     <button type="button" class="si-big" data-as="member">Pool member<span>Sign in with your pool key to see additional information</span></button>
     <button type="button" class="si-big" data-as="vol">Volunteer or board<span>Sign in or sign up to be a volunteer</span></button>
-    <div class="row"><button class="btn" type="button" id="pickCancel">Cancel</button></div>
   </div>
   <form id="unlockForm" autocomplete="off" hidden>
     <button type="button" class="si-back" id="siBack">&larr; Back</button>
-    <h2 class="si-q" id="siTitle">Pool member</h2>
+    <span id="siTitle" hidden></span>
     <div id="nameRow" hidden><label for="nameIn">First and last name</label><input type="text" id="nameIn" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" data-1p-ignore data-lpignore="true" data-form-type="other"></div>
     <label for="codeIn" id="codeLbl">Your pool key number</label>
     <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="codeIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="codeIn">Show</button></span>
@@ -1585,17 +1758,15 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
       <p>Your sign-up is waiting for approval. Someone on the board will contact you.</p>
       <button class="si-link" type="button" id="siRetry2">Back</button>
     </div>
-    <div class="err" id="unlockErr" role="alert"></div>
     <p class="hint">This device stays signed in until you tap Sign out.</p>
-    <div class="row">
-      <button class="btn" type="button" id="unlockCancel">Cancel</button>
-      <button class="btn primary" type="submit" id="unlockGo">Sign in</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot" id="siFoot" hidden><div class="err" id="unlockErr" role="alert"></div><button class="btn primary" type="submit" form="unlockForm" id="unlockGo">Sign in</button></div>
 </dialog>
 
-<dialog id="pricesDlg" class="big wide">
-  <div class="dh"><h2>Chemical prices</h2><button class="btn sm" type="button" id="prClose">Close</button></div>
+<dialog id="pricesDlg" class="pop wide" aria-labelledby="prH">
+  <div class="pophead"><div><h2 id="prH">Chemical prices</h2><span class="popsub">Purchases, stock and the price calculator</span></div><button type="button" class="popx" id="prClose" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="tabs"><button class="btn on" type="button" id="tabPrices">Purchase history</button><button class="btn" type="button" id="tabCalc">Price calculator</button></div>
   <div id="prBusy" class="prbusy" role="status" aria-live="polite" hidden><span class="prspin" aria-hidden="true"></span><span id="prBusyTxt"></span></div>
   <div class="hint" id="prDiag" style="display:none;color:var(--red)"></div>
@@ -1625,6 +1796,7 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   </form>
   </div>
   <div id="calcTab" class="cx"></div>
+  </div>
 </dialog>
 
 <div id="printView"></div>
@@ -1657,14 +1829,13 @@ var PRINT_HEADER_TINT = false;
 // Splashscreen (home) link. Paste its .../exec URL between the quotes once it is deployed.
 var HOME_URL = '../';
 var PRINT_TITLE = 'Rolling Oaks Club - Pool Report';
-var SAFARI_SCALE = 1.0667;         // Safari prints every CSS length (px, pt, in) 6.67% larger than Chrome, but its page area stays 10in
-var PRINT_BOX_IN = 9.55;           // CSS height of one page box (also in the .ppage rule). Page area is 10.25in (@page margins .5in top, .25in bottom; Safari obeys them, tested 2026-10-01), so this must stay under 10.25 / 1.0667 = 9.61in
-var PRINT_PAGE_PT = PRINT_BOX_IN * 72 * SAFARI_SCALE;   // that box as Safari really prints it (Chrome is smaller, so anything that fits here fits there)
-var PRINT_ROW_PT = 14.3;           // Safari row = 12.5pt*1.0667 + 0.8pt border = 14.13pt (13.5pt rows measured 15.2pt in a Safari PDF, 2026-10-01; tightened 2026-10-02); count 14.3pt so a page can never overfill
+// The report is a PDF the page makes itself (2026-10-09; before, the browser printed it, and the iPhone's layout broke the
+// page count). It is laid out in the PDF's own font, so every size below is exact on every device: 1 CSS px = 0.75 pt.
+var PRINT_BOX_IN = 10;             // one page box (also in the .ppage rule): letter 11in minus .5in top and .5in bottom (page footer)
+var PRINT_PAGE_PT = PRINT_BOX_IN * 72;
 var PRINT_FIT_PAGES = 2;           // "Fit on 2 pages when possible": leave out close-together readings until the report is this many pages
 var PRINT_FIT_GAP_MS = 2 * 3600e3; // readings on the same day this close together count as a retest / before-and-after pair
 var PRINT_LIST_GAP_PT = 6;         // extra space above the separate "Chemical additions" heading, below the test log
-var PRINT_LEGEND_PT = 0.56 * 72 * SAFARI_SCALE;   // room kept for the legend at the bottom of each page (it measures 0.50in)
 
 /* ------------------------------------------------------------ helpers */
 function $(id){ return document.getElementById(id); }
@@ -1906,7 +2077,7 @@ var ALSO_WHY = {
 };
 function effHtml(c){
   var parts = [];
-  if (c.slow) return '<span class="eff slowf" title="Slow feed: added through the feeder, so it reaches the pool gradually. No instant estimate, and it is left out of the predicted water chemistry.">Slow feed</span>';
+  if (c.slow) return '<span class="eff slowf" title="Slow feed: added through the feeder, so it reaches the pool gradually. No instant estimate; predictions spread it out until the feeder is filled again.">Slow feed</span>';
   if (isNum(c.eff)){
     var what = c.affects === 'ph' ? 'pH' : c.affects === 'bor' ? 'borates ppm' : 'FC ppm';
     parts.push('<span title="Estimated change in ' + what + ' for the 48,000 gal pool, from the amount added' +
@@ -2071,6 +2242,7 @@ function popNode(){
         jobShockLiquid = !jobShockLiquid; try { localStorage.setItem('jobShockLiquid', jobShockLiquid ? '1' : '0'); } catch(e2){}
         var sti = +popCurChip.getAttribute('data-ti'); renderAll(); trkReopen(sti); return;
       }
+      if (e.target.closest && e.target.closest('[data-jfeed]')) { closePop(); feedOpen(); return; }
       var jb = e.target.closest && e.target.closest('[data-jlog], [data-jnot], [data-juntil], [data-jundo], [data-jsave]');
       if (jb && popCurChip){
         var ji = +popCurChip.getAttribute('data-ti');
@@ -2512,6 +2684,7 @@ function jobDose(t){
   if (t.type === 'slow') {
     var f = JOB_FILL.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
     if (!f) return null;
+    if (/cal-?hypo/i.test(f[0].source) && DATA.feeder) f = [f[0], DATA.feeder.set.tabs, 'pucks'];   // a full load, from the feeder settings
     var a = f[1] + ' ' + f[2] + (f[3] ? ' ' + f[3] : ''), wtr = f[4] ? ' + ' + f[4] + ' gal water' : '';   // acid goes in diluted
     return {chip: a + wtr, text: 'Fill with ' + a + wtr, html: '<b>' + a + '</b>' + (wtr ? ' <span class="jm">' + wtr.slice(3) + ' (diluted)</span>' : ''), amount: f[1], unit: f[2]};
   }
@@ -2582,6 +2755,7 @@ function jobPopHtml(t, i){
     var m = /^<b>([^<]*)<\/b>\s*([\s\S]*)$/.exec(d.html);
     h += '<div class="jdose"><span class="k">' + lbl + '</span><span class="v">' + (m ? '<b>' + m[1] + '</b> ' + m[2] : d.html) + '</span></div>';
   }
+  if (feedJob(t)) h += feedLineHtml();
   if (t.post && s.post) h += '<div class="jpost">⏸ Put off to <b>' + esc(trkDay(t.post.until)) + '</b> · ' + esc(jobPostText(t).replace(/^./, function(c){ return c.toLowerCase(); })) + (t.post.by ? ' · ' + esc(firstName(t.post.by)) : '') + '</div>';
   if (ev) {
     var hist = t.events.slice(0, 4).map(function(e){ var a = jobEvAmt(t, e); return '<span>' + esc(trkDay(e.day)) + (a ? ' · ' + esc(a) : '') + '</span>'; }).join('');
@@ -2589,6 +2763,24 @@ function jobPopHtml(t, i){
     if (t.typ != null && t.count >= 4) h += '<div class="jusu">Usually every ' + fmtNum(t.typ) + ' day' + (t.typ === 1 ? '' : 's') + '</div>';
   } else h += '<div class="jusu">No record yet</div>';
   return h;
+}
+/* ---- cal-hypo feeder (2026-10-08): how the settings work out and when the last fill runs out (server feederOut_) */
+function feedJob(t){ return t && t.type === 'slow' && /cal-?hypo/i.test(t.setting || t.name) && DATA.feeder; }
+/** {empty: true, day} once the newest fill should be used up, {empty: false, days left, day} before; null without a fill. */
+function feedState(){
+  var F = DATA.feeder; if (!F || !F.emptyAt) return null;
+  var now = Date.now(), day = dayOfMs(F.emptyAt);
+  return F.emptyAt <= now ? {empty: true, day: day} : {empty: false, left: (F.emptyAt - now) / DAYMS, day: day};
+}
+function dayOfMs(ms){ var d = new Date(ms - 5 * 3600000); return d.toISOString().slice(0, 10); }   // Central (CDT; an hour off in winter is fine here)
+function feedLineHtml(){
+  var F = DATA.feeder, st = feedState();
+  var h = '<div class="jfeed">';
+  if (st) h += st.empty ? '<b class="e">Probably empty since ' + esc(trkDay(st.day)) + '</b>' :
+    '<b>About ' + (st.left < 1 ? 'a day' : Math.round(st.left) + (Math.round(st.left) === 1 ? ' day' : ' days')) + ' left <span>(runs out ' + esc(jobShort(st.day)) + ')</span></b>';
+  h += '<span class="m">About ' + fmtNum(F.lbDay) + ' lb chlorine a day (FC +' + fmtNum(Math.round(F.ppmDay * 10) / 10) + ' a day) · a full load lasts about ' + fmtNum(Math.round(F.days * 10) / 10) + ' days</span>';
+  if (isMgr()) h += '<button type="button" class="trkebtn" data-jfeed="1">Feeder settings…</button>';
+  return h + '</div>';
 }
 /** "Checked today, ½ full" / "Put off yesterday" (Jane). */
 function jobPostText(t){
@@ -2720,7 +2912,8 @@ function renderUpDetails(ts){
     var last = ev ? trkDoneWord(t) + ' ' + agoText(s.d).toLowerCase() : '';     // no record: the pill says so
     if (nx.day) last += ' · ' + nx.day;
     return '<button type="button" class="dj" data-ti="' + ts.indexOf(t) + '"><b>' + esc(trkJob(t)) + '</b><span class="jpill lv-' + nx.lv + '">' + esc(nx.txt) + '</span>' +
-      jobBar(t) + '<span class="l">' + (dose ? '<span class="jtag">' + esc(dose.chip) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
+      jobBar(t) + '<span class="l">' + (dose ? '<span class="jtag">' + esc(dose.chip) + '</span>' : '') +
+      (feedJob(t) && feedState() && feedState().empty ? '<span class="jtag post">empty since ' + esc(trkDay(feedState().day)) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
       '<span class="jw">' + esc(last) + '</span></span></button>';
   });
   var jobsHtml = jobRows.length ? '<div><div class="dsec">Jobs</div><div class="dcard">' + jobRows.join('') + '</div></div>' : '';
@@ -2776,6 +2969,8 @@ function renderJobs(ts){
     if (best === null || left < best){ best = left; names = [trkJob(t)]; } else if (left === best) names.push(trkJob(t));
   });
   var lines = [];
+  var fe = feedState(), fj = all.filter(function(i){ return feedJob(ts[i]); })[0];
+  if (fe && fe.empty && fj != null && due.indexOf(fj) < 0) lines.push('<div class="jline"><span>Cal-hypo feeder probably empty since ' + esc(trkDay(fe.day)) + '</span></div>');
   if (!rows.length && all.length) lines.push('<div class="jline"><span><span class="ok">✓</span> <b>All jobs done</b></span></div>');
   if (best !== null) lines.push('<div class="jline"><span>Next: ' + esc(names.slice(0, 2).join(' · ')) + '</span><span>' + (best <= 1 ? 'tomorrow' : 'in ' + best + ' days') + '</span></div>');
   $('jlines').innerHTML = lines.join('');
@@ -3117,21 +3312,12 @@ function nowSun(ms){
   return Math.max(0, Math.sin(Math.PI * (hr - 7) / 12.5)) * 0.8;
 }
 
-/** The additions that move anything, oldest first; a slow fill is spread from its time to the next fill of the same feeder. */
+/** The additions that move anything, oldest first. A slow fill is spread over c.fx.rampH, which the server works out
+ *  (Code.gs slowSpans_: until the next fill of the same feeder, or from a "How full" check), the same as the History predictions. */
 function nowChems(){
-  var cs = (DATA.chems || []).filter(function(c){ return c.fx; }).map(function(c){
-    var kind = !c.fx.rampH ? '' : /cal-?hypo/i.test(c.product) ? 'cal' : /tri-?chlor/i.test(c.product) ? 'tri' : c.fx.acid ? 'acid' : 'other';
-    return {ms: c.ms, fx: c.fx, slow: !!c.fx.rampH, dur: (c.fx.rampH || 0) * HR, kind: kind, c: c};
+  return (DATA.chems || []).filter(function(c){ return c.fx; }).map(function(c){
+    return {ms: c.ms, fx: c.fx, slow: !!c.fx.rampH, dur: (c.fx.rampH || 0) * HR, c: c};
   }).sort(function(a, b){ return a.ms - b.ms; });
-  ['cal', 'tri', 'acid', 'other'].forEach(function(k){
-    var fills = cs.filter(function(x){ return x.kind === k; }), gaps = [];
-    fills.forEach(function(x, i){
-      var nx = fills[i + 1];
-      if (nx) { var g = nx.ms - x.ms; if (g >= DAYMS && g <= 30 * DAYMS) { x.dur = g; gaps.push(g); } }
-      else if (gaps.length) { var s = gaps.slice(-4).sort(function(a, b){ return a - b; }); x.dur = s[Math.floor(s.length / 2)]; }
-    });
-  });
-  return cs;
 }
 /** How much of field f (fc, acid, alk, ch, cya, bor) the additions put in between a and b. */
 function nowSum(cs, f, a, b, split){
@@ -3139,10 +3325,16 @@ function nowSum(cs, f, a, b, split){
   cs.forEach(function(x){
     var v = x.fx[f]; if (!v || x.ms > b) return;
     if (!x.slow) { if (x.ms > a) s += v; return; }
-    var fr = function(t){ return Math.max(0, Math.min(1, (t - x.ms) / x.dur)); };
+    var fr = x.fx.rel ? function(t){ return nowRel(x.fx.rel, (t - x.ms) / HR); } : function(t){ return Math.max(0, Math.min(1, (t - x.ms) / x.dur)); };
     var d = v * (fr(b) - fr(a)); s += d; slow += d;
   });
   return split ? {all: s, slow: slow} : s;
+}
+/** Share arrived h hours after a cal-hypo feeder fill, from the server's release curve [[hours, share]] (Code.gs slowFrac_). */
+function nowRel(r, h){
+  if (h <= r[0][0]) return 0;
+  for (var i = 1; i < r.length; i++) if (h <= r[i][0]) return r[i - 1][1] + (r[i][1] - r[i - 1][1]) * (h - r[i - 1][0]) / (r[i][0] - r[i - 1][0]);
+  return 1;
 }
 function nowTests(k){
   return (DATA.tests || []).filter(function(t){ return isNum(t[k]); }).sort(function(a, b){ return a.ms - b.ms; });
@@ -3774,14 +3966,6 @@ function legendItems(){
   items.push('<div class="lr">' + GLYPH.green + ' in range &nbsp;! watch &nbsp;' + GLYPH.red + ' out of range (bold) &nbsp;' + GLYPH.purple + ' high</div>');
   return items.join('');
 }
-var PRINT_LINE_MAX = 82;    // characters that fit one printed addition line ("Added ..." + effect / "what" text; 2026-10-02 Safari PDF: 91 wrapped, 78 fit). Longer -> one line per chemical
-/** Characters a combined addition line would take: "Added a + b" plus the arrow/effect or "what" text. */
-function printLineLen(blk){
-  var c = blk.first, aff = AFFECT_LABEL[c.affects] ? c.affects : '';
-  var tail = aff ? 3 + AFFECT_LABEL[aff].length + (c.slow ? 10 : blk.calc.eff !== null ? 9 : 0) + blk.calc.also.reduce(function(n, a){ return n + a.k.length + 8; }, 0)
-                 : printWhat(blk.items).length + 1;
-  return 6 + blk.items.map(function(x){ return x.summary; }).join(' + ').length + tail;
-}
 function printWhat(items){ return items.map(function(x){ return x.what; }).filter(function(w, i, all){ return w && all.indexOf(w) === i; }).join(' · '); }
 /** The tests a report prints (before any are left out to fit). */
 function printTests(o){
@@ -3820,7 +4004,19 @@ function buildPrintFit(o){
   }
   return buildPrint(o);
 }
+/** A combined addition line that wraps (measured) prints one line per chemical instead: build again with those blocks split. */
 function buildPrint(o){
+  var split = {}, res;
+  for (var n = 0; n < 4; n++){
+    res = buildPrintOnce(o, split);
+    if (!res.wrapped.length) return res;
+    res.wrapped.forEach(function(k){ split[k] = 1; });
+  }
+  return res;
+}
+// #printView while the report is laid out: off screen, one page wide (7.5in = letter minus .5in sides), real layout
+var PV_OFF = 'display:block;position:absolute;left:-10000px;top:0;width:7.5in';
+function buildPrintOnce(o, split){
   var from = o.from, to = o.to;
   var tests = printTests(o).filter(function(t){ return !o.drop || o.drop.indexOf(t) < 0; });
   var chems = (o.chem && unlocked) ? (DATA.chems || []).filter(function(c){ return o.whole || inRange(c.day, from, to); }) : [];
@@ -3829,14 +4025,14 @@ function buildPrint(o){
   var seenG = {}, pblock = {};
   chems.forEach(function(c){
     var k = c.gid + '|' + blockKey(c);
-    (pblock[k] = pblock[k] || {items: [], first: c}).items.push(c);
+    (pblock[k] = pblock[k] || {items: [], first: c, key: k}).items.push(c);
     if (c.ms > pblock[k].first.ms) pblock[k].first = c;
   });
   Object.keys(pblock).forEach(function(k){ pblock[k].calc = blockCalc(pblock[k].items); });
   chems.forEach(function(c){
     var blk = pblock[c.gid + '|' + blockKey(c)];
-    // one line per block (same group, same reading), amounts joined with "+"; a block too long for one line prints a line per chemical
-    if (blk.one === undefined) blk.one = blk.items.length < 2 || printLineLen(blk) <= PRINT_LINE_MAX;
+    // one line per block (same group, same reading), amounts joined with "+"; a block whose line wraps prints a line per chemical
+    if (blk.one === undefined) blk.one = blk.items.length < 2 || !split[blk.key];
     if (!blk.one) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:[c], lead: blk.first === c});
     else if (blk.first === c) rows.push({type:'c', ms:c.ms, d:c, blk:blk, items:blk.items, lead: true});
     var pr = DATA.preds && DATA.preds[c.gid];
@@ -3920,29 +4116,44 @@ function buildPrint(o){
   if (!rowHtml.length) rowHtml.push('<tr><td colspan="' + (PRINT_COLS.length + 1 + (showCost ? 1 : 0)) + '">No readings in this range.</td></tr>');
   var legend = '<div class="plegend">' + legendItems() + '</div>';
 
-  // Every page is its own fixed-height box; page 1 has the legend pinned to its bottom (later pages use that room for rows),
-  // so nothing depends on how a browser paginates tables (Safari does not repeat table footers or fixed elements).
-  // Every table row is forced to a fixed height in POINTS (Safari's CSS pixel is 0.8pt, not 0.75pt, so anything
-  // sized in px comes out 7% bigger there; points and inches are physical everywhere), so how many rows fit on a page
-  // is plain arithmetic. Only the title block on page 1 is measured (with a margin).
+  // Every page is its own fixed-height box; page 1 has the legend pinned to its bottom (later pages use that room for rows).
+  // The report is laid out off screen in the PDF's font at one page's width, so every height is measured, not guessed:
+  // the title block, the stock block, the legend, the table headings and each row (1 CSS px = 0.75pt in the PDF).
   var pv = $('printView');
-  pv.style.cssText = 'display:block;position:absolute;left:-9999px;top:0;width:7.5in;visibility:hidden';
-  pv.innerHTML = '<div id="pvh">' + head + '</div>' + (stockHtml ? '<div id="pvs" class="pstockend">' + stockHtml + '</div>' : '');
-  var headPt = document.getElementById('pvh').offsetHeight * 0.75 * 1.15 + 8;   // screen px -> pt, with a margin
-  var stockPt = stockHtml ? document.getElementById('pvs').offsetHeight * 0.75 * 1.15 + 8 : 0;   // measured the same way
-  pv.style.cssText = '';
-  if (!o.group) items = rowHtml.map(function(h, ix){ return {t: 'a', h: h, m: meta[ix]}; });
+  pv.className = multiYear ? 'yr' : '';
+  pv.style.cssText = PV_OFF;
+  var cols = PRINT_COLS.length + 1 + (testCost ? 1 : 0);
+  pv.innerHTML = '<div id="pvh" style="display:flex;flex-direction:column">' + head + '</div>' +
+    (stockHtml ? '<div id="pvs" class="pstockend" style="display:flow-root">' + stockHtml + '</div>' : '') + legend +
+    '<table id="pvt">' + thead + '<tbody>' + rowHtml.map(function(h, ix){
+      return h.replace('{{L}}', '').replace('{{D}}', meta[ix] && meta[ix].date ? esc(dayLabel(meta[ix].day, multiYear)) : '');
+    }).join('') + '<tr><td colspan="' + cols + '">No readings in this range.</td></tr></tbody></table>' +
+    '<table id="pvb">' + theadB + '</table>';
+  var hPt = function(el){ return el ? el.getBoundingClientRect().height * 0.75 : 0; };
+  var headPt = hPt($('pvh')) + 2, stockPt = stockHtml ? hPt($('pvs')) + 2 : 0, legendPt = hPt(pv.querySelector('.plegend'));
+  var theadPt = hPt($('pvt').tHead), theadBPt = hPt($('pvb').tHead);
+  var trs = $('pvt').tBodies[0].rows, rowPt = rowHtml.map(function(h, ix){ return hPt(trs[ix]); }), plainPt = hPt(trs[trs.length - 1]);
+  // combined addition lines that wrapped (taller than a plain row): buildPrint splits them and builds again
+  var wrapped = [];
+  rows.forEach(function(r, ix){ if (r.type === 'c' && r.items.length > 1 && rowPt[ix] > plainPt + 1 && wrapped.indexOf(r.blk.key) < 0) wrapped.push(r.blk.key); });
+  if (wrapped.length){ pv.innerHTML = ''; pv.style.cssText = ''; return {wrapped: wrapped, pages: 0, rows: rowHtml.length}; }
+  if (!o.group) items = rowHtml.map(function(h, ix){ return {t: 'a', h: h, m: meta[ix], ix: ix}; });
+  else { var ixs = rows.map(function(r, ix){ return ix; }), ta = ixs.filter(function(ix){ return rows[ix].type === 't'; }), tb = ixs.filter(function(ix){ return rows[ix].type !== 't'; }), na = 0, nb = 0;
+    items.forEach(function(it){ if (it.t === 'a' && it.m) it.ix = ta[na++]; else if (it.t === 'b') it.ix = tb[nb++]; }); }
   // The stock block is one last "item" as tall as it measures, so pagination keeps room for it (or starts a new page);
   // it is drawn after that page's tables, pushed down to sit just above the legend.
   if (stockHtml) items.push({t: 'k', w: stockPt});
+  var gapPt = plainPt + PRINT_LIST_GAP_PT;   // the "Chemical additions" heading over a separate list
   function paginate(){
     var out = [], i = 0;
     while (i < items.length || !out.length){
-      var availPt = PRINT_PAGE_PT - PRINT_ROW_PT - (out.length ? 0 : headPt + PRINT_LEGEND_PT), used = 0, pg = [];   // the legend is on page 1 only
+      var availPt = PRINT_PAGE_PT - 2 - (out.length ? 0 : headPt + legendPt), used = 0, pg = [], cur = '';   // the legend is on page 1 only
       while (i < items.length){
-        var w = items[i].t === 's' ? 2 * PRINT_ROW_PT + PRINT_LIST_GAP_PT * SAFARI_SCALE + 1 : items[i].t === 'k' ? items[i].w : PRINT_ROW_PT;
-        if (pg.length && (used + w > availPt || (items[i].t === 's' && used + w + PRINT_ROW_PT > availPt))) break;   // no heading left alone at the bottom of a page
-        pg.push(items[i]); used += w; i++;
+        var it = items[i], w = it.t === 's' ? gapPt + theadBPt : it.t === 'k' ? it.w : (it.ix != null ? rowPt[it.ix] : plainPt);
+        if ((it.t === 'a' || it.t === 'b') && it.t !== cur) w += it.t === 'b' ? theadBPt : theadPt;   // a table starts here: its heading row
+        if (pg.length && (used + w > availPt || (it.t === 's' && used + w + plainPt > availPt))) break;   // no heading left alone at the bottom of a page
+        pg.push(it); used += w; i++;
+        if (it.t === 'a' || it.t === 'b') cur = it.t; else if (it.t === 's') cur = 'b';
       }
       out.push(pg);
     }
@@ -3967,43 +4178,84 @@ function buildPrint(o){
       if (it.t === 'k') return;                          // the stock block is added after the tables (below)
       // start of the separate chemical list: its heading fills the one-row gap (already counted in the separator's height),
       // drawn whether the list continues a page or starts a new one
-      if (it.t === 's'){ flush(); out += '<div class="pgap psech pgaph" style="height:' + (PRINT_ROW_PT + PRINT_LIST_GAP_PT) + 'pt">Chemical additions</div>'; cur = 'b'; return; }
+      if (it.t === 's'){ flush(); out += '<div class="pgap psech pgaph" style="height:' + gapPt.toFixed(2) + 'pt">Chemical additions</div>'; cur = 'b'; return; }
       if (it.t !== cur){ flush(); cur = it.t; }
       buf.push(it);
     });
     flush();
     return out;
   }
-  pv.className = multiYear ? 'yr' : '';
   pv.innerHTML = pages.map(function(pg, n){
     var hasStock = pg.some(function(it){ return it.t === 'k'; });
     return '<div class="ppage' + (n === pages.length - 1 ? ' last' : '') + '">' + (n === 0 ? head : '') + pageTables(pg) +
       (hasStock ? '<div class="pstockend">' + stockHtml + '</div>' : '') + (n === 0 ? legend : '') + '</div>';
   }).join('');
-  return {rows: rowHtml.length, pages: pages.length};
+  return {rows: rowHtml.length, pages: pages.length, wrapped: [], range: rangeText, tests: tests.length, chems: chems.length};
 }
-function syncGroupOpt(){ var on = $('pChem').checked; $('pGroup').disabled = !on; if (!on) $('pGroup').checked = false; }
+// Print window (2026-10-09, DESIGN.md "Pop-up windows"): date buttons, switches, and the page count worked out live at the top.
+var PRINT_RANGES = [['2m', 'This + last month'], ['month', 'This month'], ['last', 'Last month'], ['30', 'Last 30 days'], ['all', 'All time'], ['custom', 'Pick dates…']];
+var printRange = '2m', printPrevT = null;
+function setPrintRange(r){
+  printRange = r;
+  [].forEach.call($('pRange').children, function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-r') === r)); });
+  $('pCustom').hidden = r !== 'custom';
+  if (r === 'custom' && !$('pFrom').value){ var d = presetRange('2m'); $('pFrom').value = d[0]; $('pTo').value = d[1]; }
+}
+/** The chemical rows' options (tint, own table) grey out while chemical additions are off. */
+function syncGroupOpt(){
+  var on = $('pChem').checked;
+  [].forEach.call(document.querySelectorAll('#printDlg [data-need]'), function(li){ li.classList.toggle('off', !on); li.querySelector('input').disabled = !on; });
+}
 function openPrint(){
   if (!isBrd()) return;
-  var sel = $('pRange');
-  if (!sel.options.length){
-    [['2m','This month + last month'],['last','Last month'],['month','This month'],['30','Last 30 days'],['all','All time'],['custom','Custom dates…']].forEach(function(d){
-      var o = document.createElement('option'); o.value = d[0]; o.textContent = d[1]; sel.appendChild(o);
-    });
-  }
-  // saved defaults ("Remember settings", server: printPrefs) or the built-in ones
+  var box = $('pRange');
+  if (!box.children.length) box.innerHTML = PRINT_RANGES.map(function(r){ return '<button type="button" data-r="' + r[0] + '" aria-pressed="false">' + esc(r[1]) + '</button>'; }).join('');
+  // saved defaults ("Remember these settings", server: printPrefs) or the built-in ones
   var pp = DATA.printPrefs || {range: '2m', chem: true, tint: true, group: true, est: false, trk: false, stock: false, whole: false, fit: true};
-  sel.value = pp.range || '2m';
-  $('pCustom').style.display = sel.value === 'custom' ? 'block' : 'none';
-  if (sel.value === 'custom'){ $('pFrom').value = pp.from || ''; $('pTo').value = pp.to || ''; }
+  $('pFrom').value = pp.range === 'custom' ? (pp.from || '') : ''; $('pTo').value = pp.range === 'custom' ? (pp.to || '') : '';
+  setPrintRange(PRINT_RANGES.some(function(r){ return r[0] === pp.range; }) ? pp.range : '2m');
   $('pChem').checked = !!pp.chem; $('pWhole').checked = !!pp.whole; $('pTint').checked = !!pp.tint; $('pEst').checked = !!pp.est;
   $('pTrk').checked = !!pp.trk; $('pStock').checked = !!pp.stock; $('pGroup').checked = !!pp.group; $('pFit').checked = pp.fit !== false; syncGroupOpt();
-  $('pSave').disabled = false; $('pSave').textContent = 'Remember settings';
+  $('pSave').disabled = false; $('pSave').textContent = 'Remember these settings'; $('pErr').textContent = '';
+  $('pHow').textContent = pdfShareOk() ? 'The share sheet opens next, with Print, Save to Files and Mail.' : 'The PDF opens in a new tab; print it from there.';
+  $('printDlg').querySelector('.popbody').scrollTop = 0;
   openDlg('printDlg');
+  printPreview();   // also gets the PDF maker and fonts now, so Make the PDF is quick
+}
+/** The report options from the window. */
+function printOpts(){
+  var from, to;
+  if (printRange === 'custom'){ from = $('pFrom').value; to = $('pTo').value; }
+  else { var r = presetRange(printRange); from = r[0]; to = r[1]; }
+  return {from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked,
+          group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked};
+}
+/** The box at the top: pages (built for real, off screen, the same way Make the PDF does), dates, readings and additions. */
+function printPreview(){
+  clearTimeout(printPrevT);
+  var hero = $('pN').closest('.pophero'); hero.classList.add('busy');
+  printPrevT = setTimeout(function(){
+    pdfLoad().then(function(){
+      if (!$('printDlg').open) return;
+      var o = printOpts(), res = buildPrintFit(o), pv = $('printView'); pv.innerHTML = ''; pv.style.cssText = '';
+      var left = printTests(o).length - res.tests;
+      $('pN').textContent = res.pages; $('pNw').textContent = res.pages === 1 ? 'page' : 'pages';
+      $('pStats').innerHTML = '<span>' + esc(rangeShort(res.range)) + '</span><span><b>' + res.tests + '</b> reading' + (res.tests === 1 ? '' : 's') + '</span>' +
+        (o.chem ? '<span><b>' + res.chems + '</b> addition' + (res.chems === 1 ? '' : 's') + '</span>' : '') +
+        (left > 0 ? '<span>' + left + ' close retest' + (left === 1 ? '' : 's') + ' left out to fit</span>' : '');
+      var icons = ''; for (var i = 0; i < Math.min(res.pages, 10); i++) icons += '<span><i></i><i></i><i></i><i></i><i></i></span>';
+      $('pPgs').innerHTML = icons;
+      hero.classList.remove('busy');
+    }, function(){
+      $('pN').textContent = '–'; $('pPgs').innerHTML = ''; hero.classList.remove('busy');
+      $('pStats').textContent = navigator.onLine === false ? 'No internet connection: the PDF can\'t be made right now.' : 'Could not count the pages.';
+    });
+  }, 150);
 }
 function printChoices(){
-  return {range: $('pRange').value, from: $('pFrom').value, to: $('pTo').value, chem: $('pChem').checked, tint: $('pTint').checked,
-          group: $('pGroup').checked, est: $('pEst').checked, trk: $('pTrk').checked, stock: $('pStock').checked, whole: $('pWhole').checked, fit: $('pFit').checked};
+  var o = printOpts();
+  return {range: printRange, from: $('pFrom').value, to: $('pTo').value, chem: o.chem, tint: o.tint,
+          group: $('pGroup').checked, est: o.est, trk: o.trk, stock: o.stock, whole: o.whole, fit: o.fit};
 }
 function rememberPrint(){
   var b = $('pSave'); b.disabled = true; b.textContent = 'Saving…';
@@ -4014,13 +4266,323 @@ function rememberPrint(){
   }, function(){ b.disabled = false; b.textContent = 'Could not save - try again'; });
 }
 function doPrint(){
-  var p = $('pRange').value, from, to;
-  if (p === 'custom'){ from = $('pFrom').value; to = $('pTo').value; }
-  else { var r = presetRange(p); from = r[0]; to = r[1]; }
-  buildPrintFit({from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked});
-  closeDlg('printDlg');
-  setTimeout(function(){ window.print(); }, 50);
+  var o = printOpts();
+  // computers: the PDF opens in a new tab, which has to be opened now, while this tap counts (else it is a blocked pop-up)
+  var win = null;
+  if (!pdfShareOk()){ try { win = window.open('', '_blank'); if (win) win.document.write('<p style="font:16px -apple-system,Segoe UI,sans-serif;padding:24px;color:#555">Making the report…</p>'); } catch (e) { win = null; } }
+  var go = $('pGo'); go.disabled = true; go.textContent = 'Making the PDF…'; $('pErr').textContent = '';
+  pdfLoad().then(function(kit){
+    var res = buildPrintFit(o), blob = pdfBuild(kit, res), name = pdfName(res);
+    go.disabled = false; go.textContent = 'Make the PDF';
+    closeDlg('printDlg');
+    pdfDeliver(blob, name, res.pages, win);
+  }).catch(function(e){
+    var pv = $('printView'); pv.innerHTML = ''; pv.style.cssText = '';
+    go.disabled = false; go.textContent = 'Make the PDF';
+    if (win) try { win.close(); } catch (x) {}
+    $('pErr').textContent = 'Could not make the report' + (navigator.onLine === false ? ' - no internet connection.' : ': ' + (e && e.message || e)) + ' Try again.';
+  });
 }
+
+/* ------------------------------------------------------------ PDF report (2026-10-09)
+   Every device gets the same file. The report is laid out as before (buildPrintFit -> page boxes in #printView, off screen)
+   in the PDF's own fonts, then each page box is copied into the PDF (pdfPage): backgrounds, borders and every word at the
+   spot the browser put it. Phones and tablets get the share sheet (Print, Save to Files, Mail); computers open the PDF in a
+   new tab (print from there). Files on the website in chem/print/: jsPDF 2.5.1, Inter (SIL Open Font License) and RocSymbols
+   (a few DejaVu Sans symbols such as ✕ that Inter lacks), trimmed to the characters a report uses. */
+var PRINT_ASSETS = 'print/';
+// file, family, jsPDF style, CSS style, CSS weights (600-800 bold all use the Bold file, on screen and in the PDF)
+var PDF_FACES = [['Inter-Regular.ttf', 'RocPrint', 'normal', 'normal', '1 549'], ['Inter-Italic.ttf', 'RocPrint', 'italic', 'italic', '1 549'],
+  ['Inter-Bold.ttf', 'RocPrint', 'bold', 'normal', '550 1000'], ['Inter-BoldItalic.ttf', 'RocPrint', 'bolditalic', 'italic', '550 1000'],
+  ['RocSymbols.ttf', 'RocSym', 'normal', 'normal', '1 549'], ['RocSymbols-Bold.ttf', 'RocSym', 'bold', 'normal', '550 1000']];
+var PDF_INTER = /^[\u0020-\u007e\u00a0-\u00ac\u00ae-\u0148\u014a-\u017f\u2010-\u2027\u2030-\u2055\u2057\u20ac\u2122\u2190-\u2199\u21a9-\u21aa\u21b0-\u21b1\u21b3-\u21b5\u21ba-\u21bb\u21d0\u21d2\u21d4\u21de-\u21df\u21e4-\u21e5\u21e7\u21ea\u2202\u2205-\u2206\u220f\u2211-\u2212\u221a\u221e\u222b\u2236\u2248\u2260\u2264-\u2265\u2295-\u2298\u25a0-\u25a2\u25aa\u25b2-\u25b3\u25b6-\u25b7\u25ba-\u25bd\u25c0-\u25c1\u25c4-\u25c7\u25ca-\u25cb\u25cf\u25e6\u25ef\u2600\u2605-\u2606\u263c\u2661\u2665\u26a0\u2713\u2717\u2756\u2764\u2780-\u2788]$/;   // characters Inter has; anything else is drawn in RocSym
+var PDF_ASCENT = 1984 / 2048;   // Inter's ascent: a word's baseline sits this many font sizes below the top of its box
+var pdfKit = null;
+/** Loads jsPDF and the fonts once (started when the Print window opens, so Print is quick); fonts also go into the page for the layout. */
+function pdfLoad(){
+  if (pdfKit) return pdfKit;
+  function get(f){ return fetch(PRINT_ASSETS + f).then(function(r){ if (!r.ok) throw new Error(f + ' ' + r.status); return r.arrayBuffer(); }); }
+  var lib = window.jspdf ? Promise.resolve() : new Promise(function(ok, no){
+    var sc = document.createElement('script'); sc.src = PRINT_ASSETS + 'jspdf.umd.min.js';
+    sc.onload = ok; sc.onerror = function(){ no(new Error('the PDF maker did not load')); }; document.head.appendChild(sc);
+  });
+  pdfKit = Promise.all([lib].concat(PDF_FACES.map(function(f){ return get(f[0]); }))).then(function(res){
+    var bufs = res.slice(1);
+    return Promise.all(bufs.map(function(b, i){
+      var f = PDF_FACES[i];
+      return new FontFace(f[1], b.slice(0), {style: f[3], weight: f[4]}).load().then(function(ff){ document.fonts.add(ff); });
+    })).then(function(){ return {b64: bufs.map(pdfB64)}; });
+  });
+  pdfKit.catch(function(){ pdfKit = null; });   // a failed load is tried again next time
+  return pdfKit;
+}
+function pdfB64(buf){ var s = '', a = new Uint8Array(buf); for (var i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); }
+/** Phones and tablets: hand the file to the share sheet. Computers (no touch screen): open it in a tab. */
+function pdfShareOk(){
+  try { return !!(navigator.share && navigator.canShare && navigator.maxTouchPoints > 1 && navigator.canShare({files: [new File(['x'], 'x.pdf', {type: 'application/pdf'})]})); }
+  catch (e) { return false; }
+}
+/** "Pool Report Sep 1 – Oct 9, 2026.pdf" (the year once when both ends share it), "Pool Report all dates.pdf". */
+/** "Sep 1, 2026 – Oct 9, 2026" -> "Sep 1 – Oct 9, 2026" (the year once when both ends share it). */
+function rangeShort(r){ return r.replace(/^(\w+ \d+), (\d{4}) – (\w+ \d+, )\2$/, '$1 – $3$2'); }
+function pdfName(res){
+  var r = res.range === 'All dates' ? 'all dates' : rangeShort(res.range);
+  return 'Pool Report ' + r.replace(/[\/\\:*?"<>|]/g, '-') + '.pdf';
+}
+function pdfBuild(kit, res){
+  var doc = new window.jspdf.jsPDF({unit: 'pt', format: 'letter', compress: true});
+  PDF_FACES.forEach(function(f, i){ doc.addFileToVFS(f[0], kit.b64[i]); doc.addFont(f[0], f[1], f[2]); });
+  var pv = $('printView'), pages = [].slice.call(pv.querySelectorAll('.ppage'));
+  var stamp = 'Printed ' + new Date().toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'});
+  pages.forEach(function(pg, n){
+    if (n) doc.addPage();
+    pdfPage(doc, pg, 36, 36);
+    // footer, in the bottom margin
+    doc.setFont('RocPrint', 'normal'); doc.setFontSize(7); doc.setTextColor(120, 120, 120);
+    doc.text(PRINT_TITLE + ' · ' + stamp, 36, 770);
+    if (pages.length > 1) doc.text('Page ' + (n + 1) + ' of ' + pages.length, 576, 770, {align: 'right'});
+  });
+  doc.setProperties({title: PRINT_TITLE + ' ' + res.range, creator: 'rollingoaksclub.org'});
+  pv.innerHTML = ''; pv.style.cssText = '';
+  return doc.output('blob');
+}
+/** Copies one laid-out page box into the PDF at (ox, oy) points: 1 CSS px = 0.75pt. */
+function pdfPage(doc, root, ox, oy){
+  var R0 = root.getBoundingClientRect(), K = 0.75;
+  var X = function(x){ return ox + (x - R0.left) * K; }, Y = function(y){ return oy + (y - R0.top) * K; };
+  (function walk(el, clip){
+    var cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+    var r = el.getBoundingClientRect();
+    if (el !== root) pdfBox(doc, cs, r, X, Y);
+    if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible'){
+      // boxes that cut their text off (table cells, tiles); with text-overflow: ellipsis the cut text ends in "…"
+      var bl = parseFloat(cs.borderLeftWidth) || 0, br = parseFloat(cs.borderRightWidth) || 0;
+      var c = {left: r.left + bl, right: r.right - br, top: r.top, bottom: r.bottom, ell: cs.textOverflow === 'ellipsis', eRight: r.right - br - (parseFloat(cs.paddingRight) || 0)};
+      if (clip) { c.left = Math.max(c.left, clip.left); c.right = Math.min(c.right, clip.right); c.eRight = Math.min(c.eRight, clip.right); c.top = Math.max(c.top, clip.top); c.bottom = Math.min(c.bottom, clip.bottom); c.ell = c.ell || clip.ell; }
+      clip = c;
+    }
+    for (var n = el.firstChild; n; n = n.nextSibling){
+      if (n.nodeType === 1) walk(n, clip);
+      else if (n.nodeType === 3) pdfText(doc, n, cs, clip, X, Y);
+    }
+  })(root, null);
+}
+/** "rgb(…)" / "rgba(…)" -> [r, g, b] over white paper; null when see-through. */
+function pdfColor(c){
+  var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return null;
+  var p = m[1].split(/[\s,\/]+/).filter(Boolean).map(function(v){ return /%$/.test(v) ? parseFloat(v) / 100 : parseFloat(v); });
+  var a = p.length > 3 ? p[3] : 1; if (!(a > 0)) return null;
+  return [0, 1, 2].map(function(i){ return Math.round(p[i] * a + 255 * (1 - a)); });
+}
+function pdfFill(doc, c){ doc.setFillColor(c[0], c[1], c[2]); }
+function pdfRect(doc, x, y, w, h, rad){
+  if (w <= 0 || h <= 0) return;
+  rad = Math.min(rad || 0, w / 2, h / 2);
+  if (rad > 0.2) doc.roundedRect(x, y, w, h, rad, rad, 'F'); else doc.rect(x, y, w, h, 'F');
+}
+/** An element's background, its borders, and the dashed top line of the estimate rows (a CSS gradient). */
+function pdfBox(doc, cs, r, X, Y){
+  if (r.width <= 0 || r.height <= 0) return;
+  var x = X(r.left), y = Y(r.top), w = r.width * 0.75, h = r.height * 0.75;
+  var bg = pdfColor(cs.backgroundColor), rad = (parseFloat(cs.borderTopLeftRadius) || 0) * 0.75;
+  var S = ['Top', 'Right', 'Bottom', 'Left'];
+  var bw = S.map(function(s){ var st = cs['border' + s + 'Style']; return st === 'none' || st === 'hidden' ? 0 : (parseFloat(cs['border' + s + 'Width']) || 0) * 0.75; });
+  var bc = S.map(function(s, i){ return bw[i] ? pdfColor(cs['border' + s + 'Color']) : null; });
+  if (rad > 0 && (bc[0] || bc[3])){
+    // rounded box with a border (the "Chemicals to add next" tiles: thin grey edge, thick colored left side)
+    pdfFill(doc, bc[0] || bc[3]); pdfRect(doc, x, y, w, h, rad);
+    if (bc[3] && bw[3] > bw[0]){ pdfFill(doc, bc[3]); pdfRect(doc, x, y, Math.min(w, bw[3] + rad * 2), h, rad); }
+    pdfFill(doc, bg || [255, 255, 255]);
+    pdfRect(doc, x + bw[3], y + bw[0], w - bw[1] - bw[3], h - bw[0] - bw[2], Math.max(0, rad - Math.max(bw[0], bw[3])));
+    return;
+  }
+  if (bg){ pdfFill(doc, bg); pdfRect(doc, x, y, w, h, rad); }
+  var gi = cs.backgroundImage;
+  if (gi && /linear-gradient/.test(gi)){
+    var gc = pdfColor((/rgba?\([^)]+\)/.exec(gi) || [''])[0]) || [119, 119, 119];
+    var sz = String(cs.backgroundSize).split(' ').map(parseFloat), per = (sz[0] || 6) * 0.75, th = (sz[1] || 1) * 0.75;
+    pdfFill(doc, gc);
+    for (var dx = 0; dx < w; dx += per) doc.rect(x + dx, y, Math.min(per / 2, w - dx), th, 'F');
+  }
+  if (bc[0]){ pdfFill(doc, bc[0]); doc.rect(x, y, w, bw[0], 'F'); }
+  if (bc[1]){ pdfFill(doc, bc[1]); doc.rect(x + w - bw[1], y, bw[1], h, 'F'); }
+  if (bc[2]){ pdfFill(doc, bc[2]); doc.rect(x, y + h - bw[2], w, bw[2], 'F'); }
+  if (bc[3]){ pdfFill(doc, bc[3]); doc.rect(x, y, bw[3], h, 'F'); }
+}
+/** Each word of a text node, drawn where the browser placed it (so wrapping, alignment and spacing match exactly). */
+function pdfText(doc, node, cs, clip, X, Y){
+  var s = node.nodeValue; if (!/\S/.test(s)) return;
+  var px = parseFloat(cs.fontSize) || 12, pt = px * 0.75, bold = (parseInt(cs.fontWeight, 10) || 400) >= 550, ital = /italic|oblique/.test(cs.fontStyle);
+  var col = pdfColor(cs.color) || [0, 0, 0], ls = cs.letterSpacing === 'normal' ? 0 : (parseFloat(cs.letterSpacing) || 0) * 0.75;
+  var up = cs.textTransform === 'uppercase', rg = document.createRange(), re = /\S+/g, m;
+  doc.setTextColor(col[0], col[1], col[2]);
+  while ((m = re.exec(s))){
+    rg.setStart(node, m.index); rg.setEnd(node, m.index + m[0].length);
+    var rr = rg.getClientRects(); if (!rr.length) continue;
+    var b = rr[0], word = up ? m[0].toUpperCase() : m[0];
+    if (b.width <= 0) continue;
+    if (clip){
+      if (b.left >= clip.right - 0.5 || b.top >= clip.bottom - 0.5 || b.bottom <= clip.top + 0.5) continue;   // cut off entirely
+      var lim = clip.ell ? clip.eRight : clip.right;
+      if (b.right > lim + 0.5){ word = pdfFit(doc, word, (lim - b.left) * 0.75, clip.ell, pt, bold, ital, ls); if (!word) continue; }
+    }
+    pdfWord(doc, word, X(b.left), Y(b.top) + PDF_ASCENT * pt, pt, bold, ital, ls);
+  }
+}
+function pdfFace(doc, sym, pt, bold, ital){
+  doc.setFont(sym ? 'RocSym' : 'RocPrint', sym ? (bold ? 'bold' : 'normal') : bold ? (ital ? 'bolditalic' : 'bold') : ital ? 'italic' : 'normal');
+  doc.setFontSize(pt);
+}
+/** One word, split into runs of Inter and symbol characters. */
+function pdfWord(doc, w, x, y, pt, bold, ital, ls){
+  var ch = Array.from(w), i = 0;
+  while (i < ch.length){
+    var sym = !PDF_INTER.test(ch[i]), j = i + 1;
+    while (j < ch.length && !PDF_INTER.test(ch[j]) === sym) j++;
+    var part = ch.slice(i, j).join('');
+    pdfFace(doc, sym, pt, bold, ital);
+    doc.text(part, x, y, ls ? {charSpace: ls} : undefined);
+    x += doc.getTextWidth(part) + ls * (j - i);
+    i = j;
+  }
+}
+/** The longest start of a word that fits maxPt (plus "…" for text-overflow: ellipsis). */
+function pdfFit(doc, w, maxPt, ell, pt, bold, ital, ls){
+  var ch = Array.from(w); pdfFace(doc, false, pt, bold, ital);
+  var tail = ell ? '…' : '', room = maxPt - (ell ? doc.getTextWidth(tail) + ls : 0);
+  while (ch.length && doc.getTextWidth(ch.join('')) + ls * ch.length > room) ch.pop();
+  return ch.length || ell ? ch.join('') + tail : '';
+}
+/** Hands the finished file over: share sheet on phones and tablets, the tab opened at the tap on computers, else the Report ready window. */
+function pdfDeliver(blob, name, pages, win){
+  var file = new File([blob], name, {type: 'application/pdf'});
+  if (win && !win.closed){ win.location.href = URL.createObjectURL(file); return; }
+  if (pdfShareOk()){
+    navigator.share({files: [file]}).catch(function(e){ if (!e || e.name !== 'AbortError') pdfReady(file, pages); });   // too long after the tap: one more tap
+    return;
+  }
+  pdfReady(file, pages);
+}
+var pdfLast = null;
+function pdfReady(file, pages){
+  pdfLast = file;
+  $('pdfInfo').textContent = file.name + (pages ? ' · ' + pages + (pages === 1 ? ' page' : ' pages') : '');
+  var a = $('pdfSave'); if (a.href) URL.revokeObjectURL(a.href); a.href = URL.createObjectURL(file); a.download = file.name;
+  $('pdfOpen').textContent = pdfShareOk() ? 'Print or share' : 'Open';
+  openDlg('pdfDlg');
+}
+function pdfOpenLast(){
+  if (!pdfLast) return;
+  if (pdfShareOk()) navigator.share({files: [pdfLast]}).then(function(){ closeDlg('pdfDlg'); }, function(){});
+  else { window.open(URL.createObjectURL(pdfLast), '_blank'); closeDlg('pdfDlg'); }
+}
+/* ---- cal-hypo feeder settings (Manager, 2026-10-08): server saveFeeder; the result line works out live from the maker's
+   table the server sends (DATA.feeder.table, same math as Code.gs feederLbDay_ / feederInfo_). */
+var FEED_ROWS = 4, feedBusy = false;
+function feedRowHtml(r){
+  r = r || {};
+  return '<div class="fdr"><span class="fdin"><input type="time" step="60" data-fd="at" value="' + esc(r.at || '') + '" aria-label="Starts"></span>' +
+    '<span class="fdin"><input type="number" data-fd="rpm" inputmode="numeric" min="0" max="4000" step="50" value="' + (r.rpm != null ? r.rpm : '') + '" aria-label="Pump rpm"></span>' +
+    '<span class="fdin"><input type="number" data-fd="gpm" inputmode="decimal" min="0" max="6" step="0.1" value="' + (r.gpm != null ? r.gpm : '') + '" aria-label="Feeder gpm"></span>' +
+    '<button type="button" class="fdrm" data-fdrm="1" aria-label="Remove this speed">×</button></div>';
+}
+function feedOpen(){
+  var F = DATA.feeder; if (!F) return;
+  var f = F.set;
+  $('fdRows').innerHTML = f.rows.map(feedRowHtml).join('');
+  $('fdLets').innerHTML = Object.keys(F.table).map(function(L){ return '<button type="button" role="radio" data-fdl="' + L + '">' + L + '</button>'; }).join('');
+  $('fdLetter').value = f.letter; $('fdTabs').value = f.tabs; $('fdDays').value = f.days == null ? '' : f.days;
+  $('fdTabG').value = f.tabG; $('fdPct').value = f.pct; $('fdErr').textContent = '';
+  feedAddVis(); feedCalc(); openMenu('feedDlg');   // opens with nothing focused (no picker popping up on iPhone)
+}
+function feedRead(){
+  var rows = [];
+  $('fdRows').querySelectorAll('.fdr').forEach(function(el){
+    var g = function(k){ return el.querySelector('[data-fd=' + k + ']').value; }, at = g('at'), rpm = g('rpm'), gpm = g('gpm');
+    if (at || rpm || gpm) rows.push({at: at, rpm: rpm === '' ? null : +rpm, gpm: gpm === '' ? null : +gpm});
+  });
+  return {letter: $('fdLetter').value, rows: rows, tabs: +$('fdTabs').value, tabG: +$('fdTabG').value, pct: +$('fdPct').value, days: $('fdDays').value === '' ? '' : +$('fdDays').value};
+}
+function feedLb(letter, gpm){
+  var T = DATA.feeder.table, G = DATA.feeder.gpms, row = T[letter], rated = true;
+  if (!row || !(gpm > 0)) return {lb: 0, rated: true};
+  function cell(j){ if (row[j] !== null) return row[j]; rated = false; var b = 0; for (var k in T) if (T[k][j] !== null && T[k][j] > b) b = T[k][j]; return b; }
+  var n = G.length, v;
+  if (gpm <= G[0]) v = cell(0) * gpm / G[0];
+  else if (gpm >= G[n - 1]) v = cell(n - 1);
+  else for (var j = 1; j < n; j++) if (gpm <= G[j]) { var a = cell(j - 1), b = cell(j); v = a + (b - a) * (gpm - G[j - 1]) / (G[j] - G[j - 1]); break; }
+  return {lb: v, rated: rated};
+}
+function feedHour(m){ var h = Math.floor(m / 60) % 24, mm = m % 60; return (h % 12 || 12) + (mm ? ':' + ('0' + mm).slice(-2) : '') + (h < 12 ? 'a' : 'p'); }
+function feedCalc(){
+  if (!DATA || !DATA.feeder) return;     // data refreshed without the feeder (signed out): leave the window as it is
+  var f = feedRead(), T = DATA.feeder.table;
+  var segs = f.rows.filter(function(r){ return /^\d{1,2}:\d{2}$/.test(r.at) && r.gpm >= 0; }).map(function(r){ var p = r.at.split(':'); return {m: +p[0] * 60 + +p[1], gpm: r.gpm, rpm: r.rpm}; });
+  segs.sort(function(a, b){ return a.m - b.m; });
+  // letter buttons: chosen one filled; letters the maker doesn't rate at these flows greyed
+  $('fdLets').querySelectorAll('[data-fdl]').forEach(function(bt){
+    var L = bt.getAttribute('data-fdl'), ok = segs.length ? segs.every(function(s){ return feedLb(L, s.gpm).rated; }) : true;
+    bt.setAttribute('aria-checked', L === f.letter); bt.classList.toggle('off', !ok);
+  });
+  var okL = Object.keys(T).filter(function(L){ return segs.length && segs.every(function(s){ return feedLb(L, s.gpm).rated; }); });
+  $('fdLetHelp').textContent = !segs.length ? '' : okL.length ? 'At these flows the maker rates ' + (okL.length === 1 ? okL[0] : okL.slice(0, -1).join(', ') + ' and ' + okL[okL.length - 1]) +
+    (okL.length > 1 ? ' (' + okL[0] + ' gives the least, ' + okL[okL.length - 1] + ' the most).' : '.') : 'No letter is rated at these flows.';
+  $('fdTabSum').textContent = (f.tabG || '–') + ' g · ' + (f.pct || '–') + '%';
+  var el = $('fdRes');
+  if (!segs.length || !(f.tabs > 0) || !(f.tabG > 0) || !(f.pct > 0)) { el.innerHTML = '<p class="fdnote">Fill in the pump schedule to see what it works out to.</p>'; return; }
+  var sum = 0, rated = true, maxLb = 0;
+  segs.forEach(function(s, i){
+    s.mins = segs.length === 1 ? 1440 : ((segs[(i + 1) % segs.length].m - s.m) % 1440 + 1440) % 1440;
+    var v = feedLb(f.letter, s.gpm); if (!v.rated) rated = false;
+    s.lb = v.lb; sum += v.lb * s.mins; if (v.lb > maxLb) maxLb = v.lb;
+  });
+  var tableLb = sum / 1440, full = f.tabs * f.tabG / 453.59237 * f.pct / 100, tableDays = tableLb > 0 ? full / tableLb : null;
+  var days = f.days > 0 ? f.days : tableDays, k = days && tableLb > 0 ? (full / days) / tableLb : 1, lb = tableLb * k;
+  var ppm = lb * 453.59237 * 1000 / (48000 * 3.785411784), r1 = function(v){ return fmtNum(Math.round(v * 10) / 10); };
+  // 24-hour strip from midnight: one block per pump speed, as wide as its hours, as strong as its output
+  var parts = [], ticks = [], start = segs[0].m;
+  var pieces = segs.map(function(s){ return {from: s.m, mins: s.mins, lb: s.lb * k}; });
+  if (start > 0) pieces.unshift({from: 0, mins: start, lb: segs[segs.length - 1].lb * k});   // the last speed runs on past midnight
+  var tot = 0; pieces.forEach(function(p){ if (tot + p.mins > 1440) p.mins = 1440 - tot; tot += p.mins; });
+  pieces.filter(function(p){ return p.mins > 0; }).forEach(function(p){
+    var op = maxLb > 0 ? 0.35 + 0.65 * (p.lb / (maxLb * k)) : 1;
+    parts.push('<i style="flex:' + p.mins + ' 0 0;opacity:' + op.toFixed(2) + '">' + (p.mins >= 300 ? fmtNum(Math.round(p.lb * 100) / 100) + ' lb' : '') + '</i>');
+    ticks.push('<span style="left:' + (p.from / 1440 * 100).toFixed(2) + '%">' + feedHour(p.from) + '</span>');
+  });
+  ticks.push('<span style="left:100%">12a</span>');
+  el.innerHTML = '<div class="fdbig"><b>' + (days ? r1(days) : '–') + '</b><span>days per full load</span></div>' +
+    '<div class="fdstats"><span><b>' + fmtNum(Math.round(lb * 100) / 100) + ' lb</b> chlorine a day</span><span><b>FC +' + r1(ppm) + '</b> a day</span></div>' +
+    '<div class="fdday" role="img" aria-label="How much it feeds through the day">' + parts.join('') + '</div><div class="fdticks">' + ticks.join('') + '</div>' +
+    '<p class="fdnote' + (rated || f.days > 0 ? '' : ' warn') + '">' + (f.days > 0 ? 'Using your “lasts ' + fmtNum(f.days) + ' days”. The maker\'s table alone says about ' + (tableDays ? r1(tableDays) : '–') + '.'
+      : rated ? 'From the maker\'s table (the manual that came with the feeder).' : 'Letter ' + esc(f.letter) + ' isn\'t rated at this low a flow, so this borrows the nearest rated numbers. Treat it as a guess.') + '</p>';
+}
+function feedWire(){
+  var dlg = $('feedDlg');
+  dlg.addEventListener('input', feedCalc);
+  dlg.addEventListener('change', feedCalc);
+  dlg.addEventListener('click', function(e){
+    var lb = e.target.closest('[data-fdl]');
+    if (lb) { $('fdLetter').value = lb.getAttribute('data-fdl'); feedCalc(); return; }
+    var rm = e.target.closest('[data-fdrm]');
+    if (rm) { rm.closest('.fdr').remove(); feedAddVis(); feedCalc(); return; }
+  });
+  $('fdAdd').addEventListener('click', function(){ $('fdRows').insertAdjacentHTML('beforeend', feedRowHtml()); feedAddVis(); var ins = $('fdRows').querySelectorAll('.fdr'); ins[ins.length - 1].querySelector('input').focus(); });
+  $('fdX').addEventListener('click', function(){ closeDlg('feedDlg'); });
+  $('fdSave').addEventListener('click', function(){
+    if (feedBusy) return;
+    feedBusy = true; $('fdSave').textContent = 'Saving…'; $('fdErr').textContent = '';
+    serverCall('saveFeeder', [CODE, feedRead()], function(res){
+      feedBusy = false; $('fdSave').textContent = 'Save';
+      if (handleDenied(res)) return;
+      if (!res || !res.ok) { $('fdErr').textContent = (res && res.message) || 'Could not save.'; return; }
+      DATA = res.data; closeDlg('feedDlg'); renderAll();
+    }, function(err){ feedBusy = false; $('fdSave').textContent = 'Save'; $('fdErr').textContent = 'Could not reach the server: ' + (err && err.message || err); });
+  });
+}
+function feedAddVis(){ $('fdAdd').hidden = $('fdRows').querySelectorAll('.fdr').length >= FEED_ROWS; }
+// pop-ups: a thin line under the pinned header once the middle has scrolled
+document.addEventListener('scroll', function(e){ var b = e.target; if (b && b.classList && b.classList.contains('popbody') && b.previousElementSibling) b.previousElementSibling.classList.toggle('lined', b.scrollTop > 2); }, true);
 function openDlg(id){ var d = $(id); if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', ''); }
 // menus open with nothing outlined (no auto-focus ring on the first row)
 function openMenu(id){ openDlg(id); var d = $(id); d.setAttribute('tabindex', '-1'); try { d.focus({preventScroll:true}); } catch(e){ d.focus(); } }
@@ -4068,7 +4630,7 @@ function lockNow(msg){
   DATA.tests = []; DATA.chems = []; DATA.trackers = []; DATA.stock = {}; DATA.hasPrices = false; DATA.priceRows = []; DATA.chemicals = []; DATA.priceWarnings = []; DATA.noteIssues = []; DATA.calc = null; DATA.locked = true;
   $('printView').innerHTML = '';
   closeForm(); $('prList').innerHTML = ''; $('prChem').innerHTML = ''; $('prNote').textContent = '';
-  calcClear(); closeDlg('pricesDlg'); closeDlg('printDlg'); closeDlg('navDlg'); closeDlg('menuDlg'); closeDlg('viewDlg'); closeDlg('dateDlg');
+  calcClear(); closeDlg('pricesDlg'); closeDlg('printDlg'); closeDlg('pdfDlg'); closeDlg('navDlg'); closeDlg('menuDlg'); closeDlg('viewDlg'); closeDlg('dateDlg');
   setUnlocked(false); renderAll();
   showStatus(msg || '', false);
 }
@@ -4119,11 +4681,12 @@ function goSignUp(){   // the sign-up form is on Home; the name goes along on th
   window.top.location.href = 'https://www.rollingoaksclub.org/?signup';
 }
 function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
-function showPick(){ signAs = ''; $('siPick').hidden = false; $('unlockForm').hidden = true; $('unlockErr').textContent = ''; }
+function showPick(){ signAs = ''; $('siPick').hidden = false; $('unlockForm').hidden = true; $('unlockErr').textContent = ''; $('siFoot').hidden = true;
+  $('siHead').textContent = 'Who\'s signing in?'; $('siSub').textContent = 'Pool members and volunteers'; }
 function showStep(as){
   var c = SIGN_AS[as], inp = $('codeIn'); signAs = as;
-  $('siPick').hidden = true; $('unlockForm').hidden = false;
-  $('siTitle').textContent = c.title; $('codeLbl').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
+  $('siPick').hidden = true; $('unlockForm').hidden = false; $('siFoot').hidden = false;
+  $('siHead').textContent = c.title; $('siSub').textContent = 'Sign in'; $('siTitle').textContent = c.title; $('codeLbl').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
   $('nameRow').hidden = as !== 'vol';
   inp.value = ''; $('unlockErr').textContent = ''; pwShow(inp, false);
   inp.classList.toggle('secret', c.secret);
@@ -4903,6 +5466,8 @@ document.addEventListener('DOMContentLoaded', function(){
   $('dateChip').addEventListener('click', function(){ openDlg('dateDlg'); });
   $('viewChip').addEventListener('click', function(){ openDlg('viewDlg'); });
   $('moreBtn').addEventListener('click', function(){ openMenu('menuDlg'); });
+  $('menuX').addEventListener('click', function(){ closeDlg('menuDlg'); });
+  $('navX').addEventListener('click', function(){ closeDlg('navDlg'); });
   // home-screen app: the grey ⋯ above the + (#eMore, + button script) opens this menu, which also has Refresh and Sign in there
   $('mnRefresh').addEventListener('click', function(){ closeDlg('menuDlg'); refreshNow(); });
   $('mnSignIn').addEventListener('click', function(){ closeDlg('menuDlg'); openUnlock(); });
@@ -4938,7 +5503,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('jobs').addEventListener('click', function(e){ if (e.target.closest && e.target.closest('#jMore') && !$('upDet').classList.contains('open')) $('upBtn').click(); });
   $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
-  ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg'].forEach(function(id){
+  ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg', 'removedDlg', 'pdfDlg', 'entryMenu'].forEach(function(id){   // a tap outside closes (nothing typed to lose)
     $(id).addEventListener('click', function(e){
       if (e.target !== this) return;
       var r = this.getBoundingClientRect();
@@ -4970,7 +5535,6 @@ document.addEventListener('DOMContentLoaded', function(){
     b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
     b.addEventListener('click', function(){ pwShow(inp, !inp.classList.contains('shown')); inp.focus(); });
   });
-  $('unlockCancel').addEventListener('click', function(){ closeDlg('unlockDlg'); });
   // iPhone: when the keyboard closes inside the frame (e.g. right after signing in), Safari can leave every tap landing
   // off from the buttons until the page moves. Close the keyboard first, then nudge the scroll so taps line up again.
   function settleTaps(){
@@ -4998,6 +5562,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }).join(''));
   }
   $('mnRemoved').addEventListener('click', function(){ closeDlg('menuDlg'); rmRender(''); openDlg('removedDlg'); });
+  $('mnFeeder').addEventListener('click', function(){ closeDlg('menuDlg'); feedOpen(); });
+  feedWire();
   $('rmDone').addEventListener('click', function(){ closeDlg('removedDlg'); });
   $('rmList').addEventListener('click', function(e){
     var b = e.target.closest && e.target.closest('[data-rmback]');
@@ -5011,11 +5577,13 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   $('impX').addEventListener('click', impClose);
   $('printBtn').addEventListener('click', openPrint);
-  $('pRange').addEventListener('change', function(){ $('pCustom').style.display = this.value === 'custom' ? 'block' : 'none'; });
+  $('pRange').addEventListener('click', function(e){ var b = e.target.closest('button[data-r]'); if (b){ setPrintRange(b.getAttribute('data-r')); printPreview(); } });
+  $('printDlg').addEventListener('change', function(){ syncGroupOpt(); printPreview(); });
   $('pSave').addEventListener('click', rememberPrint);
-  $('pChem').addEventListener('change', syncGroupOpt);
   $('pCancel').addEventListener('click', function(){ closeDlg('printDlg'); });
   $('pGo').addEventListener('click', doPrint);
+  $('pdfOpen').addEventListener('click', pdfOpenLast);
+  $('pdfClose').addEventListener('click', function(){ closeDlg('pdfDlg'); });
 
   $('pricesBtn').addEventListener('click', openPrices);
   $('tabCalc').addEventListener('click', function(){ showPricesTab('calc'); });
@@ -5180,7 +5748,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
   </div>
 </div>
-<dialog id="entryMenu" aria-labelledby="emTitle">
+<dialog id="entryMenu" class="pop" aria-labelledby="emTitle">
   <div id="emBody"></div>
 </dialog>
 <script>
@@ -5199,7 +5767,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
     chem: ['chemical', 'var(--k-fc)', 'Save chemical'],
     vols: ['Volunteers', 'var(--red)', '']};
-  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
+  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnFeeder": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M7 13h10M10 17h4\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
   ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
@@ -5222,7 +5790,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
   // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
   // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
-  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnVols', 'mnChgPw', 'mnLock'];
+  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnFeeder', 'mnVols', 'mnChgPw', 'mnLock'];
   function setMenu(o){
     if (o) buildMenuBubbles();
     ui.classList.toggle('menu', o);
@@ -5546,9 +6114,9 @@ document.addEventListener('DOMContentLoaded', function(){
     refresh();
   }
   function numIn(v){ v = String(v == null ? '' : v).trim().replace(',', '.'); return v === '' ? NaN : Number(v); }
-  // Cal-hypo pucks: typed as a count, saved as lb (about 44-45 pucks in a 25 lb bucket).
-  var PUCK_LB = 25 / 44.5;
-  function chemAmt(it){ var a = numIn(it.amount); return it.unit === 'pucks' ? Math.round(a * PUCK_LB * 100) / 100 : a; }
+  // Cal-hypo pucks: typed as a count, saved as lb. Weight of one = the feeder settings' tablet (CCH Endurance 265 g).
+  function puckLb(){ var f = DATA.feeder && DATA.feeder.set; return f ? f.tabG / 453.59237 : 265 / 453.59237; }
+  function chemAmt(it){ var a = numIn(it.amount); return it.unit === 'pucks' ? Math.round(a * puckLb() * 100) / 100 : a; }
   function chemUnit(it){ return it.unit === 'pucks' ? 'lb' : it.unit; }
   function chemPct(it){ return numIn(it.pct); }
   function chemCheck(){
@@ -5998,13 +6566,14 @@ document.addEventListener('DOMContentLoaded', function(){
   function menu(kind, id, confirmDel, err){
     var it = findEntry(kind, id); if (!it) return;
     menuFor = {kind: kind, id: id};
-    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'chem' ? 'Added ' + esc(it.summary) : kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
-      (it.w && wxFull(it.w) ? '<p class="emsub">' + esc(wxFull(it.w)) + '</p>' : '') +
-      (it.by ? '<p class="emsub">Entered by ' + esc(fullName(it.by)) + '</p>' : '') +
-      (confirmDel ? '<p>Delete this ' + ENTRY_WORD[kind] + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
-        : '<div class="row"><button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button></div>' +
-          '<div class="row"><button type="button" class="btn" data-em="cancel">Close</button></div>') +
-      (err ? '<p style="color:var(--red)">' + esc(err) + '</p>' : '');
+    var sub = [it.w && wxFull(it.w) ? wxFull(it.w) : '', it.by ? 'Entered by ' + fullName(it.by) : ''].filter(Boolean);
+    $('emBody').innerHTML = '<div class="pophead"><div><h2 id="emTitle">' + (kind === 'chem' ? 'Added ' + esc(it.summary) : kind === 'test' ? 'Test' : 'Note') + '</h2>' +
+      '<span class="popsub">' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</span>' + sub.map(function(t){ return '<span class="popsub">' + esc(t) + '</span>'; }).join('') + '</div>' +
+      '<button type="button" class="popx" data-em="cancel" aria-label="Close">×</button></div>' +
+      (confirmDel ? '<div class="popbody"><p style="margin:4px 0 0">Delete this ' + ENTRY_WORD[kind] + '? This can\'t be undone.</p></div>' : '') +
+      '<div class="popfoot">' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
+      (confirmDel ? '<button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button>'
+        : '<button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button>') + '</div>';
     if (!$('entryMenu').open) openDlg('entryMenu');
   }
   document.addEventListener('click', function(e){
