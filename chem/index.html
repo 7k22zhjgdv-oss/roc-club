@@ -8,7 +8,7 @@
 <script>
 // Server calls: this page is not inside Apps Script, so google.script.run.x(...) is sent to the web app's doPost.
 (function(){
-  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","saveFeeder","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
+  var API = 'https://script.google.com/macros/s/AKfycbzLpS38sr24wHiNVOI8ZdR_hiHaMhLyOcp51w-Rek-U9yTLJZ3FEIwJn5sZSwnzSPgz/exec', FNS = ["unlock","publicData","pageImport","importProgress","saveMark","savePrice","deletePrice","savePrintPrefs","saveTrackerTiming","saveStockCount","setChemInactive","calcSave","calcNote","saveTest","saveNote","saveChems","saveJobCheck","saveWellCh","saveFeeder","saveAcidFeeder","deleteEntry","accessChangePassword","accessNameCheck","accessAliases","accessVolunteerList","accessVolunteerAction"];
   // Calls that only read (sign-in, data, calendar) are tried up to twice more when the reply is lost on the way back
   // (Safari: "Load failed"; it happens now and then with Apps Script). Saves are never repeated.
   var SAFE = ["whoAmI","unlock","publicData","importProgress","getRulesInfo","getCalendarMonths","getUpcomingEvents","getNextBoardMeeting","getSiteText","accessVolunteerList","accessNameCheck"];
@@ -411,6 +411,43 @@ dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 #feedDlg .fdmore[open] summary::after{transform:rotate(90deg)}
 #feedDlg .fdsum{margin-left:auto;color:var(--muted);font-size:14px}
 #feedDlg .fdmore .fdhelp{margin:4px 0 12px}
+/* acid feeder settings (2026-10-09): the pop-up rules in DESIGN.md, like the cal-hypo feeder */
+#acidDlg .aftank{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;color:var(--ink2)}
+#acidDlg .aftank b{color:var(--ink);font-weight:600}
+#acidDlg .afgauge{flex:0 0 22px;height:34px;border-radius:5px;background:color-mix(in srgb,var(--accent) 16%,var(--card));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent);position:relative;overflow:hidden}
+#acidDlg .afgauge i{position:absolute;left:0;right:0;bottom:0;background:var(--accent);opacity:.8}
+#acidDlg .afnote{margin:10px 0 0;font-size:12px;color:var(--muted);line-height:1.35}
+#acidDlg .afstep{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:center}
+#acidDlg .afpm{height:52px;border-radius:12px;border:0;background:var(--card);color:var(--accent);font:inherit;font-size:28px;font-weight:500;line-height:1;cursor:pointer;padding:0}
+#acidDlg .afpm:active{background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+#acidDlg .afval{display:flex;align-items:baseline;justify-content:center;gap:2px;background:var(--card);border-radius:12px;height:52px}
+#acidDlg .afval input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:30px;font-weight:700;width:2.4em;text-align:right;padding:0;outline:0;line-height:52px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+#acidDlg .afval input::-webkit-inner-spin-button,#acidDlg .afval input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#acidDlg .afval i{font-style:normal;font-size:18px;color:var(--muted);font-weight:600}
+#acidDlg .afval:focus-within{box-shadow:0 0 0 2px var(--accent)}
+#acidDlg .afwhen{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 4px 0;font-size:15px;color:var(--ink)}
+#acidDlg .afin{display:flex;align-items:center;background:var(--card);border-radius:10px;height:40px;padding:0 9px;min-width:0;width:104px;flex:0 0 104px}
+#acidDlg .afwhen .afin{width:auto;flex:0 1 220px}
+#acidDlg .afwhen[hidden]{display:none}
+#acidDlg .afin input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;width:100%;min-width:0;padding:0;outline:0;-webkit-appearance:none;appearance:none;font-variant-numeric:tabular-nums}
+#acidDlg .afin input[type=datetime-local]::-webkit-calendar-picker-indicator{display:none}
+#acidDlg .afin:focus-within{box-shadow:0 0 0 2px var(--accent)}
+#acidDlg .afin i{font-style:normal;font-size:12px;color:var(--muted);margin-left:3px;flex:0 0 auto}
+#acidDlg .aflog{display:flex;align-items:center;gap:10px;min-height:48px;border-top:1px solid var(--line);font-size:15px;color:var(--ink)}
+#acidDlg .aflog:first-child{border-top:0}
+#acidDlg .aflog b{flex:0 0 3.2em;font-weight:600;font-variant-numeric:tabular-nums}
+#acidDlg .aflog span{flex:1 1 auto;min-width:0;color:var(--ink2);font-size:14px}
+#acidDlg .aflog small{display:block;font-size:12px;color:var(--muted)}
+#acidDlg .aflog.now b{color:var(--accent)}
+#acidDlg .aflog.new{background:color-mix(in srgb,var(--accent) 7%,transparent);margin:0 -12px;padding:0 12px}
+#acidDlg .afrm{border:0;background:transparent;color:var(--muted);font-size:18px;width:28px;height:40px;cursor:pointer;padding:0;flex:0 0 28px}
+#acidDlg .afmore{display:block;padding:0}
+#acidDlg .afmore summary{display:flex;align-items:center;justify-content:space-between;min-height:52px;cursor:pointer;list-style:none;color:var(--ink)}
+#acidDlg .afmore summary::-webkit-details-marker{display:none}
+#acidDlg .afmore summary::after{content:"›";display:inline-block;color:var(--muted);font-size:20px;margin-left:8px;transition:transform .15s}
+#acidDlg .afmore[open] summary::after{transform:rotate(90deg)}
+#acidDlg .afsum{margin-left:auto;color:var(--muted);font-size:14px}
+#acidDlg .afmore .pophelp{margin:4px 0 12px}
 .jfeed{margin:8px 0 2px;font-size:13px;line-height:1.35}
 .jfeed b{display:block}
 .jfeed b.e{color:var(--red, #b3261e)}
@@ -1705,6 +1742,7 @@ dialog.pop.wide{max-width:1040px}
   <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
   <button type="button" class="mrow priv mgr" id="mnFeeder">Cal-hypo feeder</button>
+  <button type="button" class="mrow priv mgr" id="mnAcid">Acid feeder</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
   <button type="button" class="mrow priv mgr" id="mnVols">Volunteers</button>
   <button type="button" class="mrow priv volonly" id="mnChgPw">My login</button>
@@ -1736,6 +1774,34 @@ dialog.pop.wide{max-width:1040px}
   </div>
   </div>
   <div class="popfoot"><div class="err" id="fdErr" role="alert"></div><button class="btn primary" type="button" id="fdSave">Save</button></div>
+</dialog>
+
+<dialog id="acidDlg" class="pop" aria-labelledby="afH" tabindex="-1" autofocus>
+  <div class="pophead"><div><h2 id="afH">Acid feeder</h2><span class="popsub">Rola-Chem RC303 · one setting for everyone</span></div>
+    <button type="button" class="popx" id="afX" aria-label="Close">×</button></div>
+  <div class="popbody">
+  <div class="pophero" id="afRes" aria-live="polite"></div>
+  <div class="popsec">Pump setting</div>
+  <div class="popgrp">
+    <div class="afstep"><button type="button" class="afpm" id="afMinus" aria-label="Lower the setting">−</button>
+      <label class="afval"><input type="number" id="afPct" inputmode="numeric" min="0" max="100" step="1" aria-label="Pump setting in percent"><i>%</i></label>
+      <button type="button" class="afpm" id="afPlus" aria-label="Raise the setting">+</button></div>
+    <div class="afwhen" id="afWhen" hidden><span>Changed</span><span class="afin"><input type="datetime-local" id="afAt" aria-label="When it was changed"></span></div>
+  </div>
+  <p class="pophelp">The number on the pump's display (TIMER). Continuous = 100.</p>
+  <div class="popsec">Setting history</div>
+  <div class="popgrp poplist" id="afLog"></div>
+  <div class="popsec">A fill</div>
+  <div class="popgrp poplist">
+    <label class="popli"><span>Acid</span><span class="afin"><input type="number" id="afAcid" inputmode="decimal" min="0.25" max="15" step="0.25"><i>gal</i></span></label>
+    <label class="popli"><span>Water to dilute it</span><span class="afin"><input type="number" id="afWater" inputmode="decimal" min="0" max="50" step="0.5"><i>gal</i></span></label>
+    <details class="popli afmore"><summary><span>Pump size</span><span class="afsum" id="afGpdSum"></span></summary>
+      <label class="popli"><span>Running non-stop</span><span class="afin"><input type="number" id="afGpd" inputmode="decimal" min="0.1" max="100" step="0.1"><i>gal/day</i></span></label>
+      <p class="pophelp">RC303: 12 gal a day (maker's chart). On TIMER it runs that share of every 9 minutes.</p>
+    </details>
+  </div>
+  </div>
+  <div class="popfoot"><div class="err" id="afErr" role="alert"></div><button class="btn primary" type="button" id="afSave">Save</button></div>
 </dialog>
 
 <dialog id="removedDlg" class="pop" aria-labelledby="rmH">
@@ -2345,7 +2411,7 @@ function popNode(){
         jobShockLiquid = !jobShockLiquid; try { localStorage.setItem('jobShockLiquid', jobShockLiquid ? '1' : '0'); } catch(e2){}
         var sti = +popCurChip.getAttribute('data-ti'); renderAll(); trkReopen(sti); return;
       }
-      if (e.target.closest && e.target.closest('[data-jfeed]')) { closePop(); feedOpen(); return; }
+      if (e.target.closest && e.target.closest('[data-jfeed]')) { var fk = e.target.closest('[data-jfeed]').getAttribute('data-jfeed'); closePop(); if (fk === 'acid') acidOpen(); else feedOpen(); return; }
       var jb = e.target.closest && e.target.closest('[data-jlog], [data-jnot], [data-juntil], [data-jundo], [data-jsave]');
       if (jb && popCurChip){
         var ji = +popCurChip.getAttribute('data-ti');
@@ -2677,9 +2743,17 @@ function trkState(t){
   // yellow / red / "N days late" all count from the new due day. d = days since it was really done; dd = days into the schedule.
   var d = daysBetween(ev.day, todayCentral()), span = t.warn != null ? t.warn : t.over, anchor = ev.day;
   if (t.post && span != null) anchor = addDays(t.post.until, -span);
+  else if (span != null) { var fe = trkFeedDue(t, ev); if (fe) anchor = addDays(fe, -span); }   // feeder job: due the day the fill runs out
   var dd = daysBetween(anchor, todayCentral());
   var lv = (t.over != null && dd >= t.over) ? 'red' : (t.warn != null && dd >= t.warn) ? 'yellow' : (t.warn != null || t.over != null) ? 'green' : 'none';
   return {lv: lv, d: d, dd: dd, anchor: anchor, due: span != null ? addDays(anchor, span) : null, post: !!(t.post && span != null)};
+}
+/** Feeder jobs (2026-10-09): the day the newest fill runs out by the feeder settings (cal-hypo DATA.feeder, acid
+ *  DATA.acidFeeder), when that fill is the job's last one; else null (the fixed Warn days count). "Not yet…" still wins. */
+function trkFeedDue(t, ev){
+  var F = feedJob(t) ? DATA.feeder : acidJob(t) ? DATA.acidFeeder : null;
+  if (!F || !F.emptyAt || !F.lastFill || !ev || dayOfMs(F.lastFill) < ev.day) return null;
+  return dayOfMs(F.emptyAt);
 }
 function agoText(d){ return d <= 0 ? 'Today' : d === 1 ? 'Yesterday' : d + ' days ago'; }
 function trkDay(day){ return fmtDay(day, day.slice(0, 4) !== todayCentral().slice(0, 4)); }
@@ -2788,6 +2862,7 @@ function jobDose(t){
     var f = JOB_FILL.filter(function(x){ return x[0].test(t.setting || t.name); })[0];
     if (!f) return null;
     if (/cal-?hypo/i.test(f[0].source) && DATA.feeder) f = [f[0], DATA.feeder.set.tabs, 'pucks'];   // a full load, from the feeder settings
+    if (/acid/i.test(f[0].source) && DATA.acidFeeder) f = [f[0], DATA.acidFeeder.set.acid, 'gal', 'acid', DATA.acidFeeder.set.water];   // a fill, from the acid feeder settings
     var a = f[1] + ' ' + f[2] + (f[3] ? ' ' + f[3] : ''), wtr = f[4] ? ' + ' + f[4] + ' gal water' : '';   // acid goes in diluted
     return {chip: a + wtr, text: 'Fill with ' + a + wtr, html: '<b>' + a + '</b>' + (wtr ? ' <span class="jm">' + wtr.slice(3) + ' (diluted)</span>' : ''), amount: f[1], unit: f[2]};
   }
@@ -2859,6 +2934,7 @@ function jobPopHtml(t, i){
     h += '<div class="jdose"><span class="k">' + lbl + '</span><span class="v">' + (m ? '<b>' + m[1] + '</b> ' + m[2] : d.html) + '</span></div>';
   }
   if (feedJob(t)) h += feedLineHtml();
+  if (acidJob(t)) h += acidLineHtml();
   if (t.post && s.post) h += '<div class="jpost">⏸ Put off to <b>' + esc(trkDay(t.post.until)) + '</b> · ' + esc(jobPostText(t).replace(/^./, function(c){ return c.toLowerCase(); })) + (t.post.by ? ' · ' + esc(firstName(t.post.by)) : '') + '</div>';
   if (ev) {
     var hist = t.events.slice(0, 4).map(function(e){ var a = jobEvAmt(t, e); return '<span>' + esc(trkDay(e.day)) + (a ? ' · ' + esc(a) : '') + '</span>'; }).join('');
@@ -2869,18 +2945,33 @@ function jobPopHtml(t, i){
 }
 /* ---- cal-hypo feeder (2026-10-08): how the settings work out and when the last fill runs out (server feederOut_) */
 function feedJob(t){ return t && t.type === 'slow' && /cal-?hypo/i.test(t.setting || t.name) && DATA.feeder; }
-/** {empty: true, day} once the newest fill should be used up, {empty: false, days left, day} before; null without a fill. */
-function feedState(){
-  var F = DATA.feeder; if (!F || !F.emptyAt) return null;
+function acidJob(t){ return t && t.type === 'slow' && /acid/i.test(t.setting || t.name) && DATA.acidFeeder; }
+/** The empty-feeder state of a job's feeder (cal-hypo or acid), or null. */
+function jobFeedState(t){ return feedJob(t) ? feedState() : acidJob(t) ? feedState(DATA.acidFeeder) : null; }
+/** {empty: true, day} once the newest fill should be used up, {empty: false, days left, day} before; null without a fill.
+ *  F = the server's feeder summary (DATA.feeder when left out; DATA.acidFeeder for the acid feeder). */
+function feedState(F){
+  F = F || DATA.feeder; if (!F || !F.emptyAt) return null;
   var now = Date.now(), day = dayOfMs(F.emptyAt);
   return F.emptyAt <= now ? {empty: true, day: day} : {empty: false, left: (F.emptyAt - now) / DAYMS, day: day};
 }
 function dayOfMs(ms){ var d = new Date(ms - 5 * 3600000); return d.toISOString().slice(0, 10); }   // Central (CDT; an hour off in winter is fine here)
+function feedLeftHtml(st){
+  if (!st) return '';
+  return st.empty ? '<b class="e">Probably empty since ' + esc(trkDay(st.day)) + '</b>' :
+    '<b>About ' + (st.left < 1 ? 'a day' : Math.round(st.left) + (Math.round(st.left) === 1 ? ' day' : ' days')) + ' left <span>(runs out ' + esc(jobShort(st.day)) + ')</span></b>';
+}
+/** Acid feeder job popover: days left, the pump setting and what it feeds a day. */
+function acidLineHtml(){
+  var A = DATA.acidFeeder, h = '<div class="jfeed">' + feedLeftHtml(feedState(A));
+  h += '<span class="m">Pump at ' + A.pct + '% · about ' + fmtNum(A.acidDay) + ' gal acid a day (TA −' + fmtNum(Math.round(A.taDay * 10) / 10) + ' a day)' +
+    (A.days ? ' · a fill lasts about ' + fmtNum(Math.round(A.days * 10) / 10) + ' days' : '') + '</span>';
+  if (isMgr()) h += '<button type="button" class="trkebtn" data-jfeed="acid">Acid feeder settings…</button>';
+  return h + '</div>';
+}
 function feedLineHtml(){
   var F = DATA.feeder, st = feedState();
-  var h = '<div class="jfeed">';
-  if (st) h += st.empty ? '<b class="e">Probably empty since ' + esc(trkDay(st.day)) + '</b>' :
-    '<b>About ' + (st.left < 1 ? 'a day' : Math.round(st.left) + (Math.round(st.left) === 1 ? ' day' : ' days')) + ' left <span>(runs out ' + esc(jobShort(st.day)) + ')</span></b>';
+  var h = '<div class="jfeed">' + feedLeftHtml(st);
   h += '<span class="m">About ' + fmtNum(F.lbDay) + ' lb chlorine a day (FC +' + fmtNum(Math.round(F.ppmDay * 10) / 10) + ' a day) · a full load lasts about ' + fmtNum(Math.round(F.days * 10) / 10) + ' days</span>';
   if (isMgr()) h += '<button type="button" class="trkebtn" data-jfeed="1">Feeder settings…</button>';
   return h + '</div>';
@@ -3016,7 +3107,7 @@ function renderUpDetails(ts){
     if (nx.day) last += ' · ' + nx.day;
     return '<button type="button" class="dj" data-ti="' + ts.indexOf(t) + '"><b>' + esc(trkJob(t)) + '</b><span class="jpill lv-' + nx.lv + '">' + esc(nx.txt) + '</span>' +
       jobBar(t) + '<span class="l">' + (dose ? '<span class="jtag">' + esc(dose.chip) + '</span>' : '') +
-      (feedJob(t) && feedState() && feedState().empty ? '<span class="jtag post">empty since ' + esc(trkDay(feedState().day)) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
+      (jobFeedState(t) && jobFeedState(t).empty ? '<span class="jtag post">empty since ' + esc(trkDay(jobFeedState(t).day)) + '</span>' : '') + (t.post && s.post ? '<span class="jtag post">⏸ ' + esc(jobPostShort(t)) + '</span>' : '') +
       '<span class="jw">' + esc(last) + '</span></span></button>';
   });
   var jobsHtml = jobRows.length ? '<div><div class="dsec">Jobs</div><div class="dcard">' + jobRows.join('') + '</div></div>' : '';
@@ -3072,8 +3163,10 @@ function renderJobs(ts){
     if (best === null || left < best){ best = left; names = [trkJob(t)]; } else if (left === best) names.push(trkJob(t));
   });
   var lines = [];
-  var fe = feedState(), fj = all.filter(function(i){ return feedJob(ts[i]); })[0];
-  if (fe && fe.empty && fj != null && due.indexOf(fj) < 0) lines.push('<div class="jline"><span>Cal-hypo feeder probably empty since ' + esc(trkDay(fe.day)) + '</span></div>');
+  all.forEach(function(i){
+    var fe = jobFeedState(ts[i]);
+    if (fe && fe.empty && due.indexOf(i) < 0) lines.push('<div class="jline"><span>' + (feedJob(ts[i]) ? 'Cal-hypo' : 'Acid') + ' feeder probably empty since ' + esc(trkDay(fe.day)) + '</span></div>');
+  });
   if (!rows.length && all.length) lines.push('<div class="jline"><span><span class="ok">✓</span> <b>All jobs done</b></span></div>');
   if (best !== null) lines.push('<div class="jline"><span>Next: ' + esc(names.slice(0, 2).join(' · ')) + '</span><span>' + (best <= 1 ? 'tomorrow' : 'in ' + best + ' days') + '</span></div>');
   $('jlines').innerHTML = lines.join('');
@@ -4684,6 +4777,85 @@ function feedWire(){
   });
 }
 function feedAddVis(){ $('fdAdd').hidden = $('fdRows').querySelectorAll('.fdr').length >= FEED_ROWS; }
+/* ---- acid feeder settings (Manager, 2026-10-09): server saveAcidFeeder / acidOut_. The setting is changed now and then, so
+   each change is kept with its time (the setting history); a new number gets "Changed on the pump" (now unless set back).
+   History rows can be removed (a mistake) before Save. Days left: the server's empty time at the saved setting, redone
+   here for a new setting (what is left now, at the new rate). */
+var acidLog = [], acidBusy = false;
+function acidOpen(){
+  var A = DATA && DATA.acidFeeder;
+  if (!A) { alert('The acid feeder settings haven\'t loaded yet. Pull down to refresh (or tap Refresh in the ⋯ menu) and try again.'); return; }
+  acidLog = A.set.log.map(function(e){ return {ms: e.ms, pct: e.pct, by: e.by || ''}; });
+  $('afPct').value = A.pct; $('afAcid').value = A.set.acid; $('afWater').value = A.set.water; $('afGpd').value = A.set.gpd;
+  $('afAt').value = acidLocal(Date.now()); $('afErr').textContent = '';
+  acidCalc(); openMenu('acidDlg');
+}
+function acidLocal(ms){ var d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
+function acidWhen(ms){ return new Date(ms).toLocaleString('en-US', {weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'}); }
+function acidCurPct(){ return acidLog.length ? acidLog[acidLog.length - 1].pct : null; }
+function acidRead(){
+  var pct = $('afPct').value === '' ? NaN : Math.round(+$('afPct').value), log = acidLog.slice(), at = Date.parse($('afAt').value);
+  var changed = isFinite(pct) && pct !== acidCurPct();
+  if (changed) log.push({ms: isFinite(at) ? Math.min(at, Date.now()) : Date.now(), pct: pct, by: ''});
+  log.sort(function(a, b){ return a.ms - b.ms; });
+  return {gpd: +$('afGpd').value, acid: +$('afAcid').value, water: +$('afWater').value, log: log, pct: pct, changed: changed};
+}
+function acidCalc(){
+  if (!DATA || !DATA.acidFeeder) return;
+  var A = DATA.acidFeeder, f = acidRead(), el = $('afRes');
+  $('afWhen').hidden = !f.changed;
+  $('afGpdSum').textContent = (f.gpd > 0 ? fmtNum(f.gpd) : '–') + ' gal a day';
+  // history: newest first; the one in use now marked; a new number shown on top until saved
+  var rows = f.log.slice().reverse().map(function(e, i){
+    var isNew = f.changed && e.by === '' && e.pct === f.pct && acidLog.indexOf(e) < 0;
+    return '<div class="aflog' + (i === 0 ? ' now' : '') + (isNew ? ' new' : '') + '"><b>' + e.pct + '%</b><span>' + (e.ms > 0 ? 'from ' + esc(acidWhen(e.ms)) : 'before the history started') +
+      '<small>' + (isNew ? 'new, saved with Save' : e.ms > 0 ? (e.by ? esc(firstName(e.by)) : '') : 'assumed') + '</small></span>' +
+      (!isNew && acidLog.length > 1 ? '<button type="button" class="afrm" data-afrm="' + e.ms + '" aria-label="Remove this change">×</button>' : '') + '</div>';
+  });
+  $('afLog').innerHTML = rows.slice(0, 8).join('') + (rows.length > 8 ? '<div class="aflog"><span><small>' + (rows.length - 8) + ' older not shown</small></span></div>' : '');
+  if (!(f.pct >= 0 && f.pct <= 100) || !(f.gpd > 0) || !(f.acid > 0) || !(f.water >= 0)) { el.innerHTML = '<p class="afnote">Fill in the setting and a fill to see what it works out to.</p>'; return; }
+  var mix = f.gpd * f.pct / 100, acidDay = mix * f.acid / (f.acid + f.water), days = acidDay > 0 ? f.acid / acidDay : null;
+  var ta = A.taGal * acidDay, r1 = function(v){ return fmtNum(Math.round(v * 10) / 10); }, r2 = function(v){ return fmtNum(Math.round(v * 100) / 100); };
+  var onS = f.pct * 9 * 60 / 100, onTxt = f.pct >= 100 ? 'runs non-stop' : f.pct <= 0 ? 'is off' : 'runs about ' + (onS < 90 ? Math.round(onS) + ' sec' : r1(onS / 60) + ' min') + ' of every 9 min';
+  var h = '<div class="popbig"><b>' + (days ? (days >= 100 ? Math.round(days) : r1(days)) : '–') + '</b><span>days per fill</span></div>' +
+    '<div class="popstats"><span><b>' + r2(acidDay) + ' gal</b> acid a day</span><span><b>TA −' + r1(ta) + '</b> a day</span><span><b>' + r2(mix) + ' gal</b> mix a day</span></div>';
+  // the tank now: what is left of the newest fill at the saved setting, then at this one
+  if (A.emptyAt && A.lastFill) {
+    var now = Date.now(), left = A.emptyAt > now && A.acidDay > 0 ? (A.emptyAt - now) / DAYMS * A.acidDay : 0, share = Math.max(0, Math.min(1, left / A.set.acid));
+    var dl = left > 0 && acidDay > 0 ? left / acidDay : null, txt;
+    if (left <= 0) txt = '<b>Probably empty</b> since ' + esc(trkDay(dayOfMs(A.emptyAt)));
+    else if (dl === null) txt = '<b>About ' + Math.round(share * 100) + '% left</b>, not emptying at 0%';
+    else txt = '<b>About ' + (dl < 1.5 ? 'a day' : Math.round(dl) + ' days') + ' left</b> · runs out ' + esc(jobShort(dayOfMs(now + dl * DAYMS)));
+    h += '<div class="aftank"><span class="afgauge" aria-hidden="true"><i style="height:' + Math.round(share * 100) + '%"></i></span><span>' + txt + '<br><small>Filled ' + esc(trkDay(dayOfMs(A.lastFill))) + '</small></span></div>';
+  }
+  h += '<p class="afnote">At ' + f.pct + '% the pump ' + onTxt + '. From the maker\'s chart: ' + fmtNum(f.gpd) + ' gal a day × ' + f.pct + '%' + (f.water > 0 ? ', ' + fmtNum(f.acid) + ' of every ' + fmtNum(f.acid + f.water) + ' gal is acid' : '') + '.</p>';
+  el.innerHTML = h;
+}
+function acidStep(d){ var v = $('afPct').value === '' ? (acidCurPct() || 0) : +$('afPct').value; $('afPct').value = Math.max(0, Math.min(100, Math.round(v) + d)); acidCalc(); }
+function acidWire(){
+  var dlg = $('acidDlg');
+  dlg.addEventListener('input', acidCalc);
+  dlg.addEventListener('change', acidCalc);
+  dlg.addEventListener('click', function(e){
+    var rm = e.target.closest('[data-afrm]');
+    if (rm && acidLog.length > 1) { var ms = +rm.getAttribute('data-afrm'); acidLog = acidLog.filter(function(x){ return x.ms !== ms; }); acidCalc(); }
+  });
+  $('afMinus').addEventListener('click', function(){ acidStep(-1); });
+  $('afPlus').addEventListener('click', function(){ acidStep(1); });
+  $('afX').addEventListener('click', function(){ closeDlg('acidDlg'); });
+  $('afSave').addEventListener('click', function(){
+    if (acidBusy) return;
+    var f = acidRead();
+    if (!(f.pct >= 0 && f.pct <= 100)) { $('afErr').textContent = 'The setting is 0 to 100%.'; return; }
+    acidBusy = true; $('afSave').textContent = 'Saving…'; $('afErr').textContent = '';
+    serverCall('saveAcidFeeder', [CODE, {gpd: f.gpd, acid: f.acid, water: f.water, log: f.log}], function(res){
+      acidBusy = false; $('afSave').textContent = 'Save';
+      if (handleDenied(res)) return;
+      if (!res || !res.ok) { $('afErr').textContent = (res && res.message) || 'Could not save.'; return; }
+      DATA = res.data; closeDlg('acidDlg'); renderAll();
+    }, function(err){ acidBusy = false; $('afSave').textContent = 'Save'; $('afErr').textContent = 'Could not reach the server: ' + (err && err.message || err); });
+  });
+}
 // pop-ups: a thin line under the pinned header once the middle has scrolled
 document.addEventListener('scroll', function(e){ var b = e.target; if (b && b.classList && b.classList.contains('popbody') && b.previousElementSibling) b.previousElementSibling.classList.toggle('lined', b.scrollTop > 2); }, true);
 function openDlg(id){ var d = $(id); if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', ''); }
@@ -5666,7 +5838,9 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   $('mnRemoved').addEventListener('click', function(){ closeDlg('menuDlg'); rmRender(''); openDlg('removedDlg'); });
   $('mnFeeder').addEventListener('click', function(){ closeDlg('menuDlg'); feedOpen(); });
+  $('mnAcid').addEventListener('click', function(){ closeDlg('menuDlg'); acidOpen(); });
   feedWire();
+  acidWire();
   $('rmDone').addEventListener('click', function(){ closeDlg('removedDlg'); });
   $('rmList').addEventListener('click', function(e){
     var b = e.target.closest && e.target.closest('[data-rmback]');
@@ -5872,7 +6046,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
     chem: ['chemical', 'var(--k-fc)', 'Save chemical'],
     vols: ['Volunteers', 'var(--red)', '']};
-  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnFeeder": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M7 13h10M10 17h4\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
+  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnFeeder": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M7 13h10M10 17h4\"/>", "mnAcid": "<path d=\"M9 3h6M10 3v5.5L5.2 17.4A2.4 2.4 0 0 0 7.3 21h9.4a2.4 2.4 0 0 0 2.1-3.6L14 8.5V3\"/><path d=\"M7.5 15h9\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
   ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
@@ -5896,7 +6070,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
   // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
   // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
-  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnFeeder', 'mnVols', 'mnChgPw', 'mnLock'];
+  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnFeeder', 'mnAcid', 'mnVols', 'mnChgPw', 'mnLock'];
   function setMenu(o){
     if (o) buildMenuBubbles();
     ui.classList.toggle('menu', o);
