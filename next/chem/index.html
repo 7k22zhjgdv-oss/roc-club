@@ -1116,15 +1116,15 @@ html.app #entryUi.menu .macts{display:flex}
 .ewhen label+label{border-left-color:var(--frostLine)}
 .egrp{margin:16px 6px 6px}
 .egrp b{font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
-.etile{border:0;border-radius:16px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:9px 10px 8px;transition:box-shadow .15s}
-.etile:focus-within{background:var(--frost);box-shadow:inset 0 0 0 2px var(--c)}
+/* reading boxes keep their color tone (the user asked for the colors back, 2026-10-09) */
+.etile{border:0;border-radius:16px;background:color-mix(in srgb,var(--c) 14%,transparent);padding:9px 10px 8px;transition:box-shadow .15s,background .15s}
+.etile:focus-within{background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:inset 0 0 0 2px var(--c)}
 .etile .nm{align-items:center;justify-content:flex-start;gap:5px;font-size:12.5px}
-.etile .nm::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--c)}
 .etile .nm i{margin-left:auto;font-size:11px}
 .etile input{font-size:26px;font-weight:650;letter-spacing:-.01em;padding-top:2px}
 .etile input::placeholder{color:color-mix(in srgb,var(--muted) 45%,transparent);font-weight:400}
 .etile .ls{min-height:17px}
-.etile.odd{background:var(--frost);box-shadow:inset 0 0 0 2px var(--yellow)}
+.etile.odd{background:color-mix(in srgb,var(--yellow) 26%,transparent);box-shadow:inset 0 0 0 2px var(--yellow)}
 .eci .etile{background:var(--card)}
 .epill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 6px;margin-right:4px;letter-spacing:.01em;vertical-align:1px}
 .epill.green{background:color-mix(in srgb,var(--green) 18%,transparent);color:color-mix(in srgb,var(--green) 70%,var(--ink))}
@@ -1167,11 +1167,30 @@ html.app #entryUi.menu .macts{display:flex}
 .ecsi.ep{color:var(--ink2)}
 .erec{border-radius:16px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine);padding:2px 12px}
 .erec .r{border-bottom-color:var(--frostLine)}
-.ecpick button{border:0;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine)}
-.ecpick button.more{background:var(--glassFill)}
-.eci{border:0;border-radius:18px;background:var(--frost);box-shadow:inset 0 0 0 .5px var(--frostLine),inset 4px 0 0 var(--c)}
+/* Add chemical keeps its color-toned chemical buttons and cards (the user asked for the colors back, 2026-10-09) */
+.eci{border-radius:18px}
 .esave:disabled{background:var(--glassFill);box-shadow:inset 0 0 0 .5px var(--glassEdge)}
-@media (prefers-reduced-motion:reduce){.etile,.ebar .dot,.efold::after,.esw,.esw::after{transition:none}}
+/* saving in the background (2026-10-09): a small frosted pill at the top of the screen - Saving… / ✓ saved / not saved + Try again */
+.etoast{position:fixed;z-index:70;left:50%;top:calc(var(--barH,56px) + var(--barTop,0px) + 10px);transform:translate(-50%,-8px);opacity:0;max-width:calc(100vw - 24px);
+  display:flex;align-items:center;gap:8px;padding:8px 10px 8px 12px;border-radius:22px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);
+  box-shadow:inset 0 0 0 .5px var(--glassEdge),inset 0 1px 0 var(--glassHi),0 6px 22px rgba(0,0,0,.16);font-size:14.5px;font-weight:600;color:var(--ink);transition:opacity .2s,transform .2s}
+html.app .etoast{top:calc(env(safe-area-inset-top,0px) + 10px)}
+.etoast[hidden]{display:none}
+.etoast.on{opacity:1;transform:translate(-50%,0)}
+.etoast #eToastTxt{min-width:0}
+.etoast .eti{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+.etoast.busy .eti{border:2.5px solid color-mix(in srgb,var(--accent) 25%,transparent);border-top-color:var(--accent);animation:espin .8s linear infinite;box-sizing:border-box}
+.etoast.ok .eti{background:var(--green)}
+.etoast.ok .eti::before{content:"✓"}
+.etoast.err .eti{background:var(--red)}
+.etoast.err .eti::before{content:"!"}
+.etoast.err{font-weight:500}
+.etoast .etry{flex:none;border:0;border-radius:14px;background:var(--accent);color:var(--accentInk);font:inherit;font-size:14px;font-weight:600;padding:5px 11px;cursor:pointer}
+.etoast .etx{flex:none;width:26px;height:26px;border:0;border-radius:50%;background:var(--glassFill);color:var(--ink2);font-size:17px;line-height:1;cursor:pointer;display:none}
+.etoast.err .etx{display:block}
+.etoast .etry[hidden]{display:none}
+@keyframes espin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.etile,.ebar .dot,.efold::after,.esw,.esw::after,.etoast{transition:none}.etoast.busy .eti{animation:none}}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
 #emBody{display:contents}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
@@ -5831,6 +5850,8 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
   </div>
 </div>
+<div class="etoast" id="eToast" role="status" aria-live="polite" hidden><span class="eti" aria-hidden="true"></span><span id="eToastTxt"></span>
+  <button type="button" class="etry" id="eToastRetry" hidden>Try again</button><button type="button" class="etx" id="eToastX" aria-label="Close">×</button></div>
 <dialog id="entryMenu" class="pop" aria-labelledby="emTitle">
   <div id="emBody"></div>
 </dialog>
@@ -6600,6 +6621,34 @@ document.addEventListener('DOMContentLoaded', function(){
   window.addEventListener('resize', function(){ if (!grow.hidden && grow.classList.contains('big')) place(full(), panelRad()); });
 
   function say(text, cls){ msg.textContent = text; msg.className = 'emsg' + (cls ? ' ' + cls : ''); }
+  // Saving in the background (2026-10-09): once the checks pass, the panel closes at once and the entry is sent; a small
+  // status pill at the top says "Saving test…", then "Test saved", or what went wrong with Try again (sends the same
+  // entry again, so nothing typed is lost). Several saves at once are counted.
+  var bgN = 0, toastT = null;
+  function toast(kind, text, retry){
+    var t = $('eToast'); clearTimeout(toastT);
+    if (!kind){ t.classList.remove('on'); toastT = setTimeout(function(){ t.hidden = true; }, 250); return; }
+    t.hidden = false; t.className = 'etoast ' + kind; void t.offsetWidth; t.classList.add('on');
+    $('eToastTxt').textContent = text;
+    var b = $('eToastRetry'); b.hidden = !retry; b.onclick = retry || null;
+    if (kind === 'ok') toastT = setTimeout(function(){ toast(''); }, 2600);
+  }
+  $('eToastX').addEventListener('click', function(){ toast(''); });
+  /** send(ok, fail) does the call; done(res) takes the answer in. */
+  function bgRun(label, send, done){
+    bgN++;
+    toast('busy', bgN > 1 ? 'Saving ' + bgN + ' entries…' : 'Saving ' + label.toLowerCase() + '…');
+    send(function(res){
+      bgN--;
+      if (res && res.ok === false && res.why && res.why !== 'level') { toast(''); handleDenied(res); return; }
+      if (!res || !res.ok) { toast('err', label + ' not saved: ' + ((res && res.message) || 'the server said no.'), function(){ bgRun(label, send, done); }); return; }
+      done(res);
+      if (bgN) toast('busy', 'Saving ' + bgN + ' more…'); else toast('ok', label + ' saved');
+    }, function(){
+      bgN--;
+      toast('err', label + ' not saved: no connection.', function(){ bgRun(label, send, done); });
+    });
+  }
   save.addEventListener('click', function(){
     if (busy) return;
     var w = when();
@@ -6634,18 +6683,8 @@ document.addEventListener('DOMContentLoaded', function(){
       payload = {id: editing ? editing.id : '', when: w.s, text: $('eNote').value};
       fn = 'saveNote'; label = 'Note';
     }
-    busy = true; save.disabled = true; save.textContent = 'Saving…'; say('');
-    serverCall(fn, [CODE, payload], function(res){
-      busy = false;
-      if (res && res.ok === false && res.why && res.why !== 'level') { shut(); handleDenied(res); return; }
-      if (!res || !res.ok) { save.disabled = false; save.textContent = editing ? 'Save changes' : KIND[mode][2]; say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
-      DATA = res.data; renderAll();
-      closePanel();
-      bgSet(label + ' saved.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
-    }, function(err){
-      busy = false; save.disabled = false; save.textContent = editing ? 'Save changes' : KIND[mode][2];
-      say('Not saved: could not reach the server. Check the connection and tap Save again.', 'err');
-    });
+    closePanel();
+    bgRun(label, function(ok, fail){ serverCall(fn, [CODE, payload], ok, fail); }, function(res){ DATA = res.data; renderAll(); });
   });
 
   function savePump(w){
@@ -6653,18 +6692,9 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!isFinite(pv.reading)) { say('Enter the meter reading.', 'err'); return; }
     var payload = {type: pump.type, reading: pv.reading, localDateTime: w.s, notes: $('epNote').value, name: ''};
     if (pump.type === 'well' && pv.tank !== '') payload.tankLevel = pv.tank;
-    busy = true; save.disabled = true; save.textContent = 'Saving…'; say('');
-    pumpCall('addReading', [CODE, payload], function(res){
-      busy = false;
-      if (res && res.ok === false && res.why && res.why !== 'level') { shut(); handleDenied(res); return; }
-      if (!res || !res.ok) { save.disabled = false; save.textContent = 'Save reading'; say((res && res.message) || 'Not saved. Try again.', 'err'); return; }
-      if (pump.readings && res.entry) pump.readings.unshift(res.entry);
-      closePanel();
-      bgSet((pump.type === 'well' ? 'Well' : 'Pool') + ' reading saved.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500);
-    }, function(){
-      busy = false; save.disabled = false; save.textContent = 'Save reading';
-      say('Not saved: could not reach the Pump Log. Check the connection and tap Save again.', 'err');
-    });
+    closePanel();
+    bgRun((pump.type === 'well' ? 'Well' : 'Pool') + ' reading', function(ok, fail){ pumpCall('addReading', [CODE, payload], ok, fail); },
+      function(res){ if (pump.readings && res.entry) pump.readings.unshift(res.entry); });
   }
 
   // ---- the ⋯ on a dashboard entry (edit / delete). The name now sits by the time (whoHtml); this is only the button.
