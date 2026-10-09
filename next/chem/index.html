@@ -360,7 +360,6 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 /* cal-hypo feeder settings (2026-10-08, design pass 2026-10-09): a big "days per load", a 24-hour strip of how hard it
    feeds, letter buttons, settings-style grouped rows on the soft grey */
-#feedDlg{padding:16px 14px 14px;max-width:440px;width:calc(100% - 16px);border-radius:22px;border:0}
 #feedDlg .fdhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
 #feedDlg h2{margin:0;font-size:20px;letter-spacing:-.01em}
 #feedDlg .fdsub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
@@ -412,9 +411,6 @@ dialog .hint{font-size:12px;color:var(--muted);margin-top:2px}
 #feedDlg .fdmore[open] summary::after{transform:rotate(90deg)}
 #feedDlg .fdsum{margin-left:auto;color:var(--muted);font-size:14px}
 #feedDlg .fdmore .fdhelp{margin:4px 0 12px}
-#feedDlg .err{margin-top:10px}
-#feedDlg .row{margin-top:16px}
-#feedDlg .row .btn{flex:1;min-height:46px;border-radius:12px;font-size:16px}
 .jfeed{margin:8px 0 2px;font-size:13px;line-height:1.35}
 .jfeed b{display:block}
 .jfeed b.e{color:var(--red, #b3261e)}
@@ -777,13 +773,13 @@ dialog .padj input[type=number]{width:80px;min-height:34px;font-size:16px;paddin
 .summary.hascost:not(.open) .sumdet{display:none}
 dialog.sheet{margin:auto 0 0 0;width:100%;max-width:100%;border-radius:22px 22px 0 0;border-bottom:0;padding:10px 16px max(22px,env(safe-area-inset-bottom))}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
-.sheet .seg{display:flex;width:100%;align-self:stretch}
-.sheet .seg button{flex:1;min-height:44px}
-.sheet .presets{margin-bottom:12px}
-.sheet .presets .pill{min-height:44px;padding:0 16px;font-size:15px}
-.sheet .dates{gap:10px}
-.sheet .dates label{flex:1;display:flex;flex-direction:column;gap:4px}
-.sheet .dates input{min-height:44px;width:100%}
+.sheet .seg,.sheetpop .seg{display:flex;width:100%;align-self:stretch}
+.sheet .seg button,.sheetpop .seg button{flex:1;min-height:44px}
+.sheet .presets,.sheetpop .presets{margin-bottom:12px}
+.sheet .presets .pill,.sheetpop .presets .pill{min-height:44px;padding:0 16px;font-size:15px}
+.sheet .dates,.sheetpop .dates{gap:10px}
+.sheet .dates label,.sheetpop .dates label{flex:1;display:flex;flex-direction:column;gap:4px}
+.sheet .dates input,.sheetpop .dates input{min-height:44px;width:100%}
 .sheet .go{width:100%;margin-top:16px;min-height:48px;font-size:16px}
 .mrow{display:flex;align-items:center;width:100%;min-height:54px;background:none;border:0;border-bottom:1px solid var(--line);font-size:17px;text-align:left;cursor:pointer;padding:0}
 .vrow{display:flex;align-items:center;justify-content:space-between;min-height:48px;margin-top:12px;font-size:16px}
@@ -1094,22 +1090,19 @@ html.app #entryUi.menu .macts{display:flex}
 .ectot .top{font-weight:600;font-size:13px;margin-bottom:4px}
 .ecadd{width:100%;height:46px;border:1.5px dashed var(--glassEdge);border-radius:14px;background:none;color:var(--ink2);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 /* the ⋯ on a dashboard entry (in the card's top line) and its menu's heading lines */
-#entryMenu .emsub{margin:-6px 0 8px;color:var(--muted);font-size:13px}
+#emBody{display:contents}
 .emk{margin-left:auto;background:none;border:0;color:var(--muted);font:inherit;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer}
 .emk:hover{color:var(--ink);background:var(--soft)}
 /* Remove test (test ⋯) and Review removed tests (top ⋯), Manager */
 .mkrm{display:flex;gap:8px;margin-top:10px}
 .mkrm .btn{flex:1}
 .mkrm .btn.danger,#entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
-.rmhint{margin:2px 0 10px;color:var(--muted);font-size:14px}
 .rmrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .rmrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .rmrow span{font-size:13px;color:var(--muted)}
 .rmrow .btn{flex:none}
 .rmnone{color:var(--muted)}
 .rmerr{color:var(--red)}
-#entryMenu .row{display:flex;gap:8px;margin-top:12px}
-#entryMenu .row button{flex:1}
 #entryMenu .btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
 @media (prefers-reduced-motion: reduce){.eact,.escrim,.efab svg,.egrow,.gbody,.gfoot,.gx{transition:none!important}}
 @media print{#entryUi,.emk{display:none!important}}
@@ -1445,6 +1438,63 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
 .status{background:var(--card)}
 .skel .sk{background:var(--card)}
 .btn:hover,.navbtn:hover,.impx:hover{background:color-mix(in srgb,var(--ink) 7%,var(--card))}
+/* ---- Pop-up windows (DESIGN.md "Pop-up windows", 2026-10-09): header pinned at the top (title, grey line, round ×), the
+   middle scrolls, the main button pinned at the bottom. <dialog class="pop"> .pophead (h2, .popsub, .popx) / .popbody / .popfoot */
+dialog.pop{padding:0;border:0;border-radius:22px;width:calc(100% - 16px);max-width:440px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;flex-direction:column}
+dialog.pop[open]{display:flex}
+dialog.pop.wide{max-width:1040px}
+.pophead{flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:16px 14px 10px 18px;background:var(--card);position:relative;z-index:1;transition:box-shadow .15s}
+.pophead.lined{box-shadow:0 1px 0 var(--line)}
+.pophead h2,dialog .pophead h2{margin:0;font-size:20px;letter-spacing:-.01em;line-height:1.2;font-weight:700}
+.pophead .popsub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.popx{position:relative;border:0;background:var(--soft);color:var(--ink2);width:30px;height:30px;border-radius:50%;font-size:20px;line-height:1;flex:0 0 30px;cursor:pointer;padding:0;font-family:inherit}
+.popx::after{content:"";position:absolute;inset:-7px}
+.popx:hover{background:color-mix(in srgb,var(--ink) 10%,var(--card))}
+.popbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 18px 16px}
+.popbody>:first-child{margin-top:0}
+.popfoot{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));background:var(--card);box-shadow:0 -1px 0 var(--line)}
+.popfoot .btn{flex:1 1 0;min-height:46px;border-radius:12px;font-size:16px}
+.popfoot .err{flex:1 0 100%;margin:0;min-height:0}
+.popfoot .err:empty{display:none}
+.popbody .err:empty{min-height:0;margin:0}
+.poplink{display:block;flex:1 0 100%;border:0;background:none;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:2px 4px;text-align:center}
+.poplink[disabled]{color:var(--muted);cursor:default}
+.pophero{background:color-mix(in srgb,var(--accent) 9%,var(--card));border-radius:18px;padding:14px 16px 12px}
+.popbig{display:flex;align-items:baseline;gap:8px}
+.popbig b{font-size:40px;line-height:1;font-weight:700;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums}
+.popbig span{font-size:15px;color:var(--ink2);font-weight:500}
+.popstats{display:flex;gap:4px 16px;flex-wrap:wrap;margin-top:6px;font-size:14px;color:var(--ink2)}
+.popstats b{color:var(--ink);font-weight:600}
+.popsec{margin:18px 4px 6px;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.popgrp{background:var(--soft);border-radius:14px;padding:8px}
+.poplist{padding:0 12px}
+.popli,dialog label.popli{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;margin:0;font-size:15px;color:var(--ink);border-top:1px solid var(--line)}
+.poplist>.popli:first-child{border-top:0}
+.popli small{display:block;font-size:12px;color:var(--muted);margin-top:1px;line-height:1.3}
+.popli.sub{padding-left:16px}
+.popli.off{opacity:.4}
+.pophelp{font-size:12px;color:var(--muted);margin:8px 6px 0;line-height:1.35}
+.popsw{-webkit-appearance:none;appearance:none;flex:0 0 51px;width:51px;height:31px;margin:0;border-radius:16px;background:color-mix(in srgb,var(--muted) 35%,transparent);position:relative;cursor:pointer;transition:background .15s}
+.popsw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.popsw:checked{background:#34c759}
+.popsw:checked::after{transform:translateX(20px)}
+.popsw:focus-visible,.popx:focus-visible,.popchips button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.popchips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.popchips button{min-height:40px;border-radius:10px;border:0;background:var(--card);color:var(--ink);font:inherit;font-size:14.5px;font-weight:500;cursor:pointer;padding:6px 8px}
+.popchips button[aria-pressed=true]{background:var(--accent);color:var(--accentInk)}
+.popdates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-top:6px}
+.popdates[hidden],.popfoot[hidden]{display:none}
+.popdates label,dialog .popdates label{display:flex;flex-direction:column;gap:3px;margin:0;font-size:12px;color:var(--muted)}
+.popdates input,dialog .popdates input[type=date]{height:40px;min-height:40px;border:0;border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;padding:0 9px;min-width:0;width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none}
+#printDlg .ppgs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#printDlg .ppgs span{width:30px;height:39px;border-radius:4px;background:var(--card);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,var(--line));padding:5px 4px;display:flex;flex-direction:column;gap:3px;box-sizing:border-box}
+#printDlg .ppgs i{display:block;height:2px;border-radius:1px;background:color-mix(in srgb,var(--accent) 35%,var(--line))}
+#printDlg .ppgs i:first-child{background:var(--accent);height:3px;width:70%}
+#printDlg .pophero.busy .popbig b{opacity:.45}
+/* small menus (page switcher, ⋯): a compact top row with their name and the × */
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:4px 0 2px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.mhead .popx{width:28px;height:28px;flex-basis:28px;font-size:18px;text-transform:none}
+@media (prefers-reduced-motion:reduce){.popsw,.popsw::after,.pophead{transition:none}}
 </style>
 </head>
 <body>
@@ -1530,12 +1580,13 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
 </div>
 
 <dialog id="navDlg" class="sheet" aria-label="Switch page">
+  <div class="mhead"><span>Switch page</span><button type="button" class="popx" id="navX" aria-label="Close">×</button></div>
   <div class="mrow here" aria-current="page">Pool Chemistry Dashboard</div>
   <a class="mrow" href="../pump/" target="_top" rel="noopener" style="border-bottom:0">Pump Dashboard</a>
 </dialog>
 
 <dialog id="menuDlg" class="sheet" aria-label="More actions">
-  <div class="grab"></div>
+  <div class="mhead"><span>Menu</span><button type="button" class="popx" id="menuX" aria-label="Close">×</button></div>
   <button type="button" class="mrow pub appOnly" id="mnSignIn">Sign in</button>
   <button type="button" class="mrow appOnly" id="mnRefresh">Refresh</button>
   <button type="button" class="mrow mobonly priv brd" id="mnPrint">Print</button>
@@ -1549,9 +1600,10 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
 
-<dialog id="feedDlg" class="fd" aria-labelledby="fdH" tabindex="-1" autofocus>
-  <div class="fdhead"><div><h2 id="fdH">Cal-hypo feeder</h2><span class="fdsub">CCH Endurance · one setting for everyone</span></div>
-    <button type="button" class="fdx" id="fdX" aria-label="Close">×</button></div>
+<dialog id="feedDlg" class="fd pop" aria-labelledby="fdH" tabindex="-1" autofocus>
+  <div class="pophead"><div><h2 id="fdH">Cal-hypo feeder</h2><span class="popsub">CCH Endurance · one setting for everyone</span></div>
+    <button type="button" class="popx" id="fdX" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="fdhero" id="fdRes" aria-live="polite"></div>
   <div class="fdsec">Cartridge letter</div>
   <div class="fdgrp"><input type="hidden" id="fdLetter"><div class="fdlet" id="fdLets" role="radiogroup" aria-label="Cartridge letter"></div>
@@ -1570,83 +1622,96 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
       <p class="fdhelp">CCH Endurance tablets: 265 g, 68% (maker's sheet).</p>
     </details>
   </div>
-  <div class="err" id="fdErr" role="alert"></div>
-  <div class="row"><button class="btn" type="button" id="fdCancel">Cancel</button><button class="btn primary" type="button" id="fdSave">Save</button></div>
+  </div>
+  <div class="popfoot"><div class="err" id="fdErr" role="alert"></div><button class="btn primary" type="button" id="fdSave">Save</button></div>
 </dialog>
 
-<dialog id="removedDlg" class="sheet" aria-labelledby="rmH">
-  <div class="grab"></div>
-  <h2 id="rmH">Removed tests</h2>
-  <p class="rmhint">Removed tests are left out for everyone. Bring one back to show and count it again.</p>
-  <div id="rmList"></div>
-  <button type="button" class="btn primary go" id="rmDone">Done</button>
+<dialog id="removedDlg" class="pop" aria-labelledby="rmH">
+  <div class="pophead"><div><h2 id="rmH">Removed tests</h2><span class="popsub">Left out for everyone until brought back</span></div><button type="button" class="popx" id="rmDone" aria-label="Close">×</button></div>
+  <div class="popbody"><div id="rmList"></div></div>
 </dialog>
 
-<dialog id="dateDlg" class="sheet" aria-labelledby="dateH">
-  <div class="grab"></div>
-  <h2 id="dateH">Date range</h2>
+<dialog id="dateDlg" class="pop sheetpop" aria-labelledby="dateH">
+  <div class="pophead"><div><h2 id="dateH">Date range</h2><span class="popsub">What the history shows</span></div><button type="button" class="popx" id="dateGo" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="presets" id="presets2"></div>
   <div class="dates">
     <label>From <input type="date" id="from2"></label>
     <label>To <input type="date" id="to2"></label>
   </div>
-  <button type="button" class="btn primary go" id="dateGo">Done</button>
+  </div>
 </dialog>
 
-<dialog id="viewDlg" class="sheet" aria-labelledby="viewH">
-  <div class="grab"></div>
-  <h2 id="viewH">View</h2>
+<dialog id="viewDlg" class="pop sheetpop" aria-labelledby="viewH">
+  <div class="pophead"><div><h2 id="viewH">View</h2><span class="popsub">What the history shows</span></div><button type="button" class="popx" id="viewGo" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="seg" role="group" aria-label="What to show">
     <button type="button" id="vRead" class="on">Readings</button>
     <button type="button" id="vChem">Chemicals</button>
     <button type="button" id="vBoth">Both</button>
   </div>
   <div class="vrow" id="vPredRow"><span>Predictions</span><button type="button" class="tgl" id="vPred" role="switch" aria-checked="false" aria-label="Predictions"></button></div>
-  <button type="button" class="btn primary go" id="viewGo">Done</button>
+  </div>
 </dialog>
 
-<dialog id="printDlg">
-  <h2>Print for the board</h2>
-  <label for="pRange">Date range</label>
-  <select id="pRange"></select>
-  <div id="pCustom" style="display:none">
-    <label>From <input type="date" id="pFrom"></label>
-    <label>To <input type="date" id="pTo"></label>
+<dialog id="printDlg" class="pop" aria-labelledby="pH">
+  <div class="pophead"><div><h2 id="pH">Print for the board</h2><span class="popsub">Makes a PDF · US Letter</span></div>
+    <button type="button" class="popx" id="pCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
+    <div class="pophero" aria-live="polite">
+      <div class="popbig"><b id="pN">…</b><span id="pNw">pages</span></div>
+      <div class="popstats" id="pStats"></div>
+      <div class="ppgs" id="pPgs" aria-hidden="true"></div>
+    </div>
+    <div class="popsec">Dates</div>
+    <div class="popgrp">
+      <div class="popchips" id="pRange" role="group" aria-label="Dates"></div>
+      <div class="popdates" id="pCustom" hidden>
+        <label for="pFrom">From<input type="date" id="pFrom"></label>
+        <label for="pTo">To<input type="date" id="pTo"></label>
+      </div>
+    </div>
+    <div class="popsec">In the report</div>
+    <div class="popgrp poplist">
+      <label class="popli" for="pChem"><span>Chemical additions</span><input type="checkbox" class="popsw" role="switch" id="pChem"></label>
+      <label class="popli sub" for="pTint" data-need="pChem"><span>Color-tint them<small>Off = light grey rows</small></span><input type="checkbox" class="popsw" role="switch" id="pTint"></label>
+      <label class="popli sub" for="pGroup" data-need="pChem"><span>In their own table<small>After the readings, instead of mixed in</small></span><input type="checkbox" class="popsw" role="switch" id="pGroup"></label>
+      <label class="popli" for="pTrk"><span>Chemicals to add next<small>The due-job tiles at the top</small></span><input type="checkbox" class="popsw" role="switch" id="pTrk"></label>
+      <label class="popli" for="pStock"><span>Chemical stock<small>On hand, with low and out of stock marked</small></span><input type="checkbox" class="popsw" role="switch" id="pStock"></label>
+      <label class="popli" for="pEst"><span>Estimate rows<small>Predicted water after each addition</small></span><input type="checkbox" class="popsw" role="switch" id="pEst"></label>
+    </div>
+    <div class="popsec">Fitting</div>
+    <div class="popgrp poplist">
+      <label class="popli" for="pFit"><span>Fit on 2 pages<small>Leaves out close-together retests, never red or Leslie's</small></span><input type="checkbox" class="popsw" role="switch" id="pFit"></label>
+      <label class="popli" for="pWhole"><span>Whole log<small>These dates highlighted, the rest in grey</small></span><input type="checkbox" class="popsw" role="switch" id="pWhole"></label>
+    </div>
+    <p class="pophelp" id="pHow"></p>
   </div>
-  <label class="chk"><input type="checkbox" id="pChem"><span>Include chemical additions</span></label>
-  <label class="chk"><input type="checkbox" id="pTint"><span>Color-tint chemical rows<div class="hint">Off = light gray rows.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pGroup"><span>List chemical additions separately<div class="hint">Test log first, then the chemical additions in their own table.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pEst"><span>Include estimate rows<div class="hint">The gray "Estimate" rows of predicted water chemistry.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pTrk"><span>Include chemicals to add next<div class="hint">The dashboard's top cards (Trackers tab): when each was last added and when it is due.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pStock"><span>Include chemical stock<div class="hint">How much of each active chemical is on hand, with low / out of stock marked.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pFit"><span>Fit on 2 pages when possible<div class="hint">Leaves out readings taken close together on the same day (never red or Leslie's readings) until the report fits.</div></span></label>
-  <label class="chk"><input type="checkbox" id="pWhole"><span>Print the whole log, with the chosen range highlighted<div class="hint">Other rows print in gray without colors.</div></span></label>
-  <div class="row">
-    <button class="btn mgr" type="button" id="pSave" style="margin-right:auto" title="Open the print dialog with these choices next time (any device)">Remember settings</button>
-    <button class="btn" type="button" id="pCancel">Cancel</button>
-    <button class="btn primary" type="button" id="pGo">Print</button>
+  <div class="popfoot">
+    <div class="err" id="pErr" role="alert"></div>
+    <button class="btn primary" type="button" id="pGo">Make the PDF</button>
+    <button class="poplink mgr" type="button" id="pSave" title="Open the Print window with these choices next time (any device)">Remember these settings</button>
   </div>
-  <div class="err" id="pErr" role="alert"></div>
 </dialog>
 
-<dialog id="pdfDlg">
-  <h2>Report ready</h2>
-  <p class="hint" id="pdfInfo" style="margin:0 0 12px"></p>
-  <div class="row">
-    <a class="btn" id="pdfSave" style="margin-right:auto;text-decoration:none">Save a copy</a>
-    <button class="btn" type="button" id="pdfClose">Close</button>
+<dialog id="pdfDlg" class="pop" aria-labelledby="pdfH">
+  <div class="pophead"><div><h2 id="pdfH">Report ready</h2><span class="popsub" id="pdfInfo"></span></div><button type="button" class="popx" id="pdfClose" aria-label="Close">×</button></div>
+  <div class="popfoot">
+    <a class="btn" id="pdfSave" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Save a copy</a>
     <button class="btn primary" type="button" id="pdfOpen">Open</button>
   </div>
 </dialog>
 
-<dialog id="chgDlg">
-  <h2>My login</h2>
-  <label for="akaIn">Also goes by (other first names)</label>
+<dialog id="chgDlg" class="pop" aria-labelledby="chgH">
+  <div class="pophead"><div><h2 id="chgH">My login</h2><span class="popsub">Your names and password</span></div><button type="button" class="popx" id="chgCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
+  <div class="popsec" style="margin-top:4px">Other first names</div>
+  <label for="akaIn">Also goes by</label>
   <input type="text" id="akaIn" placeholder="Like Kayti, Kat" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
   <p class="hint" style="margin:6px 0 0">You can sign in with any of these and your last name.</p>
   <div class="row" style="margin-top:8px"><button class="btn" type="button" id="akaSave">Save names</button></div>
   <div class="err" id="akaErr" role="alert"></div>
-  <h2 style="margin-top:18px">Change password</h2>
+  <div class="popsec">Change password</div>
   <p class="hint" style="margin:0 0 6px">At least 8 characters. Your other phones and computers will need to sign in again with the new password.</p>
   <form id="chgForm" autocomplete="off">
     <label for="chgCur">Current password</label>
@@ -1655,24 +1720,21 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew">Show</button></span>
     <label for="chgNew2">New password again</label>
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew2">Show</button></span>
-    <div class="err" id="chgErr" role="alert"></div>
-    <div class="row">
-      <button class="btn" type="button" id="chgCancel">Cancel</button>
-      <button class="btn primary" type="submit" id="chgGo">Change password</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot"><div class="err" id="chgErr" role="alert"></div><button class="btn primary" type="submit" form="chgForm" id="chgGo">Change password</button></div>
 </dialog>
 
-<dialog id="unlockDlg">
+<dialog id="unlockDlg" class="pop" aria-labelledby="siHead">
+  <div class="pophead"><div><h2 id="siHead">Who's signing in?</h2><span class="popsub" id="siSub">Pool members and volunteers</span></div><button type="button" class="popx" id="pickCancel" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div id="siPick">
-    <h2 class="si-q">Who's signing in?</h2>
     <button type="button" class="si-big" data-as="member">Pool member<span>Sign in with your pool key to see additional information</span></button>
     <button type="button" class="si-big" data-as="vol">Volunteer or board<span>Sign in or sign up to be a volunteer</span></button>
-    <div class="row"><button class="btn" type="button" id="pickCancel">Cancel</button></div>
   </div>
   <form id="unlockForm" autocomplete="off" hidden>
     <button type="button" class="si-back" id="siBack">&larr; Back</button>
-    <h2 class="si-q" id="siTitle">Pool member</h2>
+    <span id="siTitle" hidden></span>
     <div id="nameRow" hidden><label for="nameIn">First and last name</label><input type="text" id="nameIn" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next" data-1p-ignore data-lpignore="true" data-form-type="other"></div>
     <label for="codeIn" id="codeLbl">Your pool key number</label>
     <span class="pw-wrap"><input type="text" class="secret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other" id="codeIn"><button type="button" class="pw-show" aria-pressed="false" aria-controls="codeIn">Show</button></span>
@@ -1687,17 +1749,15 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
       <p>Your sign-up is waiting for approval. Someone on the board will contact you.</p>
       <button class="si-link" type="button" id="siRetry2">Back</button>
     </div>
-    <div class="err" id="unlockErr" role="alert"></div>
     <p class="hint">This device stays signed in until you tap Sign out.</p>
-    <div class="row">
-      <button class="btn" type="button" id="unlockCancel">Cancel</button>
-      <button class="btn primary" type="submit" id="unlockGo">Sign in</button>
-    </div>
   </form>
+  </div>
+  <div class="popfoot" id="siFoot" hidden><div class="err" id="unlockErr" role="alert"></div><button class="btn primary" type="submit" form="unlockForm" id="unlockGo">Sign in</button></div>
 </dialog>
 
-<dialog id="pricesDlg" class="big wide">
-  <div class="dh"><h2>Chemical prices</h2><button class="btn sm" type="button" id="prClose">Close</button></div>
+<dialog id="pricesDlg" class="pop wide" aria-labelledby="prH">
+  <div class="pophead"><div><h2 id="prH">Chemical prices</h2><span class="popsub">Purchases, stock and the price calculator</span></div><button type="button" class="popx" id="prClose" aria-label="Close">×</button></div>
+  <div class="popbody">
   <div class="tabs"><button class="btn on" type="button" id="tabPrices">Purchase history</button><button class="btn" type="button" id="tabCalc">Price calculator</button></div>
   <div id="prBusy" class="prbusy" role="status" aria-live="polite" hidden><span class="prspin" aria-hidden="true"></span><span id="prBusyTxt"></span></div>
   <div class="hint" id="prDiag" style="display:none;color:var(--red)"></div>
@@ -1727,6 +1787,7 @@ html.top-wash .ntag.p,html.top-wash .ncsi .ns.p{background:color-mix(in srgb,var
   </form>
   </div>
   <div id="calcTab" class="cx"></div>
+  </div>
 </dialog>
 
 <div id="printView"></div>
@@ -4120,31 +4181,72 @@ function buildPrintOnce(o, split){
     return '<div class="ppage' + (n === pages.length - 1 ? ' last' : '') + '">' + (n === 0 ? head : '') + pageTables(pg) +
       (hasStock ? '<div class="pstockend">' + stockHtml + '</div>' : '') + (n === 0 ? legend : '') + '</div>';
   }).join('');
-  return {rows: rowHtml.length, pages: pages.length, wrapped: [], range: rangeText};
+  return {rows: rowHtml.length, pages: pages.length, wrapped: [], range: rangeText, tests: tests.length, chems: chems.length};
 }
-function syncGroupOpt(){ var on = $('pChem').checked; $('pGroup').disabled = !on; if (!on) $('pGroup').checked = false; }
+// Print window (2026-10-09, DESIGN.md "Pop-up windows"): date buttons, switches, and the page count worked out live at the top.
+var PRINT_RANGES = [['2m', 'This + last month'], ['month', 'This month'], ['last', 'Last month'], ['30', 'Last 30 days'], ['all', 'All time'], ['custom', 'Pick dates…']];
+var printRange = '2m', printPrevT = null;
+function setPrintRange(r){
+  printRange = r;
+  [].forEach.call($('pRange').children, function(b){ b.setAttribute('aria-pressed', String(b.getAttribute('data-r') === r)); });
+  $('pCustom').hidden = r !== 'custom';
+  if (r === 'custom' && !$('pFrom').value){ var d = presetRange('2m'); $('pFrom').value = d[0]; $('pTo').value = d[1]; }
+}
+/** The chemical rows' options (tint, own table) grey out while chemical additions are off. */
+function syncGroupOpt(){
+  var on = $('pChem').checked;
+  [].forEach.call(document.querySelectorAll('#printDlg [data-need]'), function(li){ li.classList.toggle('off', !on); li.querySelector('input').disabled = !on; });
+}
 function openPrint(){
   if (!isBrd()) return;
-  var sel = $('pRange');
-  if (!sel.options.length){
-    [['2m','This month + last month'],['last','Last month'],['month','This month'],['30','Last 30 days'],['all','All time'],['custom','Custom dates…']].forEach(function(d){
-      var o = document.createElement('option'); o.value = d[0]; o.textContent = d[1]; sel.appendChild(o);
-    });
-  }
-  // saved defaults ("Remember settings", server: printPrefs) or the built-in ones
+  var box = $('pRange');
+  if (!box.children.length) box.innerHTML = PRINT_RANGES.map(function(r){ return '<button type="button" data-r="' + r[0] + '" aria-pressed="false">' + esc(r[1]) + '</button>'; }).join('');
+  // saved defaults ("Remember these settings", server: printPrefs) or the built-in ones
   var pp = DATA.printPrefs || {range: '2m', chem: true, tint: true, group: true, est: false, trk: false, stock: false, whole: false, fit: true};
-  sel.value = pp.range || '2m';
-  $('pCustom').style.display = sel.value === 'custom' ? 'block' : 'none';
-  if (sel.value === 'custom'){ $('pFrom').value = pp.from || ''; $('pTo').value = pp.to || ''; }
+  $('pFrom').value = pp.range === 'custom' ? (pp.from || '') : ''; $('pTo').value = pp.range === 'custom' ? (pp.to || '') : '';
+  setPrintRange(PRINT_RANGES.some(function(r){ return r[0] === pp.range; }) ? pp.range : '2m');
   $('pChem').checked = !!pp.chem; $('pWhole').checked = !!pp.whole; $('pTint').checked = !!pp.tint; $('pEst').checked = !!pp.est;
   $('pTrk').checked = !!pp.trk; $('pStock').checked = !!pp.stock; $('pGroup').checked = !!pp.group; $('pFit').checked = pp.fit !== false; syncGroupOpt();
-  $('pSave').disabled = false; $('pSave').textContent = 'Remember settings'; $('pErr').textContent = '';
+  $('pSave').disabled = false; $('pSave').textContent = 'Remember these settings'; $('pErr').textContent = '';
+  $('pHow').textContent = pdfShareOk() ? 'The share sheet opens next, with Print, Save to Files and Mail.' : 'The PDF opens in a new tab; print it from there.';
+  $('printDlg').querySelector('.popbody').scrollTop = 0;
   openDlg('printDlg');
-  pdfLoad().catch(function(){});   // get the PDF maker and fonts now, so Print is quick
+  printPreview();   // also gets the PDF maker and fonts now, so Make the PDF is quick
+}
+/** The report options from the window. */
+function printOpts(){
+  var from, to;
+  if (printRange === 'custom'){ from = $('pFrom').value; to = $('pTo').value; }
+  else { var r = presetRange(printRange); from = r[0]; to = r[1]; }
+  return {from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked,
+          group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked};
+}
+/** The box at the top: pages (built for real, off screen, the same way Make the PDF does), dates, readings and additions. */
+function printPreview(){
+  clearTimeout(printPrevT);
+  var hero = $('pN').closest('.pophero'); hero.classList.add('busy');
+  printPrevT = setTimeout(function(){
+    pdfLoad().then(function(){
+      if (!$('printDlg').open) return;
+      var o = printOpts(), res = buildPrintFit(o), pv = $('printView'); pv.innerHTML = ''; pv.style.cssText = '';
+      var left = printTests(o).length - res.tests;
+      $('pN').textContent = res.pages; $('pNw').textContent = res.pages === 1 ? 'page' : 'pages';
+      $('pStats').innerHTML = '<span>' + esc(rangeShort(res.range)) + '</span><span><b>' + res.tests + '</b> reading' + (res.tests === 1 ? '' : 's') + '</span>' +
+        (o.chem ? '<span><b>' + res.chems + '</b> addition' + (res.chems === 1 ? '' : 's') + '</span>' : '') +
+        (left > 0 ? '<span>' + left + ' close retest' + (left === 1 ? '' : 's') + ' left out to fit</span>' : '');
+      var icons = ''; for (var i = 0; i < Math.min(res.pages, 10); i++) icons += '<span><i></i><i></i><i></i><i></i><i></i></span>';
+      $('pPgs').innerHTML = icons;
+      hero.classList.remove('busy');
+    }, function(){
+      $('pN').textContent = '–'; $('pPgs').innerHTML = ''; hero.classList.remove('busy');
+      $('pStats').textContent = navigator.onLine === false ? 'No internet connection: the PDF can\'t be made right now.' : 'Could not count the pages.';
+    });
+  }, 150);
 }
 function printChoices(){
-  return {range: $('pRange').value, from: $('pFrom').value, to: $('pTo').value, chem: $('pChem').checked, tint: $('pTint').checked,
-          group: $('pGroup').checked, est: $('pEst').checked, trk: $('pTrk').checked, stock: $('pStock').checked, whole: $('pWhole').checked, fit: $('pFit').checked};
+  var o = printOpts();
+  return {range: printRange, from: $('pFrom').value, to: $('pTo').value, chem: o.chem, tint: o.tint,
+          group: $('pGroup').checked, est: o.est, trk: o.trk, stock: o.stock, whole: o.whole, fit: o.fit};
 }
 function rememberPrint(){
   var b = $('pSave'); b.disabled = true; b.textContent = 'Saving…';
@@ -4155,22 +4257,19 @@ function rememberPrint(){
   }, function(){ b.disabled = false; b.textContent = 'Could not save - try again'; });
 }
 function doPrint(){
-  var p = $('pRange').value, from, to;
-  if (p === 'custom'){ from = $('pFrom').value; to = $('pTo').value; }
-  else { var r = presetRange(p); from = r[0]; to = r[1]; }
-  var o = {from: from, to: to, fit: $('pFit').checked, chem: $('pChem').checked, tint: $('pTint').checked, est: $('pEst').checked, group: $('pGroup').checked && $('pChem').checked, whole: $('pWhole').checked, trk: $('pTrk').checked, stock: $('pStock').checked};
+  var o = printOpts();
   // computers: the PDF opens in a new tab, which has to be opened now, while this tap counts (else it is a blocked pop-up)
   var win = null;
   if (!pdfShareOk()){ try { win = window.open('', '_blank'); if (win) win.document.write('<p style="font:16px -apple-system,Segoe UI,sans-serif;padding:24px;color:#555">Making the report…</p>'); } catch (e) { win = null; } }
   var go = $('pGo'); go.disabled = true; go.textContent = 'Making the PDF…'; $('pErr').textContent = '';
   pdfLoad().then(function(kit){
     var res = buildPrintFit(o), blob = pdfBuild(kit, res), name = pdfName(res);
-    go.disabled = false; go.textContent = 'Print';
+    go.disabled = false; go.textContent = 'Make the PDF';
     closeDlg('printDlg');
     pdfDeliver(blob, name, res.pages, win);
   }).catch(function(e){
     var pv = $('printView'); pv.innerHTML = ''; pv.style.cssText = '';
-    go.disabled = false; go.textContent = 'Print';
+    go.disabled = false; go.textContent = 'Make the PDF';
     if (win) try { win.close(); } catch (x) {}
     $('pErr').textContent = 'Could not make the report' + (navigator.onLine === false ? ' - no internet connection.' : ': ' + (e && e.message || e)) + ' Try again.';
   });
@@ -4215,8 +4314,10 @@ function pdfShareOk(){
   catch (e) { return false; }
 }
 /** "Pool Report Sep 1 – Oct 9, 2026.pdf" (the year once when both ends share it), "Pool Report all dates.pdf". */
+/** "Sep 1, 2026 – Oct 9, 2026" -> "Sep 1 – Oct 9, 2026" (the year once when both ends share it). */
+function rangeShort(r){ return r.replace(/^(\w+ \d+), (\d{4}) – (\w+ \d+, )\2$/, '$1 – $3$2'); }
 function pdfName(res){
-  var r = res.range === 'All dates' ? 'all dates' : res.range.replace(/^(\w+ \d+), (\d{4}) – (\w+ \d+, )\2$/, '$1 – $3$2');
+  var r = res.range === 'All dates' ? 'all dates' : rangeShort(res.range);
   return 'Pool Report ' + r.replace(/[\/\\:*?"<>|]/g, '-') + '.pdf';
 }
 function pdfBuild(kit, res){
@@ -4459,7 +4560,6 @@ function feedWire(){
   });
   $('fdAdd').addEventListener('click', function(){ $('fdRows').insertAdjacentHTML('beforeend', feedRowHtml()); feedAddVis(); var ins = $('fdRows').querySelectorAll('.fdr'); ins[ins.length - 1].querySelector('input').focus(); });
   $('fdX').addEventListener('click', function(){ closeDlg('feedDlg'); });
-  $('fdCancel').addEventListener('click', function(){ closeDlg('feedDlg'); });
   $('fdSave').addEventListener('click', function(){
     if (feedBusy) return;
     feedBusy = true; $('fdSave').textContent = 'Saving…'; $('fdErr').textContent = '';
@@ -4472,6 +4572,8 @@ function feedWire(){
   });
 }
 function feedAddVis(){ $('fdAdd').hidden = $('fdRows').querySelectorAll('.fdr').length >= FEED_ROWS; }
+// pop-ups: a thin line under the pinned header once the middle has scrolled
+document.addEventListener('scroll', function(e){ var b = e.target; if (b && b.classList && b.classList.contains('popbody') && b.previousElementSibling) b.previousElementSibling.classList.toggle('lined', b.scrollTop > 2); }, true);
 function openDlg(id){ var d = $(id); if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', ''); }
 // menus open with nothing outlined (no auto-focus ring on the first row)
 function openMenu(id){ openDlg(id); var d = $(id); d.setAttribute('tabindex', '-1'); try { d.focus({preventScroll:true}); } catch(e){ d.focus(); } }
@@ -4570,11 +4672,12 @@ function goSignUp(){   // the sign-up form is on Home; the name goes along on th
   window.top.location.href = 'https://www.rollingoaksclub.org/?signup';
 }
 function stored(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
-function showPick(){ signAs = ''; $('siPick').hidden = false; $('unlockForm').hidden = true; $('unlockErr').textContent = ''; }
+function showPick(){ signAs = ''; $('siPick').hidden = false; $('unlockForm').hidden = true; $('unlockErr').textContent = ''; $('siFoot').hidden = true;
+  $('siHead').textContent = 'Who\'s signing in?'; $('siSub').textContent = 'Pool members and volunteers'; }
 function showStep(as){
   var c = SIGN_AS[as], inp = $('codeIn'); signAs = as;
-  $('siPick').hidden = true; $('unlockForm').hidden = false;
-  $('siTitle').textContent = c.title; $('codeLbl').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
+  $('siPick').hidden = true; $('unlockForm').hidden = false; $('siFoot').hidden = false;
+  $('siHead').textContent = c.title; $('siSub').textContent = 'Sign in'; $('siTitle').textContent = c.title; $('codeLbl').textContent = c.label; $('siHint').textContent = c.hint; $('siHint').hidden = !c.hint;
   $('nameRow').hidden = as !== 'vol';
   inp.value = ''; $('unlockErr').textContent = ''; pwShow(inp, false);
   inp.classList.toggle('secret', c.secret);
@@ -5354,6 +5457,8 @@ document.addEventListener('DOMContentLoaded', function(){
   $('dateChip').addEventListener('click', function(){ openDlg('dateDlg'); });
   $('viewChip').addEventListener('click', function(){ openDlg('viewDlg'); });
   $('moreBtn').addEventListener('click', function(){ openMenu('menuDlg'); });
+  $('menuX').addEventListener('click', function(){ closeDlg('menuDlg'); });
+  $('navX').addEventListener('click', function(){ closeDlg('navDlg'); });
   // home-screen app: the grey ⋯ above the + (#eMore, + button script) opens this menu, which also has Refresh and Sign in there
   $('mnRefresh').addEventListener('click', function(){ closeDlg('menuDlg'); refreshNow(); });
   $('mnSignIn').addEventListener('click', function(){ closeDlg('menuDlg'); openUnlock(); });
@@ -5389,7 +5494,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('jobs').addEventListener('click', function(e){ if (e.target.closest && e.target.closest('#jMore') && !$('upDet').classList.contains('open')) $('upBtn').click(); });
   $('optBtn').addEventListener('click', function(){ var o = $('opts').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
   $('sumBtn').addEventListener('click', function(){ var o = $('summary').classList.toggle('open'); this.setAttribute('aria-expanded', o ? 'true' : 'false'); });
-  ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg'].forEach(function(id){
+  ['menuDlg', 'dateDlg', 'viewDlg', 'navDlg', 'removedDlg', 'pdfDlg', 'entryMenu'].forEach(function(id){   // a tap outside closes (nothing typed to lose)
     $(id).addEventListener('click', function(e){
       if (e.target !== this) return;
       var r = this.getBoundingClientRect();
@@ -5421,7 +5526,6 @@ document.addEventListener('DOMContentLoaded', function(){
     b.addEventListener('mousedown', function(e){ e.preventDefault(); });   // keep the keyboard up
     b.addEventListener('click', function(){ pwShow(inp, !inp.classList.contains('shown')); inp.focus(); });
   });
-  $('unlockCancel').addEventListener('click', function(){ closeDlg('unlockDlg'); });
   // iPhone: when the keyboard closes inside the frame (e.g. right after signing in), Safari can leave every tap landing
   // off from the buttons until the page moves. Close the keyboard first, then nudge the scroll so taps line up again.
   function settleTaps(){
@@ -5464,9 +5568,9 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   $('impX').addEventListener('click', impClose);
   $('printBtn').addEventListener('click', openPrint);
-  $('pRange').addEventListener('change', function(){ $('pCustom').style.display = this.value === 'custom' ? 'block' : 'none'; });
+  $('pRange').addEventListener('click', function(e){ var b = e.target.closest('button[data-r]'); if (b){ setPrintRange(b.getAttribute('data-r')); printPreview(); } });
+  $('printDlg').addEventListener('change', function(){ syncGroupOpt(); printPreview(); });
   $('pSave').addEventListener('click', rememberPrint);
-  $('pChem').addEventListener('change', syncGroupOpt);
   $('pCancel').addEventListener('click', function(){ closeDlg('printDlg'); });
   $('pGo').addEventListener('click', doPrint);
   $('pdfOpen').addEventListener('click', pdfOpenLast);
@@ -5635,7 +5739,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
   </div>
 </div>
-<dialog id="entryMenu" aria-labelledby="emTitle">
+<dialog id="entryMenu" class="pop" aria-labelledby="emTitle">
   <div id="emBody"></div>
 </dialog>
 <script>
@@ -6453,13 +6557,14 @@ document.addEventListener('DOMContentLoaded', function(){
   function menu(kind, id, confirmDel, err){
     var it = findEntry(kind, id); if (!it) return;
     menuFor = {kind: kind, id: id};
-    $('emBody').innerHTML = '<h2 id="emTitle">' + (kind === 'chem' ? 'Added ' + esc(it.summary) : kind === 'test' ? 'Test' : 'Note') + ', ' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</h2>' +
-      (it.w && wxFull(it.w) ? '<p class="emsub">' + esc(wxFull(it.w)) + '</p>' : '') +
-      (it.by ? '<p class="emsub">Entered by ' + esc(fullName(it.by)) + '</p>' : '') +
-      (confirmDel ? '<p>Delete this ' + ENTRY_WORD[kind] + '? This can\'t be undone.</p><div class="row"><button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button></div>'
-        : '<div class="row"><button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button></div>' +
-          '<div class="row"><button type="button" class="btn" data-em="cancel">Close</button></div>') +
-      (err ? '<p style="color:var(--red)">' + esc(err) + '</p>' : '');
+    var sub = [it.w && wxFull(it.w) ? wxFull(it.w) : '', it.by ? 'Entered by ' + fullName(it.by) : ''].filter(Boolean);
+    $('emBody').innerHTML = '<div class="pophead"><div><h2 id="emTitle">' + (kind === 'chem' ? 'Added ' + esc(it.summary) : kind === 'test' ? 'Test' : 'Note') + '</h2>' +
+      '<span class="popsub">' + esc(fmtDayRel(it.day) + ' ' + it.time) + '</span>' + sub.map(function(t){ return '<span class="popsub">' + esc(t) + '</span>'; }).join('') + '</div>' +
+      '<button type="button" class="popx" data-em="cancel" aria-label="Close">×</button></div>' +
+      (confirmDel ? '<div class="popbody"><p style="margin:4px 0 0">Delete this ' + ENTRY_WORD[kind] + '? This can\'t be undone.</p></div>' : '') +
+      '<div class="popfoot">' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
+      (confirmDel ? '<button type="button" class="btn" data-em="cancel">Keep it</button><button type="button" class="btn danger" data-em="del2">Delete</button>'
+        : '<button type="button" class="btn" data-em="edit">Edit</button><button type="button" class="btn danger" data-em="del">Delete</button>') + '</div>';
     if (!$('entryMenu').open) openDlg('entryMenu');
   }
   document.addEventListener('click', function(e){
