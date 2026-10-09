@@ -4775,7 +4775,8 @@ function feedAddVis(){ $('fdAdd').hidden = $('fdRows').querySelectorAll('.fdr').
    here for a new setting (what is left now, at the new rate). */
 var acidLog = [], acidBusy = false;
 function acidOpen(){
-  var A = DATA.acidFeeder; if (!A) return;
+  var A = DATA && DATA.acidFeeder;
+  if (!A) { alert('The acid feeder settings haven\'t loaded yet. Pull down to refresh (or tap Refresh in the ⋯ menu) and try again.'); return; }
   acidLog = A.set.log.map(function(e){ return {ms: e.ms, pct: e.pct, by: e.by || ''}; });
   $('afPct').value = A.pct; $('afAcid').value = A.set.acid; $('afWater').value = A.set.water; $('afGpd').value = A.set.gpd;
   $('afAt').value = acidLocal(Date.now()); $('afErr').textContent = '';
