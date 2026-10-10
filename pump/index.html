@@ -1716,6 +1716,19 @@ window.rocStartPump = function (DATA) {
         var pts = bySeg[si];
         return { segIndex: si, tStart: pts[0].t.getTime(), tEnd: pts[pts.length - 1].t.getTime() };
       });
+      // tank-full readings (no segIndex of their own) widen the stretch they belong to - the one they fall in, or the
+      // latest one before them if within 30 days - so a tank full since the last wide-open reading still gets its own
+      // room on the axis instead of piling up on the right edge (2026-10-09)
+      tankFullPts.forEach(function (fp) {
+        var ft = fp.t.getTime(), home = null;
+        majorBands.forEach(function (b) { if (!home && ft >= b.tStart && ft <= b.tEnd) home = b; });
+        majorBands.forEach(function (b) { if (!home && ft > b.tEnd && ft - b.tEnd <= 30 * DAY_MS) home = b; });
+        majorBands.forEach(function (b) { if (!home && ft < b.tStart && b.tStart - ft <= 30 * DAY_MS) home = b; });
+        if (home) { home.tStart = Math.min(home.tStart, ft); home.tEnd = Math.max(home.tEnd, ft); }
+      });
+      majorBands.forEach(function (b, i) {   // never let a widened stretch run into the next one
+        if (i > 0 && b.tStart < majorBands[i - 1].tEnd) b.tStart = majorBands[i - 1].tEnd;
+      });
       gapBands = [];
       for (var gi = 0; gi < majorBands.length - 1; gi++) {
         gapBands.push({ tStart: majorBands[gi].tEnd, tEnd: majorBands[gi + 1].tStart });
