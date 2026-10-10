@@ -126,6 +126,12 @@ button,select,input[type=date]{font:inherit;color:var(--ink)}
 .seg button{border:0;background:transparent;padding:8px 14px;cursor:pointer;min-height:40px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button.on{background:var(--accent);color:var(--accentInk);font-weight:600}
+/* Feeders (2026-10-09): one ⋯ row; the feeder window's title is a Cal-hypo | Acid pill switch on the × row (the
+   one showing filled); tapping the other swaps windows */
+.pophead h2.fdsw{display:inline-flex;gap:3px;padding:3px;border-radius:999px;background:var(--soft, rgba(127,127,127,.14));margin-top:-2px}
+.pophead h2.fdsw button{font:inherit;font-size:15px;font-weight:600;letter-spacing:0;color:var(--ink2);background:none;border:0;border-radius:999px;padding:5px 16px;min-height:32px;cursor:pointer}
+.pophead h2.fdsw button.on{background:var(--accent);color:var(--accentInk);cursor:default}
+.pophead h2.fdsw + .popsub{margin-top:8px}
 .presets{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .pill{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px;min-height:34px}
 .pill.on{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-weight:600}
@@ -531,6 +537,7 @@ body:not(.unlocked) .up,body:not(.unlocked) .histrow{display:none !important}
 body:not(.lvl-board):not(.lvl-manager) .brd{display:none !important}
 body:not(.lvl-manager) .mgr{display:none !important}
 body:not(.is-vol) .volonly{display:none !important}
+body.is-vol .novol{display:none !important}   /* named people sign out from My login (2026-10-09) */
 #moreBtn,#eMore{position:relative}
 #moreBtn.has-dot,#eMore.has-dot{overflow:visible}
 #moreBtn.has-dot::after,#eMore.has-dot::after{content:attr(data-count);position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#ff3b30;color:#fff;font:600 12px/20px -apple-system,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--card);pointer-events:none}
@@ -1659,12 +1666,6 @@ dialog.pop.wide{max-width:1040px}
       <button class="btn ico keep" id="moreBtn" type="button" aria-label="More actions"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg></button>
     </div>
 </div></header>
-<div id="impBox" class="impbox" role="status" aria-live="polite" hidden>
-  <div class="imph"><span class="impspin" aria-hidden="true"></span><b id="impTitle">Importing…</b><span id="impTime" class="impt"></span><button type="button" id="impX" class="impx" aria-label="Close">×</button></div>
-  <div class="impbar"><i id="impFill"></i></div>
-  <ul id="impLog" class="implog"></ul>
-  <div id="impSum" class="impsum"></div>
-</div>
 <div class="wrap">
   <div id="status" class="status" role="status"></div>
   <div class="gate pub" id="gate">
@@ -1738,20 +1739,18 @@ dialog.pop.wide{max-width:1040px}
   <div class="mhead"><span>Menu</span><button type="button" class="popx" id="menuX" aria-label="Close">×</button></div>
   <button type="button" class="mrow pub appOnly" id="mnSignIn">Sign in</button>
   <button type="button" class="mrow appOnly" id="mnRefresh">Refresh</button>
-  <button type="button" class="mrow mobonly priv brd" id="mnPrint">Print</button>
-  <button type="button" class="mrow priv mgr" id="mnImport">Import now</button>
   <button type="button" class="mrow priv mgr" id="mnRemoved">Review removed tests</button>
-  <button type="button" class="mrow priv mgr" id="mnFeeder">Cal-hypo feeder</button>
-  <button type="button" class="mrow priv mgr" id="mnAcid">Acid feeder</button>
+  <button type="button" class="mrow priv mgr" id="mnFeeders">Feeders</button>
   <button type="button" class="mrow priv brd" id="mnPrices">Prices</button>
   <button type="button" class="mrow priv mgr" id="mnVols">Volunteers</button>
   <button type="button" class="mrow priv volonly" id="mnChgPw">My login</button>
-  <button type="button" class="mrow priv" id="mnLock" style="border-bottom:0">Sign out</button>
+  <button type="button" class="mrow priv novol" id="mnLock">Sign out</button>
+  <button type="button" class="mrow mobonly priv brd" id="mnPrint" style="border-bottom:0">Print</button>
   <div class="mninfo"><div id="mnWho"></div><div id="mnAsof"></div><div id="mnUpd"></div></div>
 </dialog>
 
 <dialog id="feedDlg" class="fd pop" aria-labelledby="fdH" tabindex="-1" autofocus>
-  <div class="pophead"><div><h2 id="fdH">Cal-hypo feeder</h2><span class="popsub">CCH Endurance · one setting for everyone</span></div>
+  <div class="pophead"><div><h2 id="fdH" class="fdsw" role="group" aria-label="Which feeder"><button type="button" data-fsw="cal" class="on" aria-pressed="true">Cal-hypo</button><button type="button" data-fsw="acid" aria-pressed="false">Acid</button></h2><span class="popsub">CCH Endurance · one setting for everyone</span></div>
     <button type="button" class="popx" id="fdX" aria-label="Close">×</button></div>
   <div class="popbody">
   <div class="fdhero" id="fdRes" aria-live="polite"></div>
@@ -1777,7 +1776,7 @@ dialog.pop.wide{max-width:1040px}
 </dialog>
 
 <dialog id="acidDlg" class="pop" aria-labelledby="afH" tabindex="-1" autofocus>
-  <div class="pophead"><div><h2 id="afH">Acid feeder</h2><span class="popsub">Rola-Chem RC303 · one setting for everyone</span></div>
+  <div class="pophead"><div><h2 id="afH" class="fdsw" role="group" aria-label="Which feeder"><button type="button" data-fsw="cal" aria-pressed="false">Cal-hypo</button><button type="button" data-fsw="acid" class="on" aria-pressed="true">Acid</button></h2><span class="popsub">Rola-Chem RC303 · one setting for everyone</span></div>
     <button type="button" class="popx" id="afX" aria-label="Close">×</button></div>
   <div class="popbody">
   <div class="pophero" id="afRes" aria-live="polite"></div>
@@ -1881,7 +1880,7 @@ dialog.pop.wide{max-width:1040px}
 </dialog>
 
 <dialog id="chgDlg" class="pop" aria-labelledby="chgH">
-  <div class="pophead"><div><h2 id="chgH">My login</h2><span class="popsub">Your names and password</span></div><button type="button" class="popx" id="chgCancel" aria-label="Close">×</button></div>
+  <div class="pophead"><div><h2 id="chgH">My login</h2><span class="popsub">Your names, password and sign out</span></div><button type="button" class="popx" id="chgCancel" aria-label="Close">×</button></div>
   <div class="popbody">
   <div class="popsec" style="margin-top:4px">Other first names</div>
   <label for="akaIn">Also goes by</label>
@@ -1899,6 +1898,9 @@ dialog.pop.wide{max-width:1040px}
     <label for="chgNew2">New password again</label>
     <span class="pw-wrap"><input type="text" class="secret" id="chgNew2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-form-type="other"><button type="button" class="pw-show" aria-pressed="false" aria-controls="chgNew2">Show</button></span>
   </form>
+  <div class="popsec">This device</div>
+  <div class="row" style="margin-top:4px"><button class="btn" type="button" id="chgOut">Sign out</button></div>
+  <p class="hint" style="margin:6px 0 0">Signs out on this phone or computer only.</p>
   </div>
   <div class="popfoot"><div class="err" id="chgErr" role="alert"></div><button class="btn primary" type="submit" form="chgForm" id="chgGo">Change password</button></div>
 </dialog>
@@ -4790,6 +4792,11 @@ function acidOpen(){
   $('afAt').value = acidLocal(Date.now()); $('afErr').textContent = '';
   acidCalc(); openMenu('acidDlg');
 }
+function lsGetFeeder(){ try { return localStorage.getItem('rocFeeder') === 'acid' ? 'acid' : 'cal'; } catch(e){ return 'cal'; } }
+function feederOpen(k){
+  try { localStorage.setItem('rocFeeder', k); } catch(e){}
+  if (k === 'acid') acidOpen(); else feedOpen();
+}
 function acidLocal(ms){ var d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
 function acidWhen(ms){ return new Date(ms).toLocaleString('en-US', {weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'}); }
 function acidCurPct(){ return acidLog.length ? acidLog[acidLog.length - 1].pct : null; }
@@ -5102,7 +5109,7 @@ window.addEventListener('message', function(e){
 /* ------------------------------------------------------------ refresh (tool bar ↻) */
 // Re-reads the sheet in place: unlocked -> unlock(CODE) with the passcode already in memory, so it never asks again
 // (a full page reload can lose the saved passcode inside the hosting frame); locked -> publicData(). Keeps the
-// current view, date range and toggles. Does not import backup files (the iPhone Shortcut / Import now do that).
+// current view, date range and toggles. For the Manager it then checks for new backup files too (importQuiet).
 var refreshMsgT = null;
 function refreshNow(){
   var b = $('refreshBtn');
@@ -5119,7 +5126,7 @@ function refreshNow(){
     serverCall('unlock', [CODE], function(res){
       if (handleDenied(res)){ finish(''); return; }
       if (!res || !res.ok){ finish((res && res.message) || 'Could not refresh.', true); return; }
-      applyUnlocked(res.data, CODE, res); finish('Up to date.');
+      applyUnlocked(res.data, CODE, res); finish('Up to date.'); importQuiet();
     }, fail);
   } else {
     serverCall('publicData', [], function(res){
@@ -5129,67 +5136,22 @@ function refreshNow(){
   }
 }
 
-/* ------------------------------------------------------------ import */
-var impPoll = null, impClock = null, impAutoHide = null;
-function impEl(id){ return document.getElementById(id); }
-/** The import box: opens the moment Import is tapped and stays until closed. Pinned under the tool bar so it is visible wherever the page is scrolled. */
-function impOpen(){
-  clearTimeout(impAutoHide);
-  var box = impEl('impBox'); box.hidden = false; box.className = 'impbox run';
-  impEl('impTitle').textContent = 'Importing…'; impEl('impTime').textContent = '0s';
-  impEl('impFill').style.width = '4%';
-  impEl('impLog').innerHTML = '<li class="now">Starting the import…</li>';
-  impEl('impSum').textContent = '';
-}
-function impRender(p){
-  if (!p || !p.log || !p.log.length) return;
-  impEl('impFill').style.width = Math.max(4, Math.min(100, p.pct || 0)) + '%';
-  impEl('impLog').innerHTML = p.log.map(function(m, i){
-    return '<li class="' + (i === p.log.length - 1 && !p.done ? 'now' : 'ok') + '">' + esc(m) + '</li>';
-  }).join('');
-}
-function impClose(){ clearTimeout(impAutoHide); impEl('impBox').hidden = true; }
-function importNow(){
-  var b = $('mnImport'), lb = b;   // the ⋯ menu row (it was a tool bar button until 2026-09-29)
-  if (b.disabled) return;
-  var token = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  var t0 = Date.now(), finished = false;
-  b.disabled = true; lb.textContent = 'Importing…'; b.setAttribute('aria-busy', 'true');
-  impOpen();
-  impClock = setInterval(function(){ impEl('impTime').textContent = Math.round((Date.now() - t0) / 1000) + 's'; }, 500);
-  function poll(){
-    if (finished) return;
-    serverCall('importProgress', [CODE, token], function(res){
-      if (finished) return;
-      if (res && res.ok && res.progress) impRender(res.progress);
-      impPoll = setTimeout(poll, 1200);
-    }, function(){ if (!finished) impPoll = setTimeout(poll, 2000); });
-  }
-  impPoll = setTimeout(poll, 600);
-  function done(ok, title, msg){
-    finished = true; clearTimeout(impPoll); clearInterval(impClock);
-    b.disabled = false; lb.textContent = 'Import now'; b.removeAttribute('aria-busy');
-    var box = impEl('impBox'); box.hidden = false; box.className = 'impbox ' + (ok ? 'ok' : 'err');
-    impEl('impTitle').textContent = title;
-    impEl('impTime').textContent = Math.round((Date.now() - t0) / 1000) + 's';
-    if (ok) impEl('impFill').style.width = '100%';
-    impEl('impLog').querySelectorAll('li.now').forEach(function(li){ li.className = ok ? 'ok' : 'bad'; });
-    impEl('impSum').textContent = msg;
-  }
-  serverCall('pageImport', [CODE, token], function(res){
-    if (handleDenied(res)){ finished = true; clearTimeout(impPoll); clearInterval(impClock); b.disabled = false; lb.textContent = 'Import now'; b.removeAttribute('aria-busy'); impClose(); return; }
-    if (!res || !res.ok){ done(false, 'Import failed', (res && res.message) || 'Import failed.'); return; }
-    var r = res.result || {};
+/* ------------------------------------------------------------ backup import (2026-10-09: no menu item any more) */
+// Pool Math backups still come in by the iPhone Shortcut and the 6-hour import. For the Manager, Refresh also checks the
+// backup folder quietly afterwards (pageImport) and only says something when it brought files in or failed.
+function importQuiet(){
+  if (!(unlocked && CODE && isMgr())) return;
+  serverCall('pageImport', [CODE, 'r' + Date.now().toString(36)], function(res){
+    if (!res || !res.ok || !res.result) return;
+    var r = res.result;
+    if (r.ok === false){ showStatus('Backup import failed: ' + (r.message || 'unknown problem'), true); return; }
+    if (!r.files) return;
     DATA = res.data; renderAll();
-    var msg = r.ok === false ? (r.message || 'Import failed.')
-      : (r.files ? 'Imported ' + r.files + ' backup file' + (r.files === 1 ? '' : 's') + '.' : 'No new backup files in the folder.');
+    var msg = 'Imported ' + r.files + ' backup file' + (r.files === 1 ? '' : 's') + '.';
     if (r.newPriceRows) msg += ' ' + r.newPriceRows + ' new chemical' + (r.newPriceRows === 1 ? '' : 's') + ' added to Prices - enter what you paid.';
-    if (r.warnings && r.warnings.length) msg += ' Note: ' + r.warnings[0];
-    var bad = (DATA.noteIssues || []).length;
-    if (bad) msg += ' ' + bad + ' Chemical note' + (bad === 1 ? '' : 's') + ' could not be read (see Prices).';
-    impRender({log: (impEl('impLog').textContent ? [].map.call(impEl('impLog').querySelectorAll('li'), function(li){ return li.textContent; }) : []), pct: 100, done: true});
-    done(r.ok !== false, r.ok === false ? 'Import failed' : 'Import finished', msg);
-  }, function(e){ done(false, 'Import failed', 'Could not reach the server: ' + (e && e.message || e)); });
+    showStatus(msg);
+    clearTimeout(refreshMsgT); refreshMsgT = setTimeout(function(){ showStatus(''); }, 6000);
+  }, function(){});
 }
 
 /* ------------------------------------------------------------ prices editor */
@@ -5825,7 +5787,6 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   $('lockBtn').addEventListener('click', function(){ lockNow(''); });
   $('refreshBtn').addEventListener('click', refreshNow);
-  $('mnImport').addEventListener('click', function(){ closeDlg('menuDlg'); importNow(); });
   // Review removed tests (Manager): each with Bring back
   var RM_KEYS = [['fc','FC'], ['cc','CC'], ['ph','pH'], ['ta','TA'], ['ch','CH'], ['cya','CYA'], ['tempF','Temp'], ['salt','Salt'], ['bor','Borates'], ['csi','CSI']];
   function rmRender(msg){
@@ -5837,8 +5798,16 @@ document.addEventListener('DOMContentLoaded', function(){
     }).join(''));
   }
   $('mnRemoved').addEventListener('click', function(){ closeDlg('menuDlg'); rmRender(''); openDlg('removedDlg'); });
-  $('mnFeeder').addEventListener('click', function(){ closeDlg('menuDlg'); feedOpen(); });
-  $('mnAcid').addEventListener('click', function(){ closeDlg('menuDlg'); acidOpen(); });
+  // Feeders: opens the feeder window used last on this device (cal-hypo the first time); the switch swaps them
+  $('mnFeeders').addEventListener('click', function(){ closeDlg('menuDlg'); feederOpen(lsGetFeeder()); });
+  document.querySelectorAll('[data-fsw]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var k = b.getAttribute('data-fsw'), cur = $('acidDlg').open ? 'acid' : 'cal';
+      if (k === cur) return;
+      closeDlg(cur === 'acid' ? 'acidDlg' : 'feedDlg'); feederOpen(k);
+    });
+  });
+  $('chgOut').addEventListener('click', function(){ closeDlg('chgDlg'); lockNow(''); });
   feedWire();
   acidWire();
   $('rmDone').addEventListener('click', function(){ closeDlg('removedDlg'); });
@@ -5852,7 +5821,6 @@ document.addEventListener('DOMContentLoaded', function(){
       if (!err) { bgSet('Test brought back.', 'ok'); setTimeout(function(){ bgSet(''); }, 2500); }
     });
   });
-  $('impX').addEventListener('click', impClose);
   $('printBtn').addEventListener('click', openPrint);
   $('pRange').addEventListener('click', function(e){ var b = e.target.closest('button[data-r]'); if (b){ setPrintRange(b.getAttribute('data-r')); printPreview(); } });
   $('printDlg').addEventListener('change', function(){ syncGroupOpt(); printPreview(); });
@@ -6046,7 +6014,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var KIND = {test: ['test', 'var(--accent)', 'Save test'], note: ['note', 'var(--ink2)', 'Save note'], pump: ['pump reading', 'var(--water)', 'Save reading'],
     chem: ['chemical', 'var(--k-fc)', 'Save chemical'],
     vols: ['Volunteers', 'var(--red)', '']};
-  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnImport": "<path d=\"M12 3v12M7 10l5 5 5-5\"/><path d=\"M4 19h16\"/>", "mnFeeder": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M7 13h10M10 17h4\"/>", "mnAcid": "<path d=\"M9 3h6M10 3v5.5L5.2 17.4A2.4 2.4 0 0 0 7.3 21h9.4a2.4 2.4 0 0 0 2.1-3.6L14 8.5V3\"/><path d=\"M7.5 15h9\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
+  var MENU_ICONS = {"mnRefresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7\"/><path d=\"M20 4v7h-7\"/>", "mnPrint": "<path d=\"M7 9V3h10v6\"/><rect x=\"3.5\" y=\"9\" width=\"17\" height=\"8\" rx=\"2\"/><path d=\"M7 14h10v7H7z\"/>", "mnPrices": "<path d=\"M3 12V4h8l10 10-8 8z\"/><circle cx=\"7.5\" cy=\"8.5\" r=\"1.4\"/>", "mnFeeders": "<rect x=\"7\" y=\"3\" width=\"10\" height=\"18\" rx=\"2\"/><path d=\"M7 13h10M10 17h4\"/>", "mnRemoved": "<path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13\"/>", "mnVols": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4\"/><path d=\"M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.7.8 2.7 2.6 3 5.2\"/>", "mnChgPw": "<rect x=\"5\" y=\"10.5\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10.5V7a4 4 0 0 1 8 0v3.5\"/>", "mnLock": "<path d=\"M10 4H5v16h5\"/><path d=\"M14 8l4 4-4 4M18 12H9\"/>", "mnSignIn": "<path d=\"M14 4h5v16h-5\"/><path d=\"M10 8l4 4-4 4M14 12H4\"/>"};
   ICON.vols = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' + MENU_ICONS.mnVols + '</svg>';
   // key, label, unit, unusual below, unusual above (yellow "Check this number"; the server refuses only impossible ones)
   var GROUPS = [
@@ -6070,7 +6038,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('eScrim').addEventListener('click', function(){ if (grow.hidden){ setOpen(false); setMenu(false); } });
   // The ⋯ as bubbles: one pill per menu row that is showing for this sign-in, nearest the ⋯ first (MENU_BOTTOM_UP), with
   // the menu's small info lines as a caption on top. A pill does what its row does; Volunteers grows into its panel.
-  var MENU_BOTTOM_UP = ['mnSignIn', 'mnRefresh', 'mnPrint', 'mnPrices', 'mnImport', 'mnRemoved', 'mnFeeder', 'mnAcid', 'mnVols', 'mnChgPw', 'mnLock'];
+  var MENU_BOTTOM_UP = ['mnPrint', 'mnSignIn', 'mnRefresh', 'mnPrices', 'mnRemoved', 'mnFeeders', 'mnVols', 'mnChgPw', 'mnLock'];
   function setMenu(o){
     if (o) buildMenuBubbles();
     ui.classList.toggle('menu', o);
@@ -6085,7 +6053,7 @@ document.addEventListener('DOMContentLoaded', function(){
       var row = $(id), pill = document.createElement('button');
       pill.type = 'button'; pill.className = 'eact';
       pill.style.animationDelay = ((ids.length - 1 - i) * 0.025) + 's';
-      pill.innerHTML = '<span>' + row.innerHTML + '</span><span class="ei44" style="--c:' + (id === 'mnVols' ? 'var(--red)' : id === 'mnLock' ? 'var(--muted)' : 'var(--accent)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + MENU_ICONS[id] + '</svg></span>';
+      pill.innerHTML = '<span>' + row.innerHTML + '</span><span class="ei44" style="--c:' + (id === 'mnVols' ? 'var(--red)' : id === 'mnChgPw' ? 'var(--green)' : id === 'mnLock' ? 'var(--muted)' : 'var(--accent)') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + MENU_ICONS[id] + '</svg></span>';
       pill.addEventListener('click', function(){
         if (id === 'mnVols'){ openPanel('vols', null, pill); return; }
         setMenu(false); row.click();
